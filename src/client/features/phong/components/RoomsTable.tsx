@@ -43,6 +43,7 @@ export function RoomsTable({
                   <>
                     <Text>{room.tenant.ho_ten}</Text>
                     <Text size="xs" c="dimmed">
+                      {room.tenant.so_nguoi} người ở ·{" "}
                       {room.tenant.sdt ?? "chưa có số điện thoại"}
                     </Text>
                   </>

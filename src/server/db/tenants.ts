@@ -1,20 +1,30 @@
-import type { Tenant } from "../../shared/types";
+import type { Tenant, TenantDetail } from "../../shared/types";
 import { buildSet, Where } from "./sql";
 
-const SELECT = "SELECT id, room_id, ho_ten, sdt, ngay_vao, ngay_ra FROM tenants";
+const SELECT = "SELECT id, room_id, ho_ten, sdt, so_nguoi, ngay_vao, ngay_ra FROM tenants";
 
+const DETAIL_SELECT = `
+  SELECT t.id, t.room_id, t.ho_ten, t.sdt, t.so_nguoi, t.ngay_vao, t.ngay_ra, r.ten_phong
+  FROM tenants t
+  JOIN rooms r ON r.id = t.room_id
+`;
+
+/** Everyone who has ever rented, unless filtered down. */
 export async function listTenants(
   db: D1Database,
   filters: { room_id?: number; dang_thue?: boolean } = {},
-): Promise<Tenant[]> {
+): Promise<TenantDetail[]> {
   const where = new Where()
-    .add("room_id = ?", filters.room_id)
-    .addRaw("ngay_ra IS NULL", filters.dang_thue === true);
+    .add("t.room_id = ?", filters.room_id)
+    .addRaw("t.ngay_ra IS NULL", filters.dang_thue === true);
 
   const { results } = await db
-    .prepare(`${SELECT}${where.clause()} ORDER BY ngay_vao DESC, id DESC`)
+    .prepare(
+      `${DETAIL_SELECT}${where.clause()}
+       ORDER BY r.ten_phong, t.ngay_ra IS NOT NULL, t.ngay_vao DESC, t.id DESC`,
+    )
     .bind(...where.bindings())
-    .all<Tenant>();
+    .all<TenantDetail>();
   return results;
 }
 
@@ -26,15 +36,17 @@ export type TenantInput = {
   room_id: number;
   ho_ten: string;
   sdt: string | null;
+  so_nguoi: number;
   ngay_vao: string;
 };
 
 export async function createTenant(db: D1Database, input: TenantInput): Promise<Tenant | null> {
   const row = await db
     .prepare(
-      "INSERT INTO tenants (room_id, ho_ten, sdt, ngay_vao) VALUES (?, ?, ?, ?) RETURNING id",
+      `INSERT INTO tenants (room_id, ho_ten, sdt, so_nguoi, ngay_vao)
+       VALUES (?, ?, ?, ?, ?) RETURNING id`,
     )
-    .bind(input.room_id, input.ho_ten, input.sdt, input.ngay_vao)
+    .bind(input.room_id, input.ho_ten, input.sdt, input.so_nguoi, input.ngay_vao)
     .first<{ id: number }>();
 
   return row ? getTenant(db, row.id) : null;
@@ -43,8 +55,9 @@ export async function createTenant(db: D1Database, input: TenantInput): Promise<
 export type TenantPatch = {
   ho_ten?: string;
   sdt?: string | null;
+  so_nguoi?: number;
   ngay_vao?: string;
-  /** Setting this marks the tenant as moved out and frees the room. */
+  /** A date marks the tenant as moved out; null puts them back as current. */
   ngay_ra?: string | null;
 };
 
@@ -61,4 +74,8 @@ export async function updateTenant(
       .run();
   }
   return getTenant(db, id);
+}
+
+export async function deleteTenant(db: D1Database, id: number): Promise<void> {
+  await db.prepare("DELETE FROM tenants WHERE id = ?").bind(id).run();
 }

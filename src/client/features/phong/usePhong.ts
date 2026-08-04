@@ -11,6 +11,7 @@ export function useDanhSachPhong() {
 export type NguoiThueMoi = {
   ho_ten: string;
   sdt: string;
+  so_nguoi: number;
   ngay_vao: string;
 };
 
@@ -37,6 +38,7 @@ export function useThaoTacPhong(reload: () => void) {
         room_id: roomId,
         ho_ten: input.ho_ten,
         sdt: input.sdt || null,
+        so_nguoi: input.so_nguoi,
         ngay_vao: input.ngay_vao,
       });
       baoThanhCong("Đã thêm người thuê.");

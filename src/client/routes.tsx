@@ -6,9 +6,10 @@ import { SettingsPage } from "./features/cai-dat/SettingsPage";
 import { ReadingsPage } from "./features/chi-so/ReadingsPage";
 import { InvoiceDetailPage } from "./features/hoa-don/InvoiceDetailPage";
 import { InvoicesPage } from "./features/hoa-don/InvoicesPage";
-import { MyInvoiceDetailPage } from "./features/nguoi-thue/MyInvoiceDetailPage";
-import { MyInvoicesPage } from "./features/nguoi-thue/MyInvoicesPage";
-import { MyReadingsPage } from "./features/nguoi-thue/MyReadingsPage";
+import { MyInvoiceDetailPage } from "./features/cua-toi/MyInvoiceDetailPage";
+import { MyInvoicesPage } from "./features/cua-toi/MyInvoicesPage";
+import { MyReadingsPage } from "./features/cua-toi/MyReadingsPage";
+import { TenantsPage } from "./features/nguoi-thue/TenantsPage";
 import { RoomsPage } from "./features/phong/RoomsPage";
 
 /**
@@ -24,6 +25,7 @@ export function AppRoutes({ user, onLogout }: { user: SessionUser; onLogout: () 
         {quanLy ? (
           <>
             <Route path="/phong" element={<RoomsPage />} />
+            <Route path="/nguoi-thue" element={<TenantsPage />} />
             <Route path="/chi-so" element={<ReadingsPage />} />
             <Route path="/hoa-don" element={<InvoicesPage />} />
             <Route path="/hoa-don/:id" element={<InvoiceDetailPage />} />

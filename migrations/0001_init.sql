@@ -24,14 +24,17 @@ CREATE TABLE rooms (
   UNIQUE (building_id, ten_phong)
 );
 
+-- Mỗi phòng chỉ có một người ĐỨNG TÊN thuê; số người ở thực tế ghi ở so_nguoi.
 CREATE TABLE tenants (
   id        INTEGER PRIMARY KEY AUTOINCREMENT,
   room_id   INTEGER NOT NULL REFERENCES rooms(id) ON DELETE RESTRICT,
   ho_ten    TEXT    NOT NULL,
   sdt       TEXT,
+  so_nguoi  INTEGER NOT NULL DEFAULT 1,
   ngay_vao  TEXT    NOT NULL,
   -- NULL = đang thuê. Có giá trị = đã chuyển đi, giữ lại để tra cứu lịch sử.
-  ngay_ra   TEXT
+  ngay_ra   TEXT,
+  CHECK (so_nguoi >= 1)
 );
 
 CREATE INDEX idx_tenants_room ON tenants (room_id);
@@ -121,6 +124,6 @@ INSERT INTO rooms (id, building_id, ten_phong, gia_phong, dien_tich) VALUES
   (1, 1, 'FMH-P01', 1800000, NULL),
   (2, 1, 'FMH-P02', 1800000, NULL);
 
-INSERT INTO tenants (id, room_id, ho_ten, sdt, ngay_vao, ngay_ra) VALUES
-  (1, 1, 'Người thuê 1', NULL, '2026-08-01', NULL),
-  (2, 2, 'Người thuê 2', NULL, '2026-08-01', NULL);
+INSERT INTO tenants (id, room_id, ho_ten, sdt, so_nguoi, ngay_vao, ngay_ra) VALUES
+  (1, 1, 'Người thuê 1', NULL, 1, '2026-08-01', NULL),
+  (2, 2, 'Người thuê 2', NULL, 1, '2026-08-01', NULL);

@@ -29,8 +29,15 @@ export type Tenant = {
   room_id: number;
   ho_ten: string;
   sdt: string | null;
+  /** People actually living in the room; only `ho_ten` signs the tenancy. */
+  so_nguoi: number;
   ngay_vao: string;
+  /** NULL while still renting. */
   ngay_ra: string | null;
+};
+
+export type TenantDetail = Tenant & {
+  ten_phong: string;
 };
 
 export type Reading = {

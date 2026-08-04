@@ -9,6 +9,7 @@ import type {
   ReadingDetail,
   RoomDetail,
   Tenant,
+  TenantDetail,
 } from "../shared/types";
 
 export class ApiError extends Error {
@@ -70,13 +71,26 @@ export const rooms = {
   remove: (id: number) => send<{ ok: true }>("DELETE", `/api/rooms/${id}`),
 };
 
+export type TenantInput = {
+  room_id: number;
+  ho_ten: string;
+  sdt: string | null;
+  so_nguoi: number;
+  ngay_vao: string;
+};
+
+export type TenantPatch = Partial<Omit<TenantInput, "room_id">> & {
+  /** A date moves them out; null brings them back as the current tenant. */
+  ngay_ra?: string | null;
+};
+
 export const tenants = {
-  list: (roomId?: number) =>
-    request<{ tenants: Tenant[] }>(`/api/tenants${roomId ? `?room_id=${roomId}` : ""}`),
-  create: (input: { room_id: number; ho_ten: string; sdt?: string | null; ngay_vao?: string }) =>
-    send<{ tenant: Tenant }>("POST", "/api/tenants", input),
-  update: (id: number, patch: { ho_ten?: string; sdt?: string | null; ngay_ra?: string | null }) =>
+  list: (params: { room_id?: number; dang_thue?: 1 } = {}) =>
+    request<{ tenants: TenantDetail[] }>(`/api/tenants${query(params)}`),
+  create: (input: TenantInput) => send<{ tenant: Tenant }>("POST", "/api/tenants", input),
+  update: (id: number, patch: TenantPatch) =>
     send<{ tenant: Tenant }>("PATCH", `/api/tenants/${id}`, patch),
+  remove: (id: number) => send<{ ok: true }>("DELETE", `/api/tenants/${id}`),
 };
 
 export type ReadingInput = {

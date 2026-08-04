@@ -68,7 +68,8 @@ users       (id, username, password_hash)   -- 3 tài khoản cố định
 Ba bổ sung so với thiết kế ban đầu, đã nằm trong `migrations/0001_init.sql`:
 
 - `buildings` có thêm `don_gia_dien`, `don_gia_nuoc` — đơn giá **hiện hành** của từng nhà, dùng để điền vào hóa đơn mới. Trước đó không bảng nào giữ giá này.
-- `tenants` có thêm `ngay_ra` (NULL = đang thuê), kèm unique index đảm bảo mỗi phòng chỉ có một người thuê đang ở. Không có cột này thì khách cũ ra, khách mới vào cùng phòng sẽ không phân biệt được.
+- `tenants` có thêm `ngay_ra` (NULL = đang thuê), kèm unique index đảm bảo mỗi phòng chỉ có một người **đứng tên** thuê. Không có cột này thì khách cũ ra, khách mới vào cùng phòng sẽ không phân biệt được.
+- `tenants.so_nguoi` — số người ở thực tế trong phòng, tính cả người đứng tên. Ở ghép nhiều người vẫn chỉ một bản ghi, không tách dòng.
 - `readings` và `invoices` đều có `UNIQUE(room_id, ky)` — nhập chỉ số hai lần không sinh hai hóa đơn cho cùng một tháng.
 
 Tiền lưu bằng `INTEGER` (VND), ngày lưu bằng `TEXT` dạng ISO.

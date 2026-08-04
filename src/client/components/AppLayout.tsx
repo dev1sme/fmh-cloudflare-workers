@@ -6,6 +6,7 @@ import type { SessionUser } from "../api";
 
 const QUAN_LY_LINKS = [
   { to: "/phong", label: "Phòng" },
+  { to: "/nguoi-thue", label: "Người thuê" },
   { to: "/chi-so", label: "Chỉ số điện nước" },
   { to: "/hoa-don", label: "Hóa đơn" },
   { to: "/cai-dat", label: "Cài đặt" },

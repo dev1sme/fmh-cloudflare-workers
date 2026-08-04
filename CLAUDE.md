@@ -39,7 +39,8 @@ src/client/           React SPA (Mantine + react-router)
   hooks/              useResource (fetch + reload), useConfirm (dialog)
   components/         cross-feature UI: AppLayout, InvoiceLines, PaymentsTable,
                       KyPicker, PageState, TrangThaiBadge, ConfirmModal
-  features/<ten>/     dang-nhap, phong, chi-so, hoa-don, cai-dat, nguoi-thue
+  features/<ten>/     dang-nhap, phong, nguoi-thue (manager), chi-so, hoa-don,
+                      cai-dat, cua-toi (the tenant's own screens)
     XxxPage.tsx       composition only
     components/       that feature's UI, one component per file
     useXxx.ts         data loading + mutations, no JSX
@@ -120,7 +121,7 @@ Table/column names mix English table names with **Vietnamese column names** (`te
 ```
 buildings (id, name, address, ⊕don_gia_dien, ⊕don_gia_nuoc)
 rooms     (id, building_id, ten_phong, gia_phong, dien_tich)          UNIQUE(building_id, ten_phong)
-tenants   (id, room_id, ho_ten, sdt, ngay_vao, ⊕ngay_ra)              UNIQUE(room_id) WHERE ngay_ra IS NULL
+tenants   (id, room_id, ho_ten, sdt, ⊕so_nguoi, ngay_vao, ⊕ngay_ra)   UNIQUE(room_id) WHERE ngay_ra IS NULL
 readings  (id, room_id, ky /YYYY-MM/, dien_cu, dien_moi, nuoc_cu, nuoc_moi, ngay_ghi)   ⊕UNIQUE(room_id, ky)
 invoices  (id, room_id, ky, tien_phong, tien_dien, tien_nuoc, phi_khac,
            don_gia_dien, don_gia_nuoc, tong_tien, trang_thai, ngay_tao)                 ⊕UNIQUE(room_id, ky)
@@ -129,7 +130,7 @@ users     (id, username, password_hash)
 ```
 
 - `buildings.don_gia_dien` / `don_gia_nuoc` hold the **current** tariff, per building (the two buildings may differ). It is what a newly generated invoice copies from; it is never read when displaying an existing invoice.
-- `tenants.ngay_ra` NULL means still renting. The partial unique index enforces at most one active tenant per room, while keeping past tenants for history.
+- `tenants.ngay_ra` NULL means still renting. The partial unique index enforces at most one active tenant per room, while keeping past tenants for history. **One tenancy = one named tenant**; several people living in the room are counted in `so_nguoi` (≥ 1, includes the named tenant) rather than as extra rows. Do not "fix" this by allowing multiple active tenants — it is the agreed model.
 - The `UNIQUE(room_id, ky)` pairs stop a double meter entry from producing two invoices for the same month.
 
 Money is `INTEGER` VND — no floats, no minor units. Dates are ISO `TEXT`. `trang_thai` ∈ `chua_thanh_toan` | `da_thanh_toan` | `huy`; `phuong_thuc` ∈ `chuyen_khoan` | `tien_mat` (both CHECK-constrained).
@@ -145,7 +146,9 @@ Billing period is `ky` in `YYYY-MM` form. Invoice line: `tien_dien = (dien_moi -
 
 Everything below `/api` except `/api/health` and `/api/auth/*` requires a session.
 
-Management (`requireQuanLy`): `GET|PATCH /buildings`, full CRUD on `/rooms`, `/tenants` (POST to move in, PATCH `ngay_ra` to move out), `/readings`, `/invoices`, `DELETE /payments/:id`, and `GET /summary`.
+Management (`requireQuanLy`): `GET|PATCH /buildings`, full CRUD on `/rooms`, `/tenants`, `/readings`, `/invoices`, `DELETE /payments/:id`, and `GET /summary`.
+
+On `/tenants`: POST moves someone in, `PATCH { ngay_ra: "…" }` moves them out, `PATCH { ngay_ra: null }` undoes a mistaken move-out (409 if the room already has a new tenant), and DELETE erases a record entered by mistake. `GET /tenants` returns everyone ever, newest tenancy per room first, with `ten_phong` joined in; `?dang_thue=1` narrows it to current tenants and `?room_id=` to one room. Moving a tenancy to another room is not supported — that is a new tenancy.
 
 Tenant (`requirePhong`): `GET /api/me/phong`, `/api/me/invoices`, `/api/me/invoices/:id`, `/api/me/readings`. Read-only by design — tenants never mark an invoice paid; that is the manager's action, or the SePay webhook's.
 

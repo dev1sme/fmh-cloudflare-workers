@@ -8,21 +8,29 @@ type RoomDetailRow = Room & {
   tenant_id: number | null;
   tenant_ho_ten: string | null;
   tenant_sdt: string | null;
+  tenant_so_nguoi: number | null;
   tenant_ngay_vao: string | null;
 };
 
 const DETAIL_SELECT = `
   SELECT r.id, r.building_id, r.ten_phong, r.gia_phong, r.dien_tich,
          b.name AS building_name, b.don_gia_dien, b.don_gia_nuoc,
-         t.id AS tenant_id, t.ho_ten AS tenant_ho_ten,
-         t.sdt AS tenant_sdt, t.ngay_vao AS tenant_ngay_vao
+         t.id AS tenant_id, t.ho_ten AS tenant_ho_ten, t.sdt AS tenant_sdt,
+         t.so_nguoi AS tenant_so_nguoi, t.ngay_vao AS tenant_ngay_vao
   FROM rooms r
   JOIN buildings b ON b.id = r.building_id
   LEFT JOIN tenants t ON t.room_id = r.id AND t.ngay_ra IS NULL
 `;
 
 function toDetail(row: RoomDetailRow): RoomDetail {
-  const { tenant_id, tenant_ho_ten, tenant_sdt, tenant_ngay_vao, ...room } = row;
+  const {
+    tenant_id,
+    tenant_ho_ten,
+    tenant_sdt,
+    tenant_so_nguoi,
+    tenant_ngay_vao,
+    ...room
+  } = row;
 
   return {
     ...room,
@@ -34,6 +42,7 @@ function toDetail(row: RoomDetailRow): RoomDetail {
             room_id: row.id,
             ho_ten: tenant_ho_ten ?? "",
             sdt: tenant_sdt,
+            so_nguoi: tenant_so_nguoi ?? 1,
             ngay_vao: tenant_ngay_vao ?? "",
             ngay_ra: null,
           },

@@ -1,4 +1,4 @@
-import { Button, Modal, Stack, TextInput } from "@mantine/core";
+import { Button, Modal, NumberInput, Stack, TextInput } from "@mantine/core";
 import { useEffect, useState } from "react";
 
 import type { RoomDetail } from "../../../../shared/types";
@@ -16,6 +16,7 @@ export function MoveInModal({
 }) {
   const [hoTen, setHoTen] = useState("");
   const [sdt, setSdt] = useState("");
+  const [soNguoi, setSoNguoi] = useState<number | string>(1);
   const [ngayVao, setNgayVao] = useState(homNay());
   const [busy, setBusy] = useState(false);
 
@@ -23,6 +24,7 @@ export function MoveInModal({
     if (!room) return;
     setHoTen("");
     setSdt("");
+    setSoNguoi(1);
     setNgayVao(homNay());
   }, [room]);
 
@@ -30,7 +32,12 @@ export function MoveInModal({
     if (!room) return;
     setBusy(true);
 
-    const ok = await onSubmit(room.id, { ho_ten: hoTen, sdt, ngay_vao: ngayVao });
+    const ok = await onSubmit(room.id, {
+      ho_ten: hoTen,
+      sdt,
+      so_nguoi: Number(soNguoi),
+      ngay_vao: ngayVao,
+    });
 
     setBusy(false);
     if (ok) onClose();
@@ -49,6 +56,13 @@ export function MoveInModal({
           label="Số điện thoại"
           value={sdt}
           onChange={(e) => setSdt(e.currentTarget.value)}
+        />
+        <NumberInput
+          label="Số người ở"
+          description="Tính cả người đứng tên"
+          value={soNguoi}
+          onChange={setSoNguoi}
+          min={1}
         />
         <TextInput
           type="date"
