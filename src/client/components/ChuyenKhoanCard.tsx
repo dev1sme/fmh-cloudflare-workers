@@ -31,12 +31,31 @@ function Dong({ label, value }: { label: string; value: string }) {
 /**
  * Payment instructions for one invoice: scan the QR, or type the details.
  * The memo carries the invoice code — that is what reconciles the transfer.
+ *
+ * The tenant sees this to pay. The manager sees the same card in `xemTruoc`
+ * mode, purely to check what the tenant is looking at — the manager never pays
+ * their own invoice.
  */
-export function ChuyenKhoanCard({ chuyenKhoan }: { chuyenKhoan: ChuyenKhoan }) {
+export function ChuyenKhoanCard({
+  chuyenKhoan,
+  xemTruoc = false,
+}: {
+  chuyenKhoan: ChuyenKhoan;
+  xemTruoc?: boolean;
+}) {
   return (
     <Card withBorder padding="md">
       <Stack>
-        <Text fw={500}>Quét mã để chuyển khoản</Text>
+        <div>
+          <Text fw={500}>
+            {xemTruoc ? "Mã QR người thuê nhìn thấy" : "Quét mã để chuyển khoản"}
+          </Text>
+          {xemTruoc && (
+            <Text size="xs" c="dimmed">
+              Xem trước để đối chiếu. Người thuê quét mã này trong tài khoản phòng.
+            </Text>
+          )}
+        </div>
 
         <Group align="flex-start" wrap="wrap" gap="lg">
           <VietQR payload={chuyenKhoan.vietqr} />
@@ -47,10 +66,12 @@ export function ChuyenKhoanCard({ chuyenKhoan }: { chuyenKhoan: ChuyenKhoan }) {
             <Dong label="Số tiền" value={tien(chuyenKhoan.so_tien)} />
             <Dong label="Nội dung" value={chuyenKhoan.noi_dung} />
 
-            <Text size="xs" c="dimmed" mt="xs">
-              Giữ nguyên nội dung <b>{chuyenKhoan.noi_dung}</b> khi chuyển khoản để đối chiếu đúng
-              hóa đơn. Mã QR đã điền sẵn số tiền và nội dung.
-            </Text>
+            {!xemTruoc && (
+              <Text size="xs" c="dimmed" mt="xs">
+                Giữ nguyên nội dung <b>{chuyenKhoan.noi_dung}</b> khi chuyển khoản để đối chiếu
+                đúng hóa đơn. Mã QR đã điền sẵn số tiền và nội dung.
+              </Text>
+            )}
           </Stack>
         </Group>
       </Stack>

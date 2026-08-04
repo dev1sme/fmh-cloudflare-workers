@@ -67,7 +67,9 @@ export function InvoiceDetailPage() {
           <Stack>
             <InvoiceHeader hoaDon={hoaDon} />
             <InvoiceLines invoice={hoaDon} />
-            {hoaDon.chuyen_khoan && <ChuyenKhoanCard chuyenKhoan={hoaDon.chuyen_khoan} />}
+            {hoaDon.chuyen_khoan && (
+              <ChuyenKhoanCard chuyenKhoan={hoaDon.chuyen_khoan} xemTruoc />
+            )}
             <PhiKhacCard phiKhac={hoaDon.phi_khac} onSave={luuPhiKhac} />
             <PaymentsCard
               hoaDon={hoaDon}
