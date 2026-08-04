@@ -1,4 +1,4 @@
-import { Button, Group, Table, Text } from "@mantine/core";
+import { Button, Group, Menu, Table, Text } from "@mantine/core";
 
 import type { RoomDetail } from "../../../../shared/types";
 import { ngay, tien } from "../../../format";
@@ -8,11 +8,13 @@ export function RoomsTable({
   onEdit,
   onMoveIn,
   onMoveOut,
+  onDelete,
 }: {
   phong: RoomDetail[];
   onEdit: (room: RoomDetail) => void;
   onMoveIn: (room: RoomDetail) => void;
   onMoveOut: (room: RoomDetail) => void;
+  onDelete: (room: RoomDetail) => void;
 }) {
   return (
     <Table.ScrollContainer minWidth={720}>
@@ -71,6 +73,18 @@ export function RoomsTable({
                       Thêm người thuê
                     </Button>
                   )}
+                  <Menu position="bottom-end" withinPortal>
+                    <Menu.Target>
+                      <Button size="xs" variant="subtle" color="gray">
+                        ⋯
+                      </Button>
+                    </Menu.Target>
+                    <Menu.Dropdown>
+                      <Menu.Item color="red" onClick={() => onDelete(room)}>
+                        Xoá phòng
+                      </Menu.Item>
+                    </Menu.Dropdown>
+                  </Menu>
                 </Group>
               </Table.Td>
             </Table.Tr>

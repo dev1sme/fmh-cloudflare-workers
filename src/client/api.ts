@@ -50,10 +50,19 @@ export const auth = {
   logout: () => send<{ ok: true }>("POST", "/api/auth/logout"),
 };
 
+export type BuildingInput = {
+  name: string;
+  address: string | null;
+  don_gia_dien: number;
+  don_gia_nuoc: number;
+};
+
 export const buildings = {
   list: () => request<{ buildings: Building[] }>("/api/buildings"),
-  update: (id: number, patch: Partial<Building>) =>
+  create: (input: BuildingInput) => send<{ building: Building }>("POST", "/api/buildings", input),
+  update: (id: number, patch: Partial<BuildingInput>) =>
     send<{ building: Building }>("PATCH", `/api/buildings/${id}`, patch),
+  remove: (id: number) => send<{ ok: true }>("DELETE", `/api/buildings/${id}`),
 };
 
 export type RoomInput = {

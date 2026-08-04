@@ -146,7 +146,11 @@ Billing period is `ky` in `YYYY-MM` form. Invoice line: `tien_dien = (dien_moi -
 
 Everything below `/api` except `/api/health` and `/api/auth/*` requires a session.
 
-Management (`requireQuanLy`): `GET|PATCH /buildings`, full CRUD on `/rooms`, `/tenants`, `/readings`, `/invoices`, `DELETE /payments/:id`, and `GET /summary`.
+Management (`requireQuanLy`): full CRUD on `/buildings`, `/rooms`, `/tenants`, `/readings`, `/invoices`, plus `DELETE /payments/:id` and `GET /summary`.
+
+The app is not hard-wired to two buildings and four rooms: the manager adds a building from **Cài đặt** (each with its own `don_gia_dien` / `don_gia_nuoc`) and rooms from **Phòng**. Deleting is FK-restricted — a building with rooms, or a room with readings/invoices/tenants, returns 409 `rang_buoc_du_lieu` rather than cascading. Room names are unique per building, not globally. A room cannot be moved to another building and a tenancy cannot be moved to another room; both would rewrite priced history, so the UI disables those selects when editing.
+
+New rooms need their own tenant account, and that is still a CLI step: `npm run hash-password -- <username> --room <ten_phong>`, then run the printed statement against D1. There is no account-management screen.
 
 On `/tenants`: POST moves someone in, `PATCH { ngay_ra: "…" }` moves them out, `PATCH { ngay_ra: null }` undoes a mistaken move-out (409 if the room already has a new tenant), and DELETE erases a record entered by mistake. `GET /tenants` returns everyone ever, newest tenancy per room first, with `ten_phong` joined in; `?dang_thue=1` narrows it to current tenants and `?room_id=` to one room. Moving a tenancy to another room is not supported — that is a new tenancy.
 

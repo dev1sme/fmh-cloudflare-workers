@@ -1,11 +1,25 @@
-import { rooms as roomsApi, tenants as tenantsApi, type RoomInput } from "../../api";
+import {
+  buildings as buildingsApi,
+  rooms as roomsApi,
+  tenants as tenantsApi,
+  type RoomInput,
+} from "../../api";
 import { baoLoi, baoThanhCong } from "../../errors";
 import { homNay } from "../../format";
 import { useResource } from "../../hooks/useResource";
 
 export function useDanhSachPhong() {
-  const { data, loading, error, reload } = useResource(() => roomsApi.list());
-  return { phong: data?.rooms ?? [], loading, error, reload };
+  const phong = useResource(() => roomsApi.list(), []);
+  const nha = useResource(() => buildingsApi.list(), []);
+
+  return {
+    phong: phong.data?.rooms ?? [],
+    // Needed to pick a building when adding a room.
+    nha: nha.data?.buildings ?? [],
+    loading: phong.loading || nha.loading,
+    error: phong.error ?? nha.error,
+    reload: phong.reload,
+  };
 }
 
 export type NguoiThueMoi = {
@@ -20,10 +34,35 @@ export type NguoiThueMoi = {
  * caller can close its modal, and reports its own success/error toast.
  */
 export function useThaoTacPhong(reload: () => void) {
+  async function themPhong(input: RoomInput): Promise<boolean> {
+    try {
+      await roomsApi.create(input);
+      baoThanhCong("Đã thêm phòng.");
+      reload();
+      return true;
+    } catch (err) {
+      baoLoi(err);
+      return false;
+    }
+  }
+
   async function capNhatPhong(id: number, patch: Partial<RoomInput>): Promise<boolean> {
     try {
       await roomsApi.update(id, patch);
       baoThanhCong("Đã lưu phòng.");
+      reload();
+      return true;
+    } catch (err) {
+      baoLoi(err);
+      return false;
+    }
+  }
+
+  /** Rejected by the API while readings, invoices or tenants reference the room. */
+  async function xoaPhong(id: number): Promise<boolean> {
+    try {
+      await roomsApi.remove(id);
+      baoThanhCong("Đã xoá phòng.");
       reload();
       return true;
     } catch (err) {
@@ -62,5 +101,5 @@ export function useThaoTacPhong(reload: () => void) {
     }
   }
 
-  return { capNhatPhong, themNguoiThue, chuyenDi };
+  return { themPhong, capNhatPhong, xoaPhong, themNguoiThue, chuyenDi };
 }

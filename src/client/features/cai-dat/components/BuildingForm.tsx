@@ -6,9 +6,11 @@ import type { Building } from "../../../../shared/types";
 export function BuildingForm({
   nha,
   onSave,
+  onDelete,
 }: {
   nha: Building;
   onSave: (id: number, patch: Partial<Building>) => Promise<boolean>;
+  onDelete: (nha: Building) => void;
 }) {
   const [name, setName] = useState(nha.name);
   const [address, setAddress] = useState(nha.address ?? "");
@@ -65,9 +67,12 @@ export function BuildingForm({
             decimalSeparator=","
           />
         </Group>
-        <Group>
+        <Group justify="space-between">
           <Button onClick={save} loading={busy}>
             Lưu
+          </Button>
+          <Button variant="subtle" color="red" onClick={() => onDelete(nha)}>
+            Xoá nhà
           </Button>
         </Group>
       </Stack>
