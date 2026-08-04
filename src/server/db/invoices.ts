@@ -26,7 +26,7 @@ const WITH_ROOM_SELECT = `
 const DETAIL_SELECT = `
   SELECT i.id, i.room_id, i.ky, i.tien_phong, i.tien_dien, i.tien_nuoc, i.phi_khac,
          i.don_gia_dien, i.don_gia_nuoc, i.tong_tien, i.trang_thai, i.ngay_tao,
-         r.ten_phong, b.bank_bin, b.bank_so_tk, b.bank_chu_tk
+         r.ten_phong, b.bank_bin, b.bank_so_tk, b.bank_chu_tk, b.momo_sdt, b.momo_ten
   FROM invoices i
   JOIN rooms r ON r.id = i.room_id
   JOIN buildings b ON b.id = r.building_id
@@ -73,6 +73,8 @@ export async function getInvoiceDetail(
     bank_bin: string | null;
     bank_so_tk: string | null;
     bank_chu_tk: string | null;
+    momo_sdt: string | null;
+    momo_ten: string | null;
   };
 
   const row = await db.prepare(`${DETAIL_SELECT} WHERE i.id = ?`).bind(id).first<DetailRow>();
@@ -84,9 +86,10 @@ export async function getInvoiceDetail(
     sumPayments(db, id),
   ]);
 
-  const { bank_bin, bank_so_tk, bank_chu_tk, ...invoice } = row;
+  const { bank_bin, bank_so_tk, bank_chu_tk, momo_sdt, momo_ten, ...invoice } = row;
   const conLai = row.tong_tien - daThu;
   const maHd = maHoaDon(row.id);
+  const conNo = conLai > 0 && row.trang_thai !== "huy";
 
   return {
     ...invoice,
@@ -101,6 +104,15 @@ export async function getInvoiceDetail(
       maHd,
       row.trang_thai,
     ),
+    momo:
+      conNo && momo_sdt
+        ? {
+            sdt: momo_sdt,
+            ten: momo_ten,
+            so_tien: conLai,
+            noi_dung: chuanHoaNoiDung(maHd),
+          }
+        : null,
   };
 }
 

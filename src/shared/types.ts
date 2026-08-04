@@ -10,6 +10,9 @@ export type Building = {
   bank_bin: string | null;
   bank_so_tk: string | null;
   bank_chu_tk: string | null;
+  /** Optional MoMo wallet, shown as text alongside the VietQR code. */
+  momo_sdt: string | null;
+  momo_ten: string | null;
 };
 
 export type Room = {
@@ -96,6 +99,17 @@ export type ChuyenKhoan = {
   so_tien: number;
 };
 
+/**
+ * MoMo alternative. Text only, no QR: MoMo's personal QR payload format is not
+ * verified, and a guessed one could send money to the wrong wallet.
+ */
+export type MomoInfo = {
+  sdt: string;
+  ten: string | null;
+  so_tien: number;
+  noi_dung: string;
+};
+
 export type InvoiceDetail = InvoiceWithRoom & {
   da_thu: number;
   con_lai: number;
@@ -103,6 +117,8 @@ export type InvoiceDetail = InvoiceWithRoom & {
   payments: Payment[];
   /** Null when the building has no bank details, or nothing is left to pay. */
   chuyen_khoan: ChuyenKhoan | null;
+  /** Null when MoMo is not configured, or nothing is left to pay. */
+  momo: MomoInfo | null;
 };
 
 export type PaymentMethod = "chuyen_khoan" | "tien_mat";

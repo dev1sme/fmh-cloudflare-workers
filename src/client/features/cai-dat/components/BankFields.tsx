@@ -6,6 +6,8 @@ export type BankValue = {
   bin: string | null;
   soTk: string;
   chuTk: string;
+  momoSdt: string;
+  momoTen: string;
 };
 
 /**
@@ -62,6 +64,26 @@ export function BankFields({
         label="Tên chủ tài khoản"
         value={value.chuTk}
         onChange={(e) => onChange({ ...value, chuTk: e.currentTarget.value })}
+      />
+
+      <Text fw={500} size="sm" mt="sm">
+        MoMo (tuỳ chọn)
+      </Text>
+      <Text size="xs" c="dimmed" mt={-8}>
+        Hiện thêm dưới mã QR dạng thông tin để người thuê tự chuyển trong app MoMo. Không có mã QR
+        MoMo vì chuẩn mã của MoMo chưa được xác minh.
+      </Text>
+
+      <TextInput
+        label="Số điện thoại MoMo"
+        placeholder="09xxxxxxxx"
+        value={value.momoSdt}
+        onChange={(e) => onChange({ ...value, momoSdt: e.currentTarget.value })}
+      />
+      <TextInput
+        label="Tên người nhận MoMo"
+        value={value.momoTen}
+        onChange={(e) => onChange({ ...value, momoTen: e.currentTarget.value })}
       />
     </Stack>
   );

@@ -42,6 +42,12 @@ function bankSoTk(value: unknown): string | null {
   return so;
 }
 
+function momoSdt(value: unknown): string | null {
+  const sdt = optionalString(value, "momo_sdt", 15);
+  if (sdt !== null && !/^0\d{8,11}$/.test(sdt)) fail("invalid_momo_sdt");
+  return sdt;
+}
+
 buildingRoutes.post("/", async (c) => {
   const body = await jsonBody(c.req);
 
@@ -53,6 +59,8 @@ buildingRoutes.post("/", async (c) => {
     bank_bin: bankBin(body.bank_bin),
     bank_so_tk: bankSoTk(body.bank_so_tk),
     bank_chu_tk: optionalString(body.bank_chu_tk, "bank_chu_tk", 100),
+    momo_sdt: momoSdt(body.momo_sdt),
+    momo_ten: optionalString(body.momo_ten, "momo_ten", 100),
   });
 
   return c.json({ building }, 201);
@@ -77,6 +85,9 @@ buildingRoutes.patch("/:id", async (c) => {
       body.bank_chu_tk === undefined
         ? undefined
         : optionalString(body.bank_chu_tk, "bank_chu_tk", 100),
+    momo_sdt: body.momo_sdt === undefined ? undefined : momoSdt(body.momo_sdt),
+    momo_ten:
+      body.momo_ten === undefined ? undefined : optionalString(body.momo_ten, "momo_ten", 100),
   });
   if (!building) return c.json({ error: "not_found" }, 404);
 

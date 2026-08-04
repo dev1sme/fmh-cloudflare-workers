@@ -21,6 +21,8 @@ export function BuildingForm({
     bin: nha.bank_bin,
     soTk: nha.bank_so_tk ?? "",
     chuTk: nha.bank_chu_tk ?? "",
+    momoSdt: nha.momo_sdt ?? "",
+    momoTen: nha.momo_ten ?? "",
   });
   const [busy, setBusy] = useState(false);
 
@@ -29,7 +31,13 @@ export function BuildingForm({
     setAddress(nha.address ?? "");
     setDien(nha.don_gia_dien);
     setNuoc(nha.don_gia_nuoc);
-    setBank({ bin: nha.bank_bin, soTk: nha.bank_so_tk ?? "", chuTk: nha.bank_chu_tk ?? "" });
+    setBank({
+      bin: nha.bank_bin,
+      soTk: nha.bank_so_tk ?? "",
+      chuTk: nha.bank_chu_tk ?? "",
+      momoSdt: nha.momo_sdt ?? "",
+      momoTen: nha.momo_ten ?? "",
+    });
   }, [nha]);
 
   async function save() {
@@ -43,6 +51,8 @@ export function BuildingForm({
       bank_bin: bank.bin || null,
       bank_so_tk: bank.soTk || null,
       bank_chu_tk: bank.chuTk || null,
+      momo_sdt: bank.momoSdt || null,
+      momo_ten: bank.momoTen || null,
     });
 
     setBusy(false);

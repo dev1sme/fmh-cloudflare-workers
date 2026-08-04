@@ -4,6 +4,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import type { Payment } from "../../../shared/types";
 import { ChuyenKhoanCard } from "../../components/ChuyenKhoanCard";
 import { InvoiceLines } from "../../components/InvoiceLines";
+import { MomoCard } from "../../components/MomoCard";
 import { PageState } from "../../components/PageState";
 import { tien } from "../../format";
 import { useConfirm } from "../../hooks/useConfirm";
@@ -70,6 +71,7 @@ export function InvoiceDetailPage() {
             {hoaDon.chuyen_khoan && (
               <ChuyenKhoanCard chuyenKhoan={hoaDon.chuyen_khoan} xemTruoc />
             )}
+            {hoaDon.momo && <MomoCard momo={hoaDon.momo} xemTruoc />}
             <PhiKhacCard phiKhac={hoaDon.phi_khac} onSave={luuPhiKhac} />
             <PaymentsCard
               hoaDon={hoaDon}

@@ -2,7 +2,7 @@ import type { Building } from "../../shared/types";
 import { buildSet } from "./sql";
 
 const COLUMNS = `id, name, address, don_gia_dien, don_gia_nuoc,
-                 bank_bin, bank_so_tk, bank_chu_tk`;
+                 bank_bin, bank_so_tk, bank_chu_tk, momo_sdt, momo_ten`;
 
 export async function listBuildings(db: D1Database): Promise<Building[]> {
   const { results } = await db
@@ -23,6 +23,8 @@ export type BuildingInput = {
   bank_bin?: string | null;
   bank_so_tk?: string | null;
   bank_chu_tk?: string | null;
+  momo_sdt?: string | null;
+  momo_ten?: string | null;
 };
 
 export async function createBuilding(
@@ -32,8 +34,8 @@ export async function createBuilding(
   const row = await db
     .prepare(
       `INSERT INTO buildings (name, address, don_gia_dien, don_gia_nuoc,
-                              bank_bin, bank_so_tk, bank_chu_tk)
-       VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id`,
+                              bank_bin, bank_so_tk, bank_chu_tk, momo_sdt, momo_ten)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`,
     )
     .bind(
       input.name,
@@ -43,6 +45,8 @@ export async function createBuilding(
       input.bank_bin ?? null,
       input.bank_so_tk ?? null,
       input.bank_chu_tk ?? null,
+      input.momo_sdt ?? null,
+      input.momo_ten ?? null,
     )
     .first<{ id: number }>();
 
@@ -62,6 +66,8 @@ export type BuildingPatch = {
   bank_bin?: string | null;
   bank_so_tk?: string | null;
   bank_chu_tk?: string | null;
+  momo_sdt?: string | null;
+  momo_ten?: string | null;
 };
 
 export async function updateBuilding(
