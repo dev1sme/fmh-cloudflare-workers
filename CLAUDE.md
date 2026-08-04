@@ -31,13 +31,18 @@ Build and dev go through **`@cloudflare/vite-plugin`**, not a bare Vite build pl
 ```
 index.html            Vite entry, loads src/client/main.tsx
 src/client/           React SPA (Mantine + react-router)
+  App.tsx             session gate only
+  routes.tsx          route table per role
   api.ts              typed wrappers over every endpoint
   errors.ts           API error code -> Vietnamese message, toasts
   format.ts           tiền / ngày / kỳ formatting
-  hooks/useResource   fetch-on-mount + reload
-  components/         AppLayout, InvoiceLines, KyPicker, PageState, TrangThaiBadge
-  pages/quanly/       Phòng, Chỉ số, Hóa đơn, Chi tiết hóa đơn, Cài đặt
-  pages/nguoithue/    Hóa đơn của tôi, Chi tiết, Lịch sử chỉ số
+  hooks/              useResource (fetch + reload), useConfirm (dialog)
+  components/         cross-feature UI: AppLayout, InvoiceLines, PaymentsTable,
+                      KyPicker, PageState, TrangThaiBadge, ConfirmModal
+  features/<ten>/     dang-nhap, phong, chi-so, hoa-don, cai-dat, nguoi-thue
+    XxxPage.tsx       composition only
+    components/       that feature's UI, one component per file
+    useXxx.ts         data loading + mutations, no JSX
 src/server/           Hono API on the Worker
   index.ts            Worker entry: route table, error mapping
   auth.ts             password verify, JWT sign/verify, the three middlewares
@@ -53,9 +58,21 @@ migrations/           SQL for D1, applied via `wrangler d1 migrations apply`
 
 `src/server/db/` replaces the single `db.ts` the spec sketched — same idea, one file per table. Route handlers validate and decide; they do not write SQL. Money arithmetic lives in `domain/invoice.ts` so it stays testable without a database.
 
-The SPA has no client-side auth guard beyond the route table: `App.tsx` asks `GET /api/auth/me` once, then renders the manager routes or the tenant routes and sends anything unknown to that role's home. That is navigation convenience, not security — the API enforces the roles.
+**Client layering, enforced by convention:**
+
+- A `*Page.tsx` composes — it holds screen-level state (which modal is open, which period is selected) and renders components. It must not call `api.ts` directly, contain a table/modal's JSX, or hold `try/catch` around a request.
+- A `use*.ts` in a feature owns data loading and mutations. Mutations return `Promise<boolean>` and raise their own toast, so the caller only decides whether to close a modal.
+- A component under `features/*/components/` takes props and callbacks. It never imports `api.ts`. UI used by more than one feature moves up to `src/client/components/`.
+
+The point is that adding an animation or reworking one table touches one file. When a page file starts growing again, split it rather than letting it absorb the next feature.
+
+A hook passed into a child's `useEffect` must be memoised — `useChiSo`'s `goiY` is wrapped in `useCallback` for exactly that reason, and dropping it produces an infinite render loop in `ReadingModal`.
+
+The SPA has no client-side auth guard beyond the route table: `App.tsx` asks `GET /api/auth/me` once, then `routes.tsx` renders the manager routes or the tenant routes and sends anything unknown to that role's home. That is navigation convenience, not security — the API enforces the roles.
 
 Data loading is `useResource` (fetch on mount, `reload()` after a mutation). No query library, no cache: one manager and two rooms do not need one. Errors surface through `errors.ts`, which maps API codes to Vietnamese and falls back to a readable message for generated codes like `invalid_gia_phong`.
+
+Confirmations go through `useConfirm` (`xacNhan({...})` + render `hopThoai`), never `window.confirm` — a native dialog cannot be styled or animated and blocks the whole tab.
 
 TypeScript is split into three project references — `tsconfig.app.json` (client, DOM libs), `tsconfig.worker.json` (Worker, workerd types), `tsconfig.node.json` (`vite.config.ts`). Client code must not import from `src/server/`, only from `src/shared/`.
 

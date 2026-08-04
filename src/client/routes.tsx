@@ -1,0 +1,44 @@
+import { Navigate, Route, Routes } from "react-router-dom";
+
+import type { SessionUser } from "./api";
+import { AppLayout } from "./components/AppLayout";
+import { SettingsPage } from "./features/cai-dat/SettingsPage";
+import { ReadingsPage } from "./features/chi-so/ReadingsPage";
+import { InvoiceDetailPage } from "./features/hoa-don/InvoiceDetailPage";
+import { InvoicesPage } from "./features/hoa-don/InvoicesPage";
+import { MyInvoiceDetailPage } from "./features/nguoi-thue/MyInvoiceDetailPage";
+import { MyInvoicesPage } from "./features/nguoi-thue/MyInvoicesPage";
+import { MyReadingsPage } from "./features/nguoi-thue/MyReadingsPage";
+import { RoomsPage } from "./features/phong/RoomsPage";
+
+/**
+ * Which screens exist depends on the role. This is navigation convenience,
+ * not access control — the API enforces the roles on every request.
+ */
+export function AppRoutes({ user, onLogout }: { user: SessionUser; onLogout: () => void }) {
+  const quanLy = user.vai_tro === "quan_ly";
+
+  return (
+    <Routes>
+      <Route element={<AppLayout user={user} onLogout={onLogout} />}>
+        {quanLy ? (
+          <>
+            <Route path="/phong" element={<RoomsPage />} />
+            <Route path="/chi-so" element={<ReadingsPage />} />
+            <Route path="/hoa-don" element={<InvoicesPage />} />
+            <Route path="/hoa-don/:id" element={<InvoiceDetailPage />} />
+            <Route path="/cai-dat" element={<SettingsPage />} />
+            <Route path="*" element={<Navigate to="/phong" replace />} />
+          </>
+        ) : (
+          <>
+            <Route path="/hoa-don-cua-toi" element={<MyInvoicesPage />} />
+            <Route path="/hoa-don-cua-toi/:id" element={<MyInvoiceDetailPage />} />
+            <Route path="/chi-so-cua-toi" element={<MyReadingsPage />} />
+            <Route path="*" element={<Navigate to="/hoa-don-cua-toi" replace />} />
+          </>
+        )}
+      </Route>
+    </Routes>
+  );
+}

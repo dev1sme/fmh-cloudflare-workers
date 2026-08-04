@@ -1,0 +1,76 @@
+import { Button, Card, Group, NumberInput, Stack, TextInput } from "@mantine/core";
+import { useEffect, useState } from "react";
+
+import type { Building } from "../../../../shared/types";
+
+export function BuildingForm({
+  nha,
+  onSave,
+}: {
+  nha: Building;
+  onSave: (id: number, patch: Partial<Building>) => Promise<boolean>;
+}) {
+  const [name, setName] = useState(nha.name);
+  const [address, setAddress] = useState(nha.address ?? "");
+  const [dien, setDien] = useState<number | string>(nha.don_gia_dien);
+  const [nuoc, setNuoc] = useState<number | string>(nha.don_gia_nuoc);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    setName(nha.name);
+    setAddress(nha.address ?? "");
+    setDien(nha.don_gia_dien);
+    setNuoc(nha.don_gia_nuoc);
+  }, [nha]);
+
+  async function save() {
+    setBusy(true);
+
+    await onSave(nha.id, {
+      name,
+      address: address || null,
+      don_gia_dien: Number(dien),
+      don_gia_nuoc: Number(nuoc),
+    });
+
+    setBusy(false);
+  }
+
+  return (
+    <Card withBorder padding="md">
+      <Stack>
+        <TextInput label="Tên nhà" value={name} onChange={(e) => setName(e.currentTarget.value)} />
+        <TextInput
+          label="Địa chỉ"
+          value={address}
+          onChange={(e) => setAddress(e.currentTarget.value)}
+        />
+        <Group grow>
+          <NumberInput
+            label="Đơn giá điện (đ/kWh)"
+            value={dien}
+            onChange={setDien}
+            min={0}
+            step={500}
+            thousandSeparator="."
+            decimalSeparator=","
+          />
+          <NumberInput
+            label="Đơn giá nước (đ/m³)"
+            value={nuoc}
+            onChange={setNuoc}
+            min={0}
+            step={1000}
+            thousandSeparator="."
+            decimalSeparator=","
+          />
+        </Group>
+        <Group>
+          <Button onClick={save} loading={busy}>
+            Lưu
+          </Button>
+        </Group>
+      </Stack>
+    </Card>
+  );
+}
