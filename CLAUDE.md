@@ -6,9 +6,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Built so far: the Vite + Hono + Wrangler scaffold, `migrations/0001_init.sql` (schema + seed), cookie-session auth with two roles, the full management API (buildings, rooms, tenants, readings, invoices, payments), the read-only tenant API under `/api/me`, and the SPA screens for both roles.
 
-The D1 database `nha-tro` exists (APAC, id in `wrangler.toml`), but migration 0001 has been applied **locally only** — the remote database is still empty, and nothing has ever been deployed. The local D1 holds throwaway accounts (`quanly`, `phong01`, `phong02`) and test readings/invoices; the real accounts do not exist anywhere yet.
+**Deployed** at `https://nha-tro.letuanthong0305.workers.dev` (account `letuanthong0305@gmail.com`). All three migrations are applied to the remote D1, `JWT_SECRET` is set as a Worker secret, and a single manager account `quanly` exists in production. Production data is otherwise just migration 0001's seed (building `FMH`, rooms `FMH-P01`/`FMH-P02`, two placeholder tenants) — the real building, room and tenant data has to be entered through the UI.
 
-Not built yet: VietQR and the SePay webhook. `README.md` (Vietnamese) is the design spec and its task list at the bottom ("Việc cần làm") is the authoritative backlog.
+The local D1 holds throwaway accounts (`quanly`, `phong01`, `phong02`, passwords `<name>-test-123`) plus test readings, invoices and a second building; none of that exists in production.
+
+Not built yet: the SePay webhook. `README.md` (Vietnamese) is the design spec and its task list at the bottom ("Việc cần làm") is the authoritative backlog.
+
+Deployment checks worth repeating after any change to auth or hashing:
+
+```bash
+./node_modules/.bin/wrangler tail nha-tro --format json    # cpuTime per request
+```
+
 
 No test runner has been chosen yet.
 
@@ -190,7 +199,11 @@ Hashing runs **in the Worker** (`hashPassword` in `auth.ts`) so the manager can 
 
 **Plaintext passwords are never stored and never readable.** A generated or chosen password is returned exactly once, in the response to the create/reset call that produced it, so the manager can pass it to the tenant; `GET /api/accounts` never includes `password_hash` or any password. A forgotten password is replaced, not recovered — do not add an endpoint, column, or log line that keeps the plaintext, even if asked for a "view password" feature. Reset gives the same practical capability without the liability.
 
-**Iterations are 50,000, not the OWASP-recommended 600,000, and that is deliberate.** Workers Free allows 10 ms CPU per request; measured on this project's hardware PBKDF2-SHA256 costs ~1.4 ms at 10k, ~5.8 ms at 50k, ~11 ms at 100k, ~65 ms at 600k. 50k leaves headroom for the D1 lookup and JWT signing. Long random passwords carry the security here, not the work factor. If deployed CPU metrics show logins near the limit, lower the constant in `scripts/hash-password.mjs` and re-hash — do not raise it past ~50k while on the free plan.
+**Iterations are 10,000, not the OWASP-recommended 600,000, and that is deliberate.** Workers Free allows 10 ms CPU per request. Measured **on the deployed Worker** (`wrangler tail --format json`, `cpuTime` field): 50k cost 11-17 ms and blew the limit on every login; at 10k a warm login is 2-3 ms, median 8 ms, with occasional 13 ms spikes on cold isolates. For reference `/api/summary` (JWT verify + D1 count) is ~3 ms and `/api/health` ~0 ms.
+
+**Never tune this from a local benchmark.** This dev machine runs 50k in ~6 ms — roughly three times faster than Cloudflare's CPU — which is exactly the mistake that shipped an over-limit login. Re-measure on the deployed Worker after any change, and remember that changing the constant only affects accounts whose passwords are re-hashed afterwards.
+
+Long random passwords carry the security here, not the work factor.
 
 Other details that are easy to break:
 

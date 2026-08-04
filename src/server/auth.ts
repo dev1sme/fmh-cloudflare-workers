@@ -13,23 +13,30 @@ export const SESSION_TTL_SECONDS = 7 * 24 * 60 * 60;
 /**
  * Password records look like `pbkdf2$sha256$<iterations>$<salt_b64>$<hash_b64>`.
  *
- * The iteration count lives inside the record, so raising it later only means
- * re-running scripts/hash-password.mjs — old records keep verifying with their
- * own count and no migration is needed.
+ * The iteration count lives inside the record, so changing it later only means
+ * re-hashing — old records keep verifying with their own count and no migration
+ * is needed. Changing it does NOT speed up existing accounts until their
+ * passwords are reset.
  *
- * 50k is well below the OWASP recommendation (600k) on purpose: Workers Free
- * allows 10 ms of CPU per request and 600k iterations measures ~65 ms. Long
- * random passwords, not the iteration count, are what carry the weight here.
+ * 10k is far below the OWASP recommendation (600k) on purpose. Workers Free
+ * allows 10 ms of CPU per request. Measured on the deployed Worker (wrangler
+ * tail, cpuTime): 50k iterations cost 11-17 ms — over the limit on every single
+ * login. At 10k a warm login is 2-3 ms, median 8 ms, occasionally spiking to 13
+ * on a cold isolate. Do not trust a local benchmark here: this dev machine ran
+ * 50k in ~6 ms, three times faster than Cloudflare's CPU.
+ *
+ * Long random passwords, not the iteration count, are what carry the weight in
+ * this app. If you raise this, re-measure on the deployed Worker, not locally.
  */
-export const PBKDF2_ITERATIONS = 50_000;
+export const PBKDF2_ITERATIONS = 10_000;
 const SALT_BYTES = 16;
 const KEY_BITS = 256;
 
 /**
  * Hashes a new password. Runs on the Worker so the manager can create accounts
- * and reset passwords from the UI; at 50k iterations it costs ~6 ms of CPU,
- * inside the 10 ms Workers Free budget. scripts/hash-password.mjs produces the
- * identical format offline for bootstrapping the first account.
+ * and reset passwords from the UI. scripts/hash-password.mjs produces the
+ * identical format offline for bootstrapping the first account — keep the two
+ * iteration counts in step.
  */
 export async function hashPassword(password: string): Promise<string> {
   const salt = crypto.getRandomValues(new Uint8Array(SALT_BYTES));

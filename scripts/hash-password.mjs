@@ -12,12 +12,15 @@
  * The password is never stored anywhere by this script — copy it out of the
  * terminal into your password manager. Only the hash goes into D1.
  *
- * Iteration count is embedded in the record, so it can be raised later without
- * a migration: re-run this script and UPDATE the row. It is kept at 50k because
- * Workers Free allows 10 ms of CPU per request (600k iterations costs ~65 ms).
+ * Iteration count is embedded in the record, so it can be changed later without
+ * a migration: re-run this script and UPDATE the row. Keep it in step with
+ * PBKDF2_ITERATIONS in src/server/auth.ts.
+ *
+ * 10k, not the OWASP-recommended 600k: Workers Free allows 10 ms of CPU per
+ * request, and a login at 50k iterations measured 11-17 ms of CPU on Cloudflare.
  */
 
-const ITERATIONS = 50_000;
+const ITERATIONS = 10_000;
 const SALT_BYTES = 16;
 const KEY_BITS = 256;
 

@@ -169,7 +169,11 @@ npm run hash-password -- <username> --room FMH-P01           # tài khoản củ
 
 Script in ra câu `INSERT ... ON CONFLICT DO UPDATE`, chạy nó bằng `wrangler d1 execute nha-tro --local` (hoặc `--remote`).
 
-**Số vòng PBKDF2 là 50.000, không phải 600.000 như khuyến nghị OWASP.** Workers Free giới hạn 10ms CPU mỗi request, trong khi đo thực tế: 50k vòng ≈ 5,8ms, 100k ≈ 11ms, 600k ≈ 65ms. Với 3 tài khoản cố định, cái giữ an toàn ở đây là password dài và ngẫu nhiên, không phải số vòng lặp. Số vòng được nhúng trong chuỗi hash nên đổi về sau không cần migration.
+**Số vòng PBKDF2 là 10.000, không phải 600.000 như khuyến nghị OWASP.** Workers Free giới hạn 10ms CPU mỗi request. Đo trên Worker đã deploy (`wrangler tail --format json`, trường `cpuTime`): 50k vòng tốn 11–17ms — vượt trần ở **mọi** lần đăng nhập; 10k vòng thì lúc nóng chỉ 2–3ms, median 8ms.
+
+Đừng chỉnh số này dựa trên benchmark máy local: máy dev chạy 50k mất ~6ms, nhanh gấp ~3 lần CPU của Cloudflare. Đổi xong phải đo lại trên bản deploy, và nhớ là số vòng chỉ áp dụng cho tài khoản được băm lại sau đó.
+
+Với 3 tài khoản cố định, cái giữ an toàn ở đây là password dài và ngẫu nhiên, không phải số vòng lặp. Số vòng được nhúng trong chuỗi hash nên đổi về sau không cần migration.
 
 Chưa có rate limit cho login — muốn có phải thêm KV hoặc Durable Objects, trái với chủ trương giữ hạ tầng tối thiểu.
 
@@ -212,5 +216,8 @@ Thực tế mỗi tháng chỉ ghi thêm vài chục dòng, nên gần như khô
 - [x] Giao diện: danh sách phòng, form nhập chỉ số, trang hóa đơn, trang người thuê
 - [x] Quản lý tài khoản: tạo, đổi tên, đặt lại mật khẩu; người dùng tự đổi mật khẩu
 - [x] Sinh mã VietQR trên hóa đơn
+- [x] Tuỳ chọn chuyển khoản MoMo (dạng thông tin, không có QR)
+- [x] Deploy lần đầu + kiểm tra CPU time thực tế của route đăng nhập
+- [ ] Nhập số liệu thật trên bản deploy: nhà, phòng, người thuê, tài khoản ngân hàng
+- [ ] Gắn domain riêng
 - [ ] (Tùy chọn) Webhook SePay tự động xác nhận thanh toán
-- [ ] Deploy lần đầu + kiểm tra CPU time thực tế của route đăng nhập
