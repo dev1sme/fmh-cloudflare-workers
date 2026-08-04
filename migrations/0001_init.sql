@@ -89,12 +89,25 @@ CREATE TABLE payments (
 
 CREATE INDEX idx_payments_invoice ON payments (invoice_id);
 
--- 3 tài khoản cố định. Mật khẩu băm PBKDF2 offline rồi INSERT vào đây.
+-- 3 tài khoản cố định: 1 quản lý + 1 account cho mỗi phòng.
+-- Mật khẩu băm PBKDF2 offline rồi INSERT vào đây (scripts/hash-password.mjs).
 CREATE TABLE users (
   id             INTEGER PRIMARY KEY AUTOINCREMENT,
   username       TEXT    NOT NULL UNIQUE,
-  password_hash  TEXT    NOT NULL
+  password_hash  TEXT    NOT NULL,
+  vai_tro        TEXT    NOT NULL,
+  -- Account người thuê gắn với PHÒNG, không gắn với người. Khách chuyển đi thì
+  -- đổi mật khẩu, không tạo account mới — số account luôn cố định.
+  room_id        INTEGER REFERENCES rooms(id) ON DELETE RESTRICT,
+  CHECK (vai_tro IN ('quan_ly', 'nguoi_thue')),
+  CHECK (
+    (vai_tro = 'quan_ly'   AND room_id IS NULL) OR
+    (vai_tro = 'nguoi_thue' AND room_id IS NOT NULL)
+  )
 );
+
+-- Mỗi phòng tối đa một account.
+CREATE UNIQUE INDEX idx_users_room ON users (room_id) WHERE room_id IS NOT NULL;
 
 -- ---------------------------------------------------------------------------
 -- Seed

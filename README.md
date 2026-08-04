@@ -141,6 +141,14 @@ Biến bí mật (đặt bằng `wrangler secret put`, không để trong code):
 
 Không dùng framework auth. Vì tài khoản cố định, không cần đăng ký / xác thực email / quên mật khẩu.
 
+| Tài khoản | `vai_tro` | Quyền |
+|---|---|---|
+| 1 — chủ nhà | `quan_ly` | Toàn quyền: phòng, người thuê, chỉ số, sinh hóa đơn, thu tiền |
+| 2 — gắn `FMH-P01` | `nguoi_thue` | Chỉ **xem** hóa đơn + lịch sử chỉ số của phòng mình |
+| 3 — gắn `FMH-P02` | `nguoi_thue` | Như trên |
+
+Account người thuê gắn với **phòng**, không gắn với người: khách chuyển đi thì đổi mật khẩu, số account luôn cố định 3. Người thuê không tự đánh dấu đã thanh toán — việc đó là của quản lý hoặc webhook SePay.
+
 - Mật khẩu được **băm sẵn offline** (PBKDF2) rồi lưu vào bảng `users`.
 - Đăng nhập đúng → ký JWT → đặt vào cookie `httpOnly`, `secure`, `sameSite=Lax`, hạn 7 ngày.
 - Route cần bảo vệ đi qua middleware đọc cookie và verify token; không cần bảng session.
@@ -149,8 +157,9 @@ Không dùng framework auth. Vì tài khoản cố định, không cần đăng 
 Tạo tài khoản:
 
 ```bash
-npm run hash-password -- <username>              # tự sinh password mạnh, in ra một lần
-npm run hash-password -- <username> <password>   # dùng password tự chọn
+npm run hash-password -- <username>                          # tài khoản quản lý, tự sinh password
+npm run hash-password -- <username> <password>               # tự chọn password
+npm run hash-password -- <username> --room FMH-P01           # tài khoản của phòng FMH-P01
 ```
 
 Script in ra câu `INSERT ... ON CONFLICT DO UPDATE`, chạy nó bằng `wrangler d1 execute nha-tro --local` (hoặc `--remote`).
@@ -187,10 +196,10 @@ Thực tế mỗi tháng chỉ ghi thêm vài chục dòng, nên gần như khô
 - [x] Khởi tạo dự án React (Vite) + Hono + Wrangler
 - [ ] Nhập số liệu thật: tên nhà, tên phòng, `gia_phong`, thông tin người thuê (seed hiện là giá trị tạm)
 - [x] Viết migration tạo bảng
-- [ ] Tạo 3 tài khoản quản trị thật (`npm run hash-password`)
-- [x] Đăng nhập + middleware bảo vệ route
-- [ ] API: rooms / readings / invoices / payments
-- [ ] Logic sinh hóa đơn từ chỉ số công tơ
+- [ ] Tạo 3 tài khoản thật (`npm run hash-password`)
+- [x] Đăng nhập + phân quyền quản lý / người thuê
+- [x] API: rooms / readings / invoices / payments
+- [x] Logic sinh hóa đơn từ chỉ số công tơ
 - [ ] Sinh mã VietQR trên hóa đơn
 - [ ] (Tùy chọn) Webhook SePay tự động xác nhận thanh toán
 - [ ] Giao diện: danh sách phòng, form nhập chỉ số, trang hóa đơn

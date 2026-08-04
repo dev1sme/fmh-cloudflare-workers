@@ -1,0 +1,40 @@
+import { Hono } from "hono";
+
+import { getInvoice, updateInvoice } from "../db/invoices";
+import { deletePayment, getPayment, sumPayments } from "../db/payments";
+import type { Invoice } from "../../shared/types";
+import type { AppEnv } from "../types";
+import { parseId } from "../validate";
+
+/**
+ * Re-derives the invoice status from what has actually been received, so
+ * deleting a mistaken payment flips it back to unpaid. A cancelled invoice is
+ * left alone — that state is a human decision, not an arithmetic one.
+ */
+export async function capNhatTrangThai(
+  db: D1Database,
+  invoiceId: number,
+): Promise<Invoice | null> {
+  const invoice = await getInvoice(db, invoiceId);
+  if (!invoice || invoice.trang_thai === "huy") return invoice;
+
+  const daThu = await sumPayments(db, invoiceId);
+  const trangThai = daThu >= invoice.tong_tien ? "da_thanh_toan" : "chua_thanh_toan";
+
+  if (trangThai === invoice.trang_thai) return invoice;
+  return updateInvoice(db, invoiceId, { trang_thai: trangThai });
+}
+
+export const paymentRoutes = new Hono<AppEnv>();
+
+paymentRoutes.delete("/:id", async (c) => {
+  const id = parseId(c.req.param("id"));
+
+  const payment = await getPayment(c.env.DB, id);
+  if (!payment) return c.json({ error: "not_found" }, 404);
+
+  await deletePayment(c.env.DB, id);
+  const invoice = await capNhatTrangThai(c.env.DB, payment.invoice_id);
+
+  return c.json({ ok: true, invoice });
+});

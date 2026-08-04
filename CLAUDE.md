@@ -4,11 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Current state
 
-Built so far: the Vite + Hono + Wrangler scaffold, `migrations/0001_init.sql` (schema + seed), and login (`POST /api/auth/login`, `/logout`, `GET /api/auth/me`) with cookie-session middleware guarding the rest of `/api`. The SPA shows a login screen and a placeholder dashboard.
+Built so far: the Vite + Hono + Wrangler scaffold, `migrations/0001_init.sql` (schema + seed), cookie-session auth with two roles, and the full management API (buildings, rooms, tenants, readings, invoices, payments) plus the read-only tenant API under `/api/me`. The SPA is still a login screen and a placeholder dashboard.
 
-The D1 database `nha-tro` exists (APAC, id in `wrangler.toml`), but migration 0001 has been applied **locally only** — the remote database is still empty, and nothing has ever been deployed. The local D1 also holds a throwaway `admin` account created for testing; the three real accounts do not exist anywhere yet.
+The D1 database `nha-tro` exists (APAC, id in `wrangler.toml`), but migration 0001 has been applied **locally only** — the remote database is still empty, and nothing has ever been deployed. The local D1 holds throwaway accounts (`quanly`, `phong01`, `phong02`) and test readings/invoices; the real accounts do not exist anywhere yet.
 
-Not built yet: the rooms/readings/invoices/payments API, invoice generation, VietQR, the SePay webhook, and every real UI screen. `README.md` (Vietnamese) is the design spec and its task list at the bottom ("Việc cần làm") is the authoritative backlog.
+Not built yet: VietQR, the SePay webhook, and every real UI screen. `README.md` (Vietnamese) is the design spec and its task list at the bottom ("Việc cần làm") is the authoritative backlog.
 
 No test runner has been chosen yet.
 
@@ -32,13 +32,19 @@ Build and dev go through **`@cloudflare/vite-plugin`**, not a bare Vite build pl
 index.html            Vite entry, loads src/client/main.tsx
 src/client/           React SPA (Mantine)
 src/server/           Hono API on the Worker
-  index.ts            Worker entry — currently only /api/health
-  routes/             rooms, readings, invoices, payments, auth, webhook (not written yet)
-  auth.ts             password hash/verify, JWT sign/verify, middleware (not written yet)
-  db.ts               D1 queries (not written yet)
-src/shared/           types shared between client and server (not created yet)
+  index.ts            Worker entry: route table, error mapping
+  auth.ts             password verify, JWT sign/verify, the three middlewares
+  validate.ts         hand-rolled request validation
+  types.ts            SessionUser / AppEnv (server-only types)
+  routes/             auth, buildings, rooms, tenants, readings, invoices, payments, me
+  domain/             pure logic — invoice.ts (amounts, HD codes), ky.ts (periods)
+  db/                 one module per table + sql.ts helpers
+src/shared/types.ts   API shapes shared by client and server
+scripts/              hash-password.mjs (offline password hashing)
 migrations/           SQL for D1, applied via `wrangler d1 migrations apply`
 ```
+
+`src/server/db/` replaces the single `db.ts` the spec sketched — same idea, one file per table. Route handlers validate and decide; they do not write SQL. Money arithmetic lives in `domain/invoice.ts` so it stays testable without a database.
 
 TypeScript is split into three project references — `tsconfig.app.json` (client, DOM libs), `tsconfig.worker.json` (Worker, workerd types), `tsconfig.node.json` (`vite.config.ts`). Client code must not import from `src/server/`, only from `src/shared/`.
 
@@ -107,11 +113,37 @@ Two invariants that the design depends on:
 
 Billing period is `ky` in `YYYY-MM` form. Invoice line: `tien_dien = (dien_moi - dien_cu) * don_gia_dien`, same shape for water.
 
+## API
+
+Everything below `/api` except `/api/health` and `/api/auth/*` requires a session.
+
+Management (`requireQuanLy`): `GET|PATCH /buildings`, full CRUD on `/rooms`, `/tenants` (POST to move in, PATCH `ngay_ra` to move out), `/readings`, `/invoices`, `DELETE /payments/:id`, and `GET /summary`.
+
+Tenant (`requirePhong`): `GET /api/me/phong`, `/api/me/invoices`, `/api/me/invoices/:id`, `/api/me/readings`. Read-only by design — tenants never mark an invoice paid; that is the manager's action, or the SePay webhook's.
+
+Behaviour worth preserving:
+
+- `POST /api/readings` fills `dien_cu`/`nuoc_cu` from the previous period's closing numbers when they are omitted; `GET /api/readings/goi-y?room_id=&ky=` returns the same suggestion for pre-filling a form. That route is registered **before** `/:id` — order matters in Hono.
+- `POST /api/invoices/generate` takes `{ ky, room_ids? }` and returns `{ created, skipped }`. Rooms with no reading or an existing invoice are reported in `skipped` rather than failing the batch, because the manager needs to know which rooms still need a meter entry. Inserts run in one `db.batch()`, so a period is created all-or-nothing.
+- `PATCH /api/invoices/:id` accepts `tien_phong`, `phi_khac` and `trang_thai` only, and recomputes `tong_tien`. **`don_gia_*` is deliberately not patchable** — fixing a wrong tariff means deleting the invoice and generating it again, so a stored invoice always matches the price it was issued at.
+- Recording or deleting a payment re-derives `trang_thai` from `SUM(payments)` vs `tong_tien` (`capNhatTrangThai` in `routes/payments.ts`). A `huy` invoice is never touched by that arithmetic and rejects new payments.
+- Errors: `ValidationError` → 400 with a stable code (`invalid_ky`, `dien_moi_nho_hon_dien_cu`, …); D1 UNIQUE → 409 `trung_du_lieu`; FOREIGN KEY → 409 `rang_buoc_du_lieu`; CHECK → 400. Codes are the API contract — the client maps them to Vietnamese, so do not reword them casually.
+
 Seed in 0001: one building (`Nhà trọ 1`, điện 3.000đ/kWh, nước 15.000đ/m³), two rooms (`P101`, `P102`, `gia_phong = 0`), one placeholder tenant. Names and `gia_phong` are placeholders awaiting real data — do not treat them as facts.
 
 ## Auth
 
 No auth framework. Stateless — there is no session table, and there should not be one.
+
+**Three accounts, two roles.** `users.vai_tro` is `quan_ly` (one account — the owner, full management) or `nguoi_thue` (one account per room, read-only). A tenant account is bound to a **room**, not to a person, via `users.room_id`: when a tenant moves out, the password changes and the account stays. The schema enforces both halves — `quan_ly` must have a NULL `room_id`, `nguoi_thue` must have one, and a partial unique index allows at most one account per room.
+
+Three middlewares in `auth.ts`:
+
+- `requireAuth` — any valid session.
+- `requireQuanLy` — management endpoints; 403 for tenants.
+- `requirePhong` — `/api/me/*`; requires a `room_id` on the token, so the manager gets 403 there.
+
+The room in `/api/me/*` queries always comes from the token, never the request. `GET /api/me/invoices/:id` re-checks `room_id` and answers 404 (not 403) for another room's invoice, so ids cannot be probed.
 
 Password records are stored in `users.password_hash` as `pbkdf2$sha256$<iterations>$<salt_b64>$<hash_b64>`. The iteration count is part of the record, so raising it later is a re-hash plus an `UPDATE`, never a migration. Hashing happens **offline** via `npm run hash-password -- <username> [password]` (prints the password if it generates one, plus an upsert statement); the Worker only ever verifies.
 

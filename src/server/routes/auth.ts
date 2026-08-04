@@ -7,8 +7,8 @@ import {
   setSessionCookie,
   verifyPassword,
 } from "../auth";
-import { getUserByUsername } from "../db";
-import type { AppEnv } from "../types";
+import { getUserByUsername } from "../db/users";
+import type { AppEnv, SessionUser } from "../types";
 
 /**
  * Verified when the username does not exist, so a wrong username and a wrong
@@ -36,10 +36,16 @@ authRoutes.post("/login", async (c) => {
     return c.json({ error: "invalid_credentials" }, 401);
   }
 
-  const token = await createSessionToken(c.env, { id: user.id, username: user.username });
-  setSessionCookie(c, token);
+  const session: SessionUser = {
+    id: user.id,
+    username: user.username,
+    vai_tro: user.vai_tro,
+    room_id: user.vai_tro === "quan_ly" ? null : user.room_id,
+  };
 
-  return c.json({ user: { id: user.id, username: user.username } });
+  setSessionCookie(c, await createSessionToken(c.env, session));
+
+  return c.json({ user: session });
 });
 
 authRoutes.post("/logout", (c) => {

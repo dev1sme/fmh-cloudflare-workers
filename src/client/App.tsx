@@ -37,13 +37,21 @@ export function App() {
 }
 
 function Dashboard({ user, onLogout }: { user: SessionUser; onLogout: () => void }) {
-  const [rooms, setRooms] = useState<number | null>(null);
+  const isQuanLy = user.vai_tro === "quan_ly";
+  const [summary, setSummary] = useState<string | null>(null);
 
   useEffect(() => {
-    api<{ rooms: number }>("/api/summary")
-      .then(({ rooms }) => setRooms(rooms))
-      .catch(() => setRooms(null));
-  }, []);
+    if (isQuanLy) {
+      api<{ rooms: number }>("/api/summary")
+        .then(({ rooms }) => setSummary(`Đang quản lý ${rooms} phòng.`))
+        .catch(() => setSummary(null));
+      return;
+    }
+
+    api<{ invoices: unknown[] }>("/api/me/invoices")
+      .then(({ invoices }) => setSummary(`Phòng của bạn có ${invoices.length} hóa đơn.`))
+      .catch(() => setSummary(null));
+  }, [isQuanLy]);
 
   return (
     <Container size="sm" py="xl">
@@ -58,11 +66,9 @@ function Dashboard({ user, onLogout }: { user: SessionUser; onLogout: () => void
         <Card withBorder padding="md">
           <Stack gap="xs">
             <Text>
-              Đăng nhập với tài khoản <b>{user.username}</b>.
+              Xin chào <b>{user.username}</b> — {isQuanLy ? "quản lý" : "người thuê"}.
             </Text>
-            <Text c="dimmed">
-              {rooms === null ? "Đang tải số phòng…" : `Đang quản lý ${rooms} phòng.`}
-            </Text>
+            <Text c="dimmed">{summary ?? "Đang tải…"}</Text>
           </Stack>
         </Card>
       </Stack>

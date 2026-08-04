@@ -3,7 +3,9 @@ import { createMiddleware } from "hono/factory";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import { SignJWT, jwtVerify } from "jose";
 
-import type { AppEnv, SessionUser } from "./types";
+import type { AppEnv, Role, SessionUser } from "./types";
+
+const ROLES: readonly Role[] = ["quan_ly", "nguoi_thue"];
 
 export const SESSION_COOKIE = "session";
 export const SESSION_TTL_SECONDS = 7 * 24 * 60 * 60;
@@ -81,7 +83,11 @@ function secretKey(env: Env): Uint8Array {
 }
 
 export async function createSessionToken(env: Env, user: SessionUser): Promise<string> {
-  return new SignJWT({ username: user.username })
+  return new SignJWT({
+    username: user.username,
+    vai_tro: user.vai_tro,
+    room_id: user.room_id,
+  })
     .setProtectedHeader({ alg: "HS256" })
     .setSubject(String(user.id))
     .setIssuedAt()
@@ -92,10 +98,26 @@ export async function createSessionToken(env: Env, user: SessionUser): Promise<s
 export async function readSessionToken(env: Env, token: string): Promise<SessionUser | null> {
   try {
     const { payload } = await jwtVerify(token, secretKey(env), { algorithms: ["HS256"] });
+
     const id = Number(payload.sub);
-    const username = payload.username;
-    if (!Number.isInteger(id) || typeof username !== "string") return null;
-    return { id, username };
+    const { username, vai_tro: role, room_id: roomId } = payload;
+
+    if (!Number.isInteger(id)) return null;
+    if (typeof username !== "string") return null;
+    if (typeof role !== "string" || !ROLES.includes(role as Role)) return null;
+
+    // A tenant token without a room would authorise nothing; a manager token
+    // with one would silently scope queries. Reject both rather than guess.
+    const isManager = role === "quan_ly";
+    if (isManager && roomId !== null) return null;
+    if (!isManager && (typeof roomId !== "number" || !Number.isInteger(roomId))) return null;
+
+    return {
+      id,
+      username,
+      vai_tro: role as Role,
+      room_id: isManager ? null : (roomId as number),
+    };
   } catch {
     return null;
   }
@@ -126,6 +148,29 @@ export async function currentUser(c: Context<AppEnv>): Promise<SessionUser | nul
 export const requireAuth = createMiddleware<AppEnv>(async (c, next) => {
   const user = await currentUser(c);
   if (!user) return c.json({ error: "unauthorized" }, 401);
+
+  c.set("user", user);
+  await next();
+});
+
+/** Management endpoints: everything that writes to rooms, readings or money. */
+export const requireQuanLy = createMiddleware<AppEnv>(async (c, next) => {
+  const user = await currentUser(c);
+  if (!user) return c.json({ error: "unauthorized" }, 401);
+  if (user.vai_tro !== "quan_ly") return c.json({ error: "forbidden" }, 403);
+
+  c.set("user", user);
+  await next();
+});
+
+/**
+ * Tenant endpoints under /api/me. The room always comes from the token, never
+ * from the request, so one tenant cannot read another room's invoices.
+ */
+export const requirePhong = createMiddleware<AppEnv>(async (c, next) => {
+  const user = await currentUser(c);
+  if (!user) return c.json({ error: "unauthorized" }, 401);
+  if (user.room_id === null) return c.json({ error: "khong_gan_phong" }, 403);
 
   c.set("user", user);
   await next();

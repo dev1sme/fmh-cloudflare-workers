@@ -22,7 +22,12 @@ export async function api<T>(path: string, init?: RequestInit): Promise<T> {
   return body as T;
 }
 
-export type SessionUser = { id: number; username: string };
+export type SessionUser = {
+  id: number;
+  username: string;
+  vai_tro: "quan_ly" | "nguoi_thue";
+  room_id: number | null;
+};
 
 export const auth = {
   me: () => api<{ user: SessionUser }>("/api/auth/me"),
