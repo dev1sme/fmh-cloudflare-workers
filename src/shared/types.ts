@@ -99,6 +99,17 @@ export type Payment = {
   ghi_chu: string | null;
 };
 
+export type Role = "quan_ly" | "nguoi_thue";
+
+/** An account as the management screen sees it — never carries a password. */
+export type Account = {
+  id: number;
+  username: string;
+  vai_tro: Role;
+  room_id: number | null;
+  ten_phong: string | null;
+};
+
 /** Result of POST /api/invoices/generate. */
 export type GenerateResult = {
   created: Invoice[];

@@ -21,6 +21,23 @@ export const SESSION_TTL_SECONDS = 7 * 24 * 60 * 60;
  * allows 10 ms of CPU per request and 600k iterations measures ~65 ms. Long
  * random passwords, not the iteration count, are what carry the weight here.
  */
+export const PBKDF2_ITERATIONS = 50_000;
+const SALT_BYTES = 16;
+const KEY_BITS = 256;
+
+/**
+ * Hashes a new password. Runs on the Worker so the manager can create accounts
+ * and reset passwords from the UI; at 50k iterations it costs ~6 ms of CPU,
+ * inside the 10 ms Workers Free budget. scripts/hash-password.mjs produces the
+ * identical format offline for bootstrapping the first account.
+ */
+export async function hashPassword(password: string): Promise<string> {
+  const salt = crypto.getRandomValues(new Uint8Array(SALT_BYTES));
+  const hash = await deriveBits(password, salt, PBKDF2_ITERATIONS, KEY_BITS);
+
+  return ["pbkdf2", "sha256", PBKDF2_ITERATIONS, encodeBase64(salt), encodeBase64(hash)].join("$");
+}
+
 export async function verifyPassword(password: string, record: string): Promise<boolean> {
   const parts = record.split("$");
   if (parts.length !== 5 || parts[0] !== "pbkdf2" || parts[1] !== "sha256") return false;
@@ -62,6 +79,12 @@ function timingSafeEqual(a: Uint8Array, b: Uint8Array): boolean {
   let diff = 0;
   for (let i = 0; i < a.length; i++) diff |= a[i]! ^ b[i]!;
   return diff === 0;
+}
+
+function encodeBase64(bytes: Uint8Array): string {
+  let binary = "";
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary);
 }
 
 function decodeBase64(value: string): Uint8Array | null {

@@ -155,7 +155,11 @@ Account người thuê gắn với **phòng**, không gắn với người: khá
 - Route cần bảo vệ đi qua middleware đọc cookie và verify token; không cần bảng session.
 - Đổi mật khẩu = cập nhật lại `password_hash` trong D1.
 
-Tạo tài khoản:
+Quản lý tự tạo tài khoản, đổi tên đăng nhập, đặt lại mật khẩu và xoá tài khoản ngay trong màn **Tài khoản**. Đặt lại mật khẩu **không cần mật khẩu hiện tại**; mật khẩu mới (tự sinh 20 ký tự hoặc tự chọn) hiện đúng **một lần** kèm nút copy để đưa cho người thuê.
+
+Mật khẩu chỉ lưu dạng đã băm, không có chỗ nào xem lại được. Quên thì đặt lại — không tra cứu. Đây là lý do không lưu plaintext: hai trong ba tài khoản là của người thuê, mà người ta hay dùng lại mật khẩu ở dịch vụ khác.
+
+Tài khoản quản lý **đầu tiên** (lúc DB còn rỗng, chưa đăng nhập được để dùng giao diện) vẫn tạo bằng script:
 
 ```bash
 npm run hash-password -- <username>                          # tài khoản quản lý, tự sinh password

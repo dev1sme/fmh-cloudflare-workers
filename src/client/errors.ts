@@ -18,6 +18,9 @@ const MESSAGES: Record<string, string> = {
   nuoc_moi_nho_hon_nuoc_cu: "Chỉ số nước mới không được nhỏ hơn chỉ số cũ.",
   phong_khong_ton_tai: "Phòng không tồn tại.",
   hoa_don_da_huy: "Hóa đơn đã huỷ, không ghi nhận thanh toán được.",
+  password_qua_ngan: "Mật khẩu phải từ 8 ký tự trở lên.",
+  khong_tu_xoa: "Không xoá được tài khoản đang đăng nhập.",
+  phai_con_mot_quan_ly: "Phải còn ít nhất một tài khoản quản lý.",
   loi_he_thong: "Lỗi hệ thống, thử lại sau.",
 };
 

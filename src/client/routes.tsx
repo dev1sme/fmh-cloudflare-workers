@@ -11,6 +11,7 @@ import { MyInvoicesPage } from "./features/cua-toi/MyInvoicesPage";
 import { MyReadingsPage } from "./features/cua-toi/MyReadingsPage";
 import { TenantsPage } from "./features/nguoi-thue/TenantsPage";
 import { RoomsPage } from "./features/phong/RoomsPage";
+import { AccountsPage } from "./features/tai-khoan/AccountsPage";
 
 /**
  * Which screens exist depends on the role. This is navigation convenience,
@@ -29,6 +30,7 @@ export function AppRoutes({ user, onLogout }: { user: SessionUser; onLogout: () 
             <Route path="/chi-so" element={<ReadingsPage />} />
             <Route path="/hoa-don" element={<InvoicesPage />} />
             <Route path="/hoa-don/:id" element={<InvoiceDetailPage />} />
+            <Route path="/tai-khoan" element={<AccountsPage user={user} />} />
             <Route path="/cai-dat" element={<SettingsPage />} />
             <Route path="*" element={<Navigate to="/phong" replace />} />
           </>

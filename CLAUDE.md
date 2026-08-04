@@ -150,7 +150,9 @@ Management (`requireQuanLy`): full CRUD on `/buildings`, `/rooms`, `/tenants`, `
 
 The app is not hard-wired to two buildings and four rooms: the manager adds a building from **Cài đặt** (each with its own `don_gia_dien` / `don_gia_nuoc`) and rooms from **Phòng**. Deleting is FK-restricted — a building with rooms, or a room with readings/invoices/tenants, returns 409 `rang_buoc_du_lieu` rather than cascading. Room names are unique per building, not globally. A room cannot be moved to another building and a tenancy cannot be moved to another room; both would rewrite priced history, so the UI disables those selects when editing.
 
-New rooms need their own tenant account, and that is still a CLI step: `npm run hash-password -- <username> --room <ten_phong>`, then run the printed statement against D1. There is no account-management screen.
+Accounts (`/api/accounts`, manager only): `GET` lists them, `POST` creates one (password optional — omitted means the server generates a 20-character one), `PATCH` renames, `POST /:id/reset-password` resets **without asking for the current password**, `DELETE` removes. Two guards keep the app reachable: you cannot delete the account you are logged in as (`khong_tu_xoa`), and you cannot delete the last manager (`phai_con_mot_quan_ly`). One account per room is enforced by the partial unique index.
+
+Sessions are stateless, so a reset does not kick out an existing session — the old JWT stays valid until it expires. That is acceptable here (three accounts, one manager); fixing it would need a token version column and a lookup per request.
 
 On `/tenants`: POST moves someone in, `PATCH { ngay_ra: "…" }` moves them out, `PATCH { ngay_ra: null }` undoes a mistaken move-out (409 if the room already has a new tenant), and DELETE erases a record entered by mistake. `GET /tenants` returns everyone ever, newest tenancy per room first, with `ten_phong` joined in; `?dang_thue=1` narrows it to current tenants and `?room_id=` to one room. Moving a tenancy to another room is not supported — that is a new tenancy.
 
@@ -180,7 +182,11 @@ Three middlewares in `auth.ts`:
 
 The room in `/api/me/*` queries always comes from the token, never the request. `GET /api/me/invoices/:id` re-checks `room_id` and answers 404 (not 403) for another room's invoice, so ids cannot be probed.
 
-Password records are stored in `users.password_hash` as `pbkdf2$sha256$<iterations>$<salt_b64>$<hash_b64>`. The iteration count is part of the record, so raising it later is a re-hash plus an `UPDATE`, never a migration. Hashing happens **offline** via `npm run hash-password -- <username> [password]` (prints the password if it generates one, plus an upsert statement); the Worker only ever verifies.
+Password records are stored in `users.password_hash` as `pbkdf2$sha256$<iterations>$<salt_b64>$<hash_b64>`. The iteration count is part of the record, so raising it later is a re-hash plus an `UPDATE`, never a migration.
+
+Hashing runs **in the Worker** (`hashPassword` in `auth.ts`) so the manager can create accounts and reset passwords from the UI. `scripts/hash-password.mjs` produces the identical format offline and is still how the first manager account is bootstrapped into an empty database.
+
+**Plaintext passwords are never stored and never readable.** A generated or chosen password is returned exactly once, in the response to the create/reset call that produced it, so the manager can pass it to the tenant; `GET /api/accounts` never includes `password_hash` or any password. A forgotten password is replaced, not recovered — do not add an endpoint, column, or log line that keeps the plaintext, even if asked for a "view password" feature. Reset gives the same practical capability without the liability.
 
 **Iterations are 50,000, not the OWASP-recommended 600,000, and that is deliberate.** Workers Free allows 10 ms CPU per request; measured on this project's hardware PBKDF2-SHA256 costs ~1.4 ms at 10k, ~5.8 ms at 50k, ~11 ms at 100k, ~65 ms at 600k. 50k leaves headroom for the D1 lookup and JWT signing. Long random passwords carry the security here, not the work factor. If deployed CPU metrics show logins near the limit, lower the constant in `scripts/hash-password.mjs` and re-hash — do not raise it past ~50k while on the free plan.
 

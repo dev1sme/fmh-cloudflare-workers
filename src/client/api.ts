@@ -1,4 +1,5 @@
 import type {
+  Account,
   Building,
   GenerateResult,
   Invoice,
@@ -55,6 +56,30 @@ export type BuildingInput = {
   address: string | null;
   don_gia_dien: number;
   don_gia_nuoc: number;
+};
+
+export type AccountInput = {
+  username: string;
+  vai_tro: "quan_ly" | "nguoi_thue";
+  room_id: number | null;
+  /** Omit to have the server generate a strong one. */
+  password?: string;
+};
+
+/**
+ * `password` comes back only from create and reset, and only that once — it is
+ * stored hashed and cannot be read back afterwards.
+ */
+export type AccountWithPassword = { account: Account; password: string };
+
+export const accounts = {
+  list: () => request<{ accounts: Account[] }>("/api/accounts"),
+  create: (input: AccountInput) => send<AccountWithPassword>("POST", "/api/accounts", input),
+  rename: (id: number, username: string) =>
+    send<{ account: Account }>("PATCH", `/api/accounts/${id}`, { username }),
+  resetPassword: (id: number, password?: string) =>
+    send<AccountWithPassword>("POST", `/api/accounts/${id}/reset-password`, { password }),
+  remove: (id: number) => send<{ ok: true }>("DELETE", `/api/accounts/${id}`),
 };
 
 export const buildings = {

@@ -2,6 +2,7 @@ import { Hono } from "hono";
 
 import { requirePhong, requireQuanLy } from "./auth";
 import { countRooms } from "./db/rooms";
+import { accountRoutes } from "./routes/accounts";
 import { authRoutes } from "./routes/auth";
 import { buildingRoutes } from "./routes/buildings";
 import { invoiceRoutes } from "./routes/invoices";
@@ -30,6 +31,7 @@ app.route("/api/me", me);
 const admin = new Hono<AppEnv>();
 admin.use("*", requireQuanLy);
 admin.get("/summary", async (c) => c.json({ user: c.get("user"), rooms: await countRooms(c.env.DB) }));
+admin.route("/accounts", accountRoutes);
 admin.route("/buildings", buildingRoutes);
 admin.route("/rooms", roomRoutes);
 admin.route("/tenants", tenantRoutes);
