@@ -10,6 +10,7 @@
     "deploy": "npm run build && wrangler deploy",
     "typecheck": "tsc -b --noEmit",
     "cf-typegen": "wrangler types",
+    "hash-password": "node scripts/hash-password.mjs",
     "db:migrate": "wrangler d1 migrations apply nha-tro --local",
     "db:migrate:remote": "wrangler d1 migrations apply nha-tro --remote"
   },

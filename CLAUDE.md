@@ -4,9 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Current state
 
-Scaffold is in place: `package.json`, `wrangler.toml`, `vite.config.ts`, tsconfig project references, a Hono Worker with `/api/health`, a Mantine SPA shell, and `migrations/0001_init.sql` (schema + seed). The D1 database `nha-tro` exists (APAC, id in `wrangler.toml`); migration 0001 has been applied **locally only** — the remote database is still empty.
+Built so far: the Vite + Hono + Wrangler scaffold, `migrations/0001_init.sql` (schema + seed), and login (`POST /api/auth/login`, `/logout`, `GET /api/auth/me`) with cookie-session middleware guarding the rest of `/api`. The SPA shows a login screen and a placeholder dashboard.
 
-Not built yet: auth, the rooms/readings/invoices/payments API, invoice generation, VietQR, the SePay webhook, and every real UI screen. `README.md` (Vietnamese) is the design spec and its task list at the bottom ("Việc cần làm") is the authoritative backlog.
+The D1 database `nha-tro` exists (APAC, id in `wrangler.toml`), but migration 0001 has been applied **locally only** — the remote database is still empty, and nothing has ever been deployed. The local D1 also holds a throwaway `admin` account created for testing; the three real accounts do not exist anywhere yet.
+
+Not built yet: the rooms/readings/invoices/payments API, invoice generation, VietQR, the SePay webhook, and every real UI screen. `README.md` (Vietnamese) is the design spec and its task list at the bottom ("Việc cần làm") is the authoritative backlog.
 
 No test runner has been chosen yet.
 
@@ -109,9 +111,19 @@ Seed in 0001: one building (`Nhà trọ 1`, điện 3.000đ/kWh, nước 15.000�
 
 ## Auth
 
-No auth framework. Passwords are PBKDF2-hashed **offline** and inserted into `users` (changing a password = updating `password_hash` in D1). Login signs a JWT with `jose` and sets it in an `httpOnly` + `secure` + `sameSite` cookie; protected routes go through middleware that verifies the cookie. Stateless — there is no session table, and there should not be one.
+No auth framework. Stateless — there is no session table, and there should not be one.
 
-Hashing uses Web Crypto (Workers runtime), not Node `crypto`.
+Password records are stored in `users.password_hash` as `pbkdf2$sha256$<iterations>$<salt_b64>$<hash_b64>`. The iteration count is part of the record, so raising it later is a re-hash plus an `UPDATE`, never a migration. Hashing happens **offline** via `npm run hash-password -- <username> [password]` (prints the password if it generates one, plus an upsert statement); the Worker only ever verifies.
+
+**Iterations are 50,000, not the OWASP-recommended 600,000, and that is deliberate.** Workers Free allows 10 ms CPU per request; measured on this project's hardware PBKDF2-SHA256 costs ~1.4 ms at 10k, ~5.8 ms at 50k, ~11 ms at 100k, ~65 ms at 600k. 50k leaves headroom for the D1 lookup and JWT signing. Long random passwords carry the security here, not the work factor. If deployed CPU metrics show logins near the limit, lower the constant in `scripts/hash-password.mjs` and re-hash — do not raise it past ~50k while on the free plan.
+
+Other details that are easy to break:
+
+- `POST /api/auth/login` verifies against a dummy record when the username does not exist, so a bad username and a bad password take the same time and cannot be distinguished.
+- Verification uses a constant-time byte compare, and Web Crypto (`crypto.subtle`), not Node `crypto`.
+- The session cookie is `session`: `httpOnly`, `secure`, `sameSite=Lax`, 7-day TTL, carrying an HS256 JWT signed with `jose` (`sub` = user id).
+- Route layout in `src/server/index.ts`: `/api/health` and `/api/auth/*` are public and registered **first**; everything else is mounted through a sub-app with `requireAuth`. Registration order is what makes this work in Hono — a new public route must go above the sub-app mount.
+- There is **no login rate limiting**. Adding one would need KV or Durable Objects, which the project deliberately avoids; three fixed accounts with long random passwords is the mitigation.
 
 ## Payments
 
@@ -122,3 +134,7 @@ Optional automation: SePay balance-change webhook at `/api/webhook/sepay` parses
 ## Secrets
 
 Set via `wrangler secret put`, never committed: `JWT_SECRET`, and `SEPAY_WEBHOOK_TOKEN` if the SePay webhook is enabled.
+
+`wrangler.toml` declares `[secrets] required = ["JWT_SECRET"]`, so `wrangler deploy` fails if the secret is missing on the Worker instead of shipping a build that 500s on every login. Add new secret names there too.
+
+Locally the same values live in `.dev.vars` (gitignored; `.dev.vars.example` is the committed template). The Vite plugin copies `.dev.vars` into `dist/nha_tro/` so `vite preview` can run — that is build output, gitignored, and not served to browsers, but it does mean `dist/` holds a real secret on disk.

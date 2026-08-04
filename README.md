@@ -142,9 +142,22 @@ Biến bí mật (đặt bằng `wrangler secret put`, không để trong code):
 Không dùng framework auth. Vì tài khoản cố định, không cần đăng ký / xác thực email / quên mật khẩu.
 
 - Mật khẩu được **băm sẵn offline** (PBKDF2) rồi lưu vào bảng `users`.
-- Đăng nhập đúng → ký JWT → đặt vào cookie `httpOnly`, `secure`, `sameSite`.
+- Đăng nhập đúng → ký JWT → đặt vào cookie `httpOnly`, `secure`, `sameSite=Lax`, hạn 7 ngày.
 - Route cần bảo vệ đi qua middleware đọc cookie và verify token; không cần bảng session.
 - Đổi mật khẩu = cập nhật lại `password_hash` trong D1.
+
+Tạo tài khoản:
+
+```bash
+npm run hash-password -- <username>              # tự sinh password mạnh, in ra một lần
+npm run hash-password -- <username> <password>   # dùng password tự chọn
+```
+
+Script in ra câu `INSERT ... ON CONFLICT DO UPDATE`, chạy nó bằng `wrangler d1 execute nha-tro --local` (hoặc `--remote`).
+
+**Số vòng PBKDF2 là 50.000, không phải 600.000 như khuyến nghị OWASP.** Workers Free giới hạn 10ms CPU mỗi request, trong khi đo thực tế: 50k vòng ≈ 5,8ms, 100k ≈ 11ms, 600k ≈ 65ms. Với 3 tài khoản cố định, cái giữ an toàn ở đây là password dài và ngẫu nhiên, không phải số vòng lặp. Số vòng được nhúng trong chuỗi hash nên đổi về sau không cần migration.
+
+Chưa có rate limit cho login — muốn có phải thêm KV hoặc Durable Objects, trái với chủ trương giữ hạ tầng tối thiểu.
 
 ## Thanh toán
 
@@ -173,10 +186,11 @@ Thực tế mỗi tháng chỉ ghi thêm vài chục dòng, nên gần như khô
 
 - [x] Khởi tạo dự án React (Vite) + Hono + Wrangler
 - [ ] Nhập số liệu thật: tên nhà, tên phòng, `gia_phong`, thông tin người thuê (seed hiện là giá trị tạm)
-- [ ] Viết migration tạo bảng, seed 3 tài khoản
+- [x] Viết migration tạo bảng
+- [ ] Tạo 3 tài khoản quản trị thật (`npm run hash-password`)
+- [x] Đăng nhập + middleware bảo vệ route
 - [ ] API: rooms / readings / invoices / payments
 - [ ] Logic sinh hóa đơn từ chỉ số công tơ
-- [ ] Đăng nhập + middleware bảo vệ route
 - [ ] Sinh mã VietQR trên hóa đơn
 - [ ] (Tùy chọn) Webhook SePay tự động xác nhận thanh toán
 - [ ] Giao diện: danh sách phòng, form nhập chỉ số, trang hóa đơn

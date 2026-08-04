@@ -1,14 +1,28 @@
 import { Hono } from "hono";
 
-const app = new Hono<{ Bindings: Env }>();
+import { requireAuth } from "./auth";
+import { countRooms } from "./db";
+import { authRoutes } from "./routes/auth";
+import type { AppEnv } from "./types";
 
-app.get("/api/health", async (c) => {
-  const row = await c.env.DB.prepare("SELECT COUNT(*) AS rooms FROM rooms").first<{
-    rooms: number;
-  }>();
+const app = new Hono<AppEnv>();
 
-  return c.json({ ok: true, rooms: row?.rooms ?? 0 });
+// Public.
+app.get("/api/health", (c) => c.json({ ok: true }));
+app.route("/api/auth", authRoutes);
+
+// Everything else under /api requires a session cookie.
+const api = new Hono<AppEnv>();
+api.use("*", requireAuth);
+
+api.get("/summary", async (c) => {
+  return c.json({
+    user: c.get("user"),
+    rooms: await countRooms(c.env.DB),
+  });
 });
+
+app.route("/api", api);
 
 app.notFound((c) => c.json({ error: "not_found" }, 404));
 

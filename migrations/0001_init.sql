@@ -98,16 +98,16 @@ CREATE TABLE users (
 
 -- ---------------------------------------------------------------------------
 -- Seed
--- Tên nhà, tên phòng, giá phòng và thông tin người thuê là giá trị tạm;
--- sửa lại qua giao diện quản trị sau khi có số liệu thật.
+-- Tên người thuê là giá trị tạm, sửa lại qua giao diện quản trị khi có tên thật.
 -- ---------------------------------------------------------------------------
 
 INSERT INTO buildings (id, name, address, don_gia_dien, don_gia_nuoc) VALUES
-  (1, 'Nhà trọ 1', NULL, 3000, 15000);
+  (1, 'FMH', NULL, 3000, 15000);
 
 INSERT INTO rooms (id, building_id, ten_phong, gia_phong, dien_tich) VALUES
-  (1, 1, 'P101', 0, NULL),
-  (2, 1, 'P102', 0, NULL);
+  (1, 1, 'FMH-P01', 1800000, NULL),
+  (2, 1, 'FMH-P02', 1800000, NULL);
 
 INSERT INTO tenants (id, room_id, ho_ten, sdt, ngay_vao, ngay_ra) VALUES
-  (1, 1, 'Người thuê 1', NULL, '2026-08-01', NULL);
+  (1, 1, 'Người thuê 1', NULL, '2026-08-01', NULL),
+  (2, 2, 'Người thuê 2', NULL, '2026-08-01', NULL);
