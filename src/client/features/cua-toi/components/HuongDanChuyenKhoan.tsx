@@ -1,15 +1,15 @@
 import { Card, Text } from "@mantine/core";
 
 /**
- * Placeholder until the VietQR code is generated here — the transfer memo is
- * what lets the manager (or the SePay webhook) match a payment to an invoice.
+ * Fallback when the building has no bank details yet, so no VietQR code can be
+ * built. The invoice code still has to reach the manager somehow.
  */
 export function HuongDanChuyenKhoan({ maHoaDon }: { maHoaDon: string }) {
   return (
     <Card withBorder padding="md">
       <Text size="sm" c="dimmed">
-        Chuyển khoản với nội dung <b>{maHoaDon}</b> để chủ nhà đối chiếu. Mã VietQR sẽ hiển thị ở
-        đây sau khi được cấu hình.
+        Chủ nhà chưa cấu hình tài khoản nhận tiền nên chưa có mã QR. Khi chuyển khoản, ghi nội dung{" "}
+        <b>{maHoaDon}</b> để đối chiếu.
       </Text>
     </Card>
   );

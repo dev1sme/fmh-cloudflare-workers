@@ -4,11 +4,14 @@ import {
   clearSessionCookie,
   createSessionToken,
   currentUser,
+  hashPassword,
   setSessionCookie,
   verifyPassword,
 } from "../auth";
-import { getUserByUsername } from "../db/users";
+import { getUserByUsername, setPasswordHash } from "../db/users";
+import { DO_DAI_TOI_THIEU } from "../domain/password";
 import type { AppEnv, SessionUser } from "../types";
+import { fail, jsonBody, requireString } from "../validate";
 
 /**
  * Verified when the username does not exist, so a wrong username and a wrong
@@ -58,4 +61,33 @@ authRoutes.get("/me", async (c) => {
   if (!user) return c.json({ error: "unauthorized" }, 401);
 
   return c.json({ user });
+});
+
+/**
+ * Self-service change, for tenants and the manager alike.
+ *
+ * Unlike the manager's reset this *does* require the current password: the
+ * session cookie alone should not be enough to lock the real owner out if a
+ * logged-in device is left unattended.
+ */
+authRoutes.post("/doi-mat-khau", async (c) => {
+  const session = await currentUser(c);
+  if (!session) return c.json({ error: "unauthorized" }, 401);
+
+  const body = await jsonBody(c.req);
+  const matKhauCu = requireString(body.mat_khau_cu, "mat_khau_cu", 200);
+  const matKhauMoi = requireString(body.mat_khau_moi, "mat_khau_moi", 200);
+
+  if (matKhauMoi.length < DO_DAI_TOI_THIEU) fail("password_qua_ngan");
+
+  const user = await getUserByUsername(c.env.DB, session.username);
+  if (!user) return c.json({ error: "not_found" }, 404);
+
+  if (!(await verifyPassword(matKhauCu, user.password_hash))) {
+    return c.json({ error: "sai_mat_khau_cu" }, 400);
+  }
+
+  await setPasswordHash(c.env.DB, user.id, await hashPassword(matKhauMoi));
+
+  return c.json({ ok: true });
 });

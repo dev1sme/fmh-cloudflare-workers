@@ -1,5 +1,12 @@
-import type { Invoice, InvoiceDetail, InvoiceStatus, InvoiceWithRoom } from "../../shared/types";
+import type {
+  ChuyenKhoan,
+  Invoice,
+  InvoiceDetail,
+  InvoiceStatus,
+  InvoiceWithRoom,
+} from "../../shared/types";
 import { maHoaDon } from "../domain/invoice";
+import { chuanHoaNoiDung, nganHangHopLe, taoVietQR } from "../domain/vietqr";
 import { getReadingByRoomKy } from "./readings";
 import { listPayments, sumPayments } from "./payments";
 import { buildSet, Where } from "./sql";
@@ -13,6 +20,16 @@ const WITH_ROOM_SELECT = `
          r.ten_phong
   FROM invoices i
   JOIN rooms r ON r.id = i.room_id
+`;
+
+/** Same row, plus the bank details the VietQR code is built from. */
+const DETAIL_SELECT = `
+  SELECT i.id, i.room_id, i.ky, i.tien_phong, i.tien_dien, i.tien_nuoc, i.phi_khac,
+         i.don_gia_dien, i.don_gia_nuoc, i.tong_tien, i.trang_thai, i.ngay_tao,
+         r.ten_phong, b.bank_bin, b.bank_so_tk, b.bank_chu_tk
+  FROM invoices i
+  JOIN rooms r ON r.id = i.room_id
+  JOIN buildings b ON b.id = r.building_id
 `;
 
 export async function listInvoices(
@@ -52,10 +69,13 @@ export async function getInvoiceDetail(
   db: D1Database,
   id: number,
 ): Promise<InvoiceDetail | null> {
-  const row = await db
-    .prepare(`${WITH_ROOM_SELECT} WHERE i.id = ?`)
-    .bind(id)
-    .first<Omit<InvoiceWithRoom, "ma_hoa_don">>();
+  type DetailRow = Omit<InvoiceWithRoom, "ma_hoa_don"> & {
+    bank_bin: string | null;
+    bank_so_tk: string | null;
+    bank_chu_tk: string | null;
+  };
+
+  const row = await db.prepare(`${DETAIL_SELECT} WHERE i.id = ?`).bind(id).first<DetailRow>();
   if (!row) return null;
 
   const [reading, payments, daThu] = await Promise.all([
@@ -64,13 +84,47 @@ export async function getInvoiceDetail(
     sumPayments(db, id),
   ]);
 
+  const { bank_bin, bank_so_tk, bank_chu_tk, ...invoice } = row;
+  const conLai = row.tong_tien - daThu;
+  const maHd = maHoaDon(row.id);
+
   return {
-    ...row,
-    ma_hoa_don: maHoaDon(row.id),
+    ...invoice,
+    ma_hoa_don: maHd,
     reading,
     payments,
     da_thu: daThu,
-    con_lai: row.tong_tien - daThu,
+    con_lai: conLai,
+    chuyen_khoan: taoChuyenKhoan(
+      { bank_bin, bank_so_tk, bank_chu_tk },
+      conLai,
+      maHd,
+      row.trang_thai,
+    ),
+  };
+}
+
+/** No QR for a cancelled or fully paid invoice, or an unconfigured building. */
+function taoChuyenKhoan(
+  bank: { bank_bin: string | null; bank_so_tk: string | null; bank_chu_tk: string | null },
+  conLai: number,
+  maHoaDonStr: string,
+  trangThai: InvoiceStatus,
+): ChuyenKhoan | null {
+  if (conLai <= 0 || trangThai === "huy") return null;
+
+  const nganHang = nganHangHopLe(bank);
+  if (!nganHang) return null;
+
+  const noiDung = chuanHoaNoiDung(maHoaDonStr);
+
+  return {
+    vietqr: taoVietQR({ nganHang, soTien: conLai, noiDung }),
+    bank_bin: nganHang.bank_bin,
+    bank_so_tk: nganHang.bank_so_tk,
+    bank_chu_tk: nganHang.bank_chu_tk,
+    noi_dung: noiDung,
+    so_tien: conLai,
   };
 }
 

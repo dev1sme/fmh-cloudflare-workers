@@ -1,6 +1,7 @@
 import { Button, Card, Group, Stack, Text, Title } from "@mantine/core";
 import { Link, useParams } from "react-router-dom";
 
+import { ChuyenKhoanCard } from "../../components/ChuyenKhoanCard";
 import { InvoiceLines } from "../../components/InvoiceLines";
 import { PageState } from "../../components/PageState";
 import { PaymentsTable } from "../../components/PaymentsTable";
@@ -41,8 +42,13 @@ export function MyInvoiceDetailPage() {
               </Card>
             )}
 
-            {hoaDon.con_lai > 0 && hoaDon.trang_thai !== "huy" && (
-              <HuongDanChuyenKhoan maHoaDon={hoaDon.ma_hoa_don} />
+            {hoaDon.chuyen_khoan ? (
+              <ChuyenKhoanCard chuyenKhoan={hoaDon.chuyen_khoan} />
+            ) : (
+              hoaDon.con_lai > 0 &&
+              hoaDon.trang_thai !== "huy" && (
+                <HuongDanChuyenKhoan maHoaDon={hoaDon.ma_hoa_don} />
+              )
             )}
           </Stack>
         )}

@@ -152,6 +152,8 @@ The app is not hard-wired to two buildings and four rooms: the manager adds a bu
 
 Accounts (`/api/accounts`, manager only): `GET` lists them, `POST` creates one (password optional — omitted means the server generates a 20-character one), `PATCH` renames, `POST /:id/reset-password` resets **without asking for the current password**, `DELETE` removes. Two guards keep the app reachable: you cannot delete the account you are logged in as (`khong_tu_xoa`), and you cannot delete the last manager (`phai_con_mot_quan_ly`). One account per room is enforced by the partial unique index.
 
+`POST /api/auth/doi-mat-khau` is the self-service change, open to both roles, and it **does** require the current password — a session cookie alone must not be enough to lock the real owner out of an unattended device. The manager's reset is the opposite case and deliberately skips it.
+
 Sessions are stateless, so a reset does not kick out an existing session — the old JWT stays valid until it expires. That is acceptable here (three accounts, one manager); fixing it would need a token version column and a lookup per request.
 
 On `/tenants`: POST moves someone in, `PATCH { ngay_ra: "…" }` moves them out, `PATCH { ngay_ra: null }` undoes a mistaken move-out (409 if the room already has a new tenant), and DELETE erases a record entered by mistake. `GET /tenants` returns everyone ever, newest tenancy per room first, with `ten_phong` joined in; `?dang_thue=1` narrows it to current tenants and `?room_id=` to one room. Moving a tenancy to another room is not supported — that is a new tenancy.
@@ -201,6 +203,10 @@ Other details that are easy to break:
 ## Payments
 
 Default flow is manual: each invoice renders a VietQR code whose transfer memo carries the invoice code (e.g. `HD00123`); the admin marks it paid.
+
+**The QR payload is built in-house** (`src/server/domain/vietqr.ts`, EMVCo TLV with the NAPAS profile) and encoded to SVG in the browser with `@paulmillr/qr`. Do not replace this with `img.vietqr.io` or any QR image service: that would tell a third party who owes how much, and break the page whenever that service is down. The CRC is CRC-16/CCITT-FALSE over the payload including the trailing `6304` tag — verify against the standard vector (`"123456789"` → `29B1`) if you touch it.
+
+Bank details live on `buildings` (`bank_bin`, `bank_so_tk`, `bank_chu_tk`, migration 0002) because each building may collect into a different account. `GET /api/invoices/:id` returns `chuyen_khoan` with the payload, or **null** when the building has no bank details, the invoice is cancelled, or nothing is left to pay — the UI falls back to showing the invoice code as text. The amount encoded is `con_lai`, not `tong_tien`, so a partly paid invoice asks for the remainder.
 
 Optional automation: SePay balance-change webhook at `/api/webhook/sepay` parses the invoice code out of the transfer memo, sets `invoices.trang_thai = 'da_thanh_toan'`, and inserts a `payments` row. The webhook must authenticate with `SEPAY_WEBHOOK_TOKEN` before mutating anything.
 

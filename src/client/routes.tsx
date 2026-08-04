@@ -3,6 +3,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import type { SessionUser } from "./api";
 import { AppLayout } from "./components/AppLayout";
 import { SettingsPage } from "./features/cai-dat/SettingsPage";
+import { ChangePasswordPage } from "./features/doi-mat-khau/ChangePasswordPage";
 import { ReadingsPage } from "./features/chi-so/ReadingsPage";
 import { InvoiceDetailPage } from "./features/hoa-don/InvoiceDetailPage";
 import { InvoicesPage } from "./features/hoa-don/InvoicesPage";
@@ -23,6 +24,9 @@ export function AppRoutes({ user, onLogout }: { user: SessionUser; onLogout: () 
   return (
     <Routes>
       <Route element={<AppLayout user={user} onLogout={onLogout} />}>
+        {/* Available to both roles. */}
+        <Route path="/doi-mat-khau" element={<ChangePasswordPage />} />
+
         {quanLy ? (
           <>
             <Route path="/phong" element={<RoomsPage />} />

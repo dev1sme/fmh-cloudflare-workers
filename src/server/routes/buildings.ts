@@ -8,7 +8,15 @@ import {
   updateBuilding,
 } from "../db/buildings";
 import type { AppEnv } from "../types";
-import { jsonBody, optionalInt, optionalString, parseId, requireInt, requireString } from "../validate";
+import {
+  fail,
+  jsonBody,
+  optionalInt,
+  optionalString,
+  parseId,
+  requireInt,
+  requireString,
+} from "../validate";
 
 export const buildingRoutes = new Hono<AppEnv>();
 
@@ -21,6 +29,19 @@ buildingRoutes.get("/:id", async (c) => {
   return c.json({ building });
 });
 
+/** 6-digit NAPAS acquirer id; anything else would produce an unscannable QR. */
+function bankBin(value: unknown): string | null {
+  const bin = optionalString(value, "bank_bin", 6);
+  if (bin !== null && !/^\d{6}$/.test(bin)) fail("invalid_bank_bin");
+  return bin;
+}
+
+function bankSoTk(value: unknown): string | null {
+  const so = optionalString(value, "bank_so_tk", 30);
+  if (so !== null && !/^\d+$/.test(so)) fail("invalid_bank_so_tk");
+  return so;
+}
+
 buildingRoutes.post("/", async (c) => {
   const body = await jsonBody(c.req);
 
@@ -29,6 +50,9 @@ buildingRoutes.post("/", async (c) => {
     address: optionalString(body.address, "address"),
     don_gia_dien: requireInt(body.don_gia_dien, "don_gia_dien"),
     don_gia_nuoc: requireInt(body.don_gia_nuoc, "don_gia_nuoc"),
+    bank_bin: bankBin(body.bank_bin),
+    bank_so_tk: bankSoTk(body.bank_so_tk),
+    bank_chu_tk: optionalString(body.bank_chu_tk, "bank_chu_tk", 100),
   });
 
   return c.json({ building }, 201);
@@ -47,6 +71,12 @@ buildingRoutes.patch("/:id", async (c) => {
     address: body.address === undefined ? undefined : optionalString(body.address, "address"),
     don_gia_dien: optionalInt(body.don_gia_dien, "don_gia_dien"),
     don_gia_nuoc: optionalInt(body.don_gia_nuoc, "don_gia_nuoc"),
+    bank_bin: body.bank_bin === undefined ? undefined : bankBin(body.bank_bin),
+    bank_so_tk: body.bank_so_tk === undefined ? undefined : bankSoTk(body.bank_so_tk),
+    bank_chu_tk:
+      body.bank_chu_tk === undefined
+        ? undefined
+        : optionalString(body.bank_chu_tk, "bank_chu_tk", 100),
   });
   if (!building) return c.json({ error: "not_found" }, 404);
 

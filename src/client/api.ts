@@ -49,6 +49,11 @@ export const auth = {
   login: (username: string, password: string) =>
     send<{ user: SessionUser }>("POST", "/api/auth/login", { username, password }),
   logout: () => send<{ ok: true }>("POST", "/api/auth/logout"),
+  doiMatKhau: (matKhauCu: string, matKhauMoi: string) =>
+    send<{ ok: true }>("POST", "/api/auth/doi-mat-khau", {
+      mat_khau_cu: matKhauCu,
+      mat_khau_moi: matKhauMoi,
+    }),
 };
 
 export type BuildingInput = {

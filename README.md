@@ -176,6 +176,10 @@ Chưa có rate limit cho login — muốn có phải thêm KV hoặc Durable Obj
 ## Thanh toán
 
 - **Mặc định:** sinh mã VietQR cho mỗi hóa đơn (số tiền + nội dung chứa mã hóa đơn, ví dụ `HD00123`). Người thuê quét và chuyển khoản; quản trị đánh dấu đã thu.
+
+  Cấu hình tài khoản nhận tiền trong **Cài đặt** của từng nhà: ngân hàng (mã BIN NAPAS), số tài khoản, tên chủ tài khoản. Chưa cấu hình thì hóa đơn chỉ hiện nội dung chuyển khoản dạng chữ, không có QR.
+
+  Payload QR do ứng dụng tự sinh theo chuẩn EMVCo/NAPAS rồi vẽ thành SVG ngay trên trình duyệt — không gọi `img.vietqr.io` hay dịch vụ ảnh QR nào. Lý do: không để bên thứ ba biết ai nợ bao nhiêu, và dịch vụ đó sập thì hóa đơn vẫn dùng được. Số tiền mã hoá trong QR là **số còn lại**, nên hóa đơn trả một phần sẽ quét ra đúng phần thiếu.
 - **Tự động (tùy chọn):** đăng ký SePay để nhận webhook biến động số dư. Route `/api/webhook/sepay` bóc mã hóa đơn từ nội dung chuyển khoản, cập nhật `invoices.trang_thai = 'da_thanh_toan'` và ghi vào `payments`. Gói miễn phí của SePay đủ cho quy mô này.
 
 ## Deploy
@@ -206,6 +210,7 @@ Thực tế mỗi tháng chỉ ghi thêm vài chục dòng, nên gần như khô
 - [x] API: rooms / readings / invoices / payments
 - [x] Logic sinh hóa đơn từ chỉ số công tơ
 - [x] Giao diện: danh sách phòng, form nhập chỉ số, trang hóa đơn, trang người thuê
-- [ ] Sinh mã VietQR trên hóa đơn
+- [x] Quản lý tài khoản: tạo, đổi tên, đặt lại mật khẩu; người dùng tự đổi mật khẩu
+- [x] Sinh mã VietQR trên hóa đơn
 - [ ] (Tùy chọn) Webhook SePay tự động xác nhận thanh toán
 - [ ] Deploy lần đầu + kiểm tra CPU time thực tế của route đăng nhập

@@ -11,11 +11,13 @@ const QUAN_LY_LINKS = [
   { to: "/hoa-don", label: "Hóa đơn" },
   { to: "/tai-khoan", label: "Tài khoản" },
   { to: "/cai-dat", label: "Cài đặt" },
+  { to: "/doi-mat-khau", label: "Đổi mật khẩu" },
 ];
 
 const NGUOI_THUE_LINKS = [
   { to: "/hoa-don-cua-toi", label: "Hóa đơn của tôi" },
   { to: "/chi-so-cua-toi", label: "Lịch sử chỉ số" },
+  { to: "/doi-mat-khau", label: "Đổi mật khẩu" },
 ];
 
 export function AppLayout({ user, onLogout }: { user: SessionUser; onLogout: () => void }) {

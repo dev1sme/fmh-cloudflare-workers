@@ -1,18 +1,18 @@
 import type { Building } from "../../shared/types";
 import { buildSet } from "./sql";
 
+const COLUMNS = `id, name, address, don_gia_dien, don_gia_nuoc,
+                 bank_bin, bank_so_tk, bank_chu_tk`;
+
 export async function listBuildings(db: D1Database): Promise<Building[]> {
   const { results } = await db
-    .prepare("SELECT id, name, address, don_gia_dien, don_gia_nuoc FROM buildings ORDER BY name")
+    .prepare(`SELECT ${COLUMNS} FROM buildings ORDER BY name`)
     .all<Building>();
   return results;
 }
 
 export function getBuilding(db: D1Database, id: number): Promise<Building | null> {
-  return db
-    .prepare("SELECT id, name, address, don_gia_dien, don_gia_nuoc FROM buildings WHERE id = ?")
-    .bind(id)
-    .first<Building>();
+  return db.prepare(`SELECT ${COLUMNS} FROM buildings WHERE id = ?`).bind(id).first<Building>();
 }
 
 export type BuildingInput = {
@@ -20,6 +20,9 @@ export type BuildingInput = {
   address: string | null;
   don_gia_dien: number;
   don_gia_nuoc: number;
+  bank_bin?: string | null;
+  bank_so_tk?: string | null;
+  bank_chu_tk?: string | null;
 };
 
 export async function createBuilding(
@@ -28,10 +31,19 @@ export async function createBuilding(
 ): Promise<Building | null> {
   const row = await db
     .prepare(
-      `INSERT INTO buildings (name, address, don_gia_dien, don_gia_nuoc)
-       VALUES (?, ?, ?, ?) RETURNING id`,
+      `INSERT INTO buildings (name, address, don_gia_dien, don_gia_nuoc,
+                              bank_bin, bank_so_tk, bank_chu_tk)
+       VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id`,
     )
-    .bind(input.name, input.address, input.don_gia_dien, input.don_gia_nuoc)
+    .bind(
+      input.name,
+      input.address,
+      input.don_gia_dien,
+      input.don_gia_nuoc,
+      input.bank_bin ?? null,
+      input.bank_so_tk ?? null,
+      input.bank_chu_tk ?? null,
+    )
     .first<{ id: number }>();
 
   return row ? getBuilding(db, row.id) : null;
@@ -47,6 +59,9 @@ export type BuildingPatch = {
   address?: string | null;
   don_gia_dien?: number;
   don_gia_nuoc?: number;
+  bank_bin?: string | null;
+  bank_so_tk?: string | null;
+  bank_chu_tk?: string | null;
 };
 
 export async function updateBuilding(

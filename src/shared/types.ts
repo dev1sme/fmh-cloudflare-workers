@@ -6,6 +6,10 @@ export type Building = {
   address: string | null;
   don_gia_dien: number;
   don_gia_nuoc: number;
+  /** NAPAS bank id, account and holder for VietQR. Null until configured. */
+  bank_bin: string | null;
+  bank_so_tk: string | null;
+  bank_chu_tk: string | null;
 };
 
 export type Room = {
@@ -81,11 +85,24 @@ export type InvoiceWithRoom = Invoice & {
   ma_hoa_don: string;
 };
 
+/** What the tenant needs to pay: the QR payload plus the same data as text. */
+export type ChuyenKhoan = {
+  /** EMVCo/NAPAS payload — render it as a QR, do not display it. */
+  vietqr: string;
+  bank_bin: string;
+  bank_so_tk: string;
+  bank_chu_tk: string | null;
+  noi_dung: string;
+  so_tien: number;
+};
+
 export type InvoiceDetail = InvoiceWithRoom & {
   da_thu: number;
   con_lai: number;
   reading: Reading | null;
   payments: Payment[];
+  /** Null when the building has no bank details, or nothing is left to pay. */
+  chuyen_khoan: ChuyenKhoan | null;
 };
 
 export type PaymentMethod = "chuyen_khoan" | "tien_mat";

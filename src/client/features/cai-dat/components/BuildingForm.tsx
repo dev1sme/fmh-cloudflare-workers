@@ -1,7 +1,8 @@
-import { Button, Card, Group, NumberInput, Stack, TextInput } from "@mantine/core";
+import { Button, Card, Divider, Group, NumberInput, Stack, TextInput } from "@mantine/core";
 import { useEffect, useState } from "react";
 
 import type { Building } from "../../../../shared/types";
+import { BankFields, type BankValue } from "./BankFields";
 
 export function BuildingForm({
   nha,
@@ -16,6 +17,11 @@ export function BuildingForm({
   const [address, setAddress] = useState(nha.address ?? "");
   const [dien, setDien] = useState<number | string>(nha.don_gia_dien);
   const [nuoc, setNuoc] = useState<number | string>(nha.don_gia_nuoc);
+  const [bank, setBank] = useState<BankValue>({
+    bin: nha.bank_bin,
+    soTk: nha.bank_so_tk ?? "",
+    chuTk: nha.bank_chu_tk ?? "",
+  });
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -23,6 +29,7 @@ export function BuildingForm({
     setAddress(nha.address ?? "");
     setDien(nha.don_gia_dien);
     setNuoc(nha.don_gia_nuoc);
+    setBank({ bin: nha.bank_bin, soTk: nha.bank_so_tk ?? "", chuTk: nha.bank_chu_tk ?? "" });
   }, [nha]);
 
   async function save() {
@@ -33,6 +40,9 @@ export function BuildingForm({
       address: address || null,
       don_gia_dien: Number(dien),
       don_gia_nuoc: Number(nuoc),
+      bank_bin: bank.bin || null,
+      bank_so_tk: bank.soTk || null,
+      bank_chu_tk: bank.chuTk || null,
     });
 
     setBusy(false);
@@ -67,6 +77,10 @@ export function BuildingForm({
             decimalSeparator=","
           />
         </Group>
+        <Divider my="xs" />
+        <BankFields value={bank} onChange={setBank} />
+        <Divider my="xs" />
+
         <Group justify="space-between">
           <Button onClick={save} loading={busy}>
             Lưu
