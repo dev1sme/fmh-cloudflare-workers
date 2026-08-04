@@ -1,4 +1,4 @@
-import type { Invoice, InvoiceDetail, InvoiceStatus } from "../../shared/types";
+import type { Invoice, InvoiceDetail, InvoiceStatus, InvoiceWithRoom } from "../../shared/types";
 import { maHoaDon } from "../domain/invoice";
 import { getReadingByRoomKy } from "./readings";
 import { listPayments, sumPayments } from "./payments";
@@ -6,8 +6,6 @@ import { buildSet, Where } from "./sql";
 
 const COLUMNS = `id, room_id, ky, tien_phong, tien_dien, tien_nuoc, phi_khac,
                  don_gia_dien, don_gia_nuoc, tong_tien, trang_thai, ngay_tao`;
-
-export type InvoiceWithRoom = Invoice & { ten_phong: string; ma_hoa_don: string };
 
 const WITH_ROOM_SELECT = `
   SELECT i.id, i.room_id, i.ky, i.tien_phong, i.tien_dien, i.tien_nuoc, i.phi_khac,

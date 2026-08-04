@@ -4,11 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Current state
 
-Built so far: the Vite + Hono + Wrangler scaffold, `migrations/0001_init.sql` (schema + seed), cookie-session auth with two roles, and the full management API (buildings, rooms, tenants, readings, invoices, payments) plus the read-only tenant API under `/api/me`. The SPA is still a login screen and a placeholder dashboard.
+Built so far: the Vite + Hono + Wrangler scaffold, `migrations/0001_init.sql` (schema + seed), cookie-session auth with two roles, the full management API (buildings, rooms, tenants, readings, invoices, payments), the read-only tenant API under `/api/me`, and the SPA screens for both roles.
 
 The D1 database `nha-tro` exists (APAC, id in `wrangler.toml`), but migration 0001 has been applied **locally only** — the remote database is still empty, and nothing has ever been deployed. The local D1 holds throwaway accounts (`quanly`, `phong01`, `phong02`) and test readings/invoices; the real accounts do not exist anywhere yet.
 
-Not built yet: VietQR, the SePay webhook, and every real UI screen. `README.md` (Vietnamese) is the design spec and its task list at the bottom ("Việc cần làm") is the authoritative backlog.
+Not built yet: VietQR and the SePay webhook. `README.md` (Vietnamese) is the design spec and its task list at the bottom ("Việc cần làm") is the authoritative backlog.
 
 No test runner has been chosen yet.
 
@@ -30,7 +30,14 @@ Build and dev go through **`@cloudflare/vite-plugin`**, not a bare Vite build pl
 
 ```
 index.html            Vite entry, loads src/client/main.tsx
-src/client/           React SPA (Mantine)
+src/client/           React SPA (Mantine + react-router)
+  api.ts              typed wrappers over every endpoint
+  errors.ts           API error code -> Vietnamese message, toasts
+  format.ts           tiền / ngày / kỳ formatting
+  hooks/useResource   fetch-on-mount + reload
+  components/         AppLayout, InvoiceLines, KyPicker, PageState, TrangThaiBadge
+  pages/quanly/       Phòng, Chỉ số, Hóa đơn, Chi tiết hóa đơn, Cài đặt
+  pages/nguoithue/    Hóa đơn của tôi, Chi tiết, Lịch sử chỉ số
 src/server/           Hono API on the Worker
   index.ts            Worker entry: route table, error mapping
   auth.ts             password verify, JWT sign/verify, the three middlewares
@@ -45,6 +52,10 @@ migrations/           SQL for D1, applied via `wrangler d1 migrations apply`
 ```
 
 `src/server/db/` replaces the single `db.ts` the spec sketched — same idea, one file per table. Route handlers validate and decide; they do not write SQL. Money arithmetic lives in `domain/invoice.ts` so it stays testable without a database.
+
+The SPA has no client-side auth guard beyond the route table: `App.tsx` asks `GET /api/auth/me` once, then renders the manager routes or the tenant routes and sends anything unknown to that role's home. That is navigation convenience, not security — the API enforces the roles.
+
+Data loading is `useResource` (fetch on mount, `reload()` after a mutation). No query library, no cache: one manager and two rooms do not need one. Errors surface through `errors.ts`, which maps API codes to Vietnamese and falls back to a readable message for generated codes like `invalid_gia_phong`.
 
 TypeScript is split into three project references — `tsconfig.app.json` (client, DOM libs), `tsconfig.worker.json` (Worker, workerd types), `tsconfig.node.json` (`vite.config.ts`). Client code must not import from `src/server/`, only from `src/shared/`.
 

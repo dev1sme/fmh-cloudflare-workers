@@ -67,10 +67,14 @@ export type Invoice = {
   ngay_tao: string;
 };
 
-export type InvoiceDetail = Invoice & {
+/** What list endpoints return: the invoice plus the room it belongs to. */
+export type InvoiceWithRoom = Invoice & {
   ten_phong: string;
   /** Code shown to tenants and carried in the transfer memo, e.g. HD00123. */
   ma_hoa_don: string;
+};
+
+export type InvoiceDetail = InvoiceWithRoom & {
   da_thu: number;
   con_lai: number;
   reading: Reading | null;

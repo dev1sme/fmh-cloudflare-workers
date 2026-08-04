@@ -17,10 +17,12 @@
   "dependencies": {
     "@mantine/core": "^9.5.1",
     "@mantine/hooks": "^9.5.1",
+    "@mantine/notifications": "^9.5.1",
     "hono": "^4.13.0",
     "jose": "^6.2.8",
     "react": "^19.2.8",
-    "react-dom": "^19.2.8"
+    "react-dom": "^19.2.8",
+    "react-router-dom": "^7.18.2"
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "^1.50.0",

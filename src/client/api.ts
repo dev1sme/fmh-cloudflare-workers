@@ -1,3 +1,16 @@
+import type {
+  Building,
+  GenerateResult,
+  Invoice,
+  InvoiceDetail,
+  InvoiceWithRoom,
+  Payment,
+  Reading,
+  ReadingDetail,
+  RoomDetail,
+  Tenant,
+} from "../shared/types";
+
 export class ApiError extends Error {
   constructor(
     readonly status: number,
@@ -7,7 +20,7 @@ export class ApiError extends Error {
   }
 }
 
-export async function api<T>(path: string, init?: RequestInit): Promise<T> {
+async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(path, {
     ...init,
     headers: { "Content-Type": "application/json", ...init?.headers },
@@ -15,12 +28,12 @@ export async function api<T>(path: string, init?: RequestInit): Promise<T> {
 
   const body = (await res.json().catch(() => null)) as (T & { error?: string }) | null;
 
-  if (!res.ok) {
-    throw new ApiError(res.status, body?.error ?? `http_${res.status}`);
-  }
-
+  if (!res.ok) throw new ApiError(res.status, body?.error ?? `http_${res.status}`);
   return body as T;
 }
+
+const send = <T>(method: string, path: string, body?: unknown) =>
+  request<T>(path, { method, body: body === undefined ? undefined : JSON.stringify(body) });
 
 export type SessionUser = {
   id: number;
@@ -30,11 +43,92 @@ export type SessionUser = {
 };
 
 export const auth = {
-  me: () => api<{ user: SessionUser }>("/api/auth/me"),
+  me: () => request<{ user: SessionUser }>("/api/auth/me"),
   login: (username: string, password: string) =>
-    api<{ user: SessionUser }>("/api/auth/login", {
-      method: "POST",
-      body: JSON.stringify({ username, password }),
-    }),
-  logout: () => api<{ ok: true }>("/api/auth/logout", { method: "POST" }),
+    send<{ user: SessionUser }>("POST", "/api/auth/login", { username, password }),
+  logout: () => send<{ ok: true }>("POST", "/api/auth/logout"),
 };
+
+export const buildings = {
+  list: () => request<{ buildings: Building[] }>("/api/buildings"),
+  update: (id: number, patch: Partial<Building>) =>
+    send<{ building: Building }>("PATCH", `/api/buildings/${id}`, patch),
+};
+
+export type RoomInput = {
+  building_id: number;
+  ten_phong: string;
+  gia_phong: number;
+  dien_tich: number | null;
+};
+
+export const rooms = {
+  list: () => request<{ rooms: RoomDetail[] }>("/api/rooms"),
+  create: (input: RoomInput) => send<{ room: RoomDetail }>("POST", "/api/rooms", input),
+  update: (id: number, patch: Partial<RoomInput>) =>
+    send<{ room: RoomDetail }>("PATCH", `/api/rooms/${id}`, patch),
+  remove: (id: number) => send<{ ok: true }>("DELETE", `/api/rooms/${id}`),
+};
+
+export const tenants = {
+  list: (roomId?: number) =>
+    request<{ tenants: Tenant[] }>(`/api/tenants${roomId ? `?room_id=${roomId}` : ""}`),
+  create: (input: { room_id: number; ho_ten: string; sdt?: string | null; ngay_vao?: string }) =>
+    send<{ tenant: Tenant }>("POST", "/api/tenants", input),
+  update: (id: number, patch: { ho_ten?: string; sdt?: string | null; ngay_ra?: string | null }) =>
+    send<{ tenant: Tenant }>("PATCH", `/api/tenants/${id}`, patch),
+};
+
+export type ReadingInput = {
+  room_id: number;
+  ky: string;
+  dien_cu?: number;
+  dien_moi: number;
+  nuoc_cu?: number;
+  nuoc_moi: number;
+  ngay_ghi?: string;
+};
+
+export const readings = {
+  list: (params: { ky?: string; room_id?: number } = {}) =>
+    request<{ readings: ReadingDetail[] }>(`/api/readings${query(params)}`),
+  suggest: (roomId: number, ky: string) =>
+    request<{ dien_cu: number; nuoc_cu: number; ky_truoc: string | null }>(
+      `/api/readings/goi-y?room_id=${roomId}&ky=${ky}`,
+    ),
+  create: (input: ReadingInput) => send<{ reading: Reading }>("POST", "/api/readings", input),
+  update: (id: number, patch: Partial<Omit<ReadingInput, "room_id" | "ky">>) =>
+    send<{ reading: Reading }>("PATCH", `/api/readings/${id}`, patch),
+  remove: (id: number) => send<{ ok: true }>("DELETE", `/api/readings/${id}`),
+};
+
+export const invoices = {
+  list: (params: { ky?: string; room_id?: number; trang_thai?: string } = {}) =>
+    request<{ invoices: InvoiceWithRoom[] }>(`/api/invoices${query(params)}`),
+  get: (id: number) => request<{ invoice: InvoiceDetail }>(`/api/invoices/${id}`),
+  generate: (ky: string, roomIds?: number[]) =>
+    send<GenerateResult>("POST", "/api/invoices/generate", { ky, room_ids: roomIds }),
+  update: (id: number, patch: { phi_khac?: number; tien_phong?: number; trang_thai?: string }) =>
+    send<{ invoice: Invoice }>("PATCH", `/api/invoices/${id}`, patch),
+  remove: (id: number) => send<{ ok: true }>("DELETE", `/api/invoices/${id}`),
+  pay: (
+    id: number,
+    input: { so_tien: number; ngay_tt?: string; phuong_thuc?: string; ghi_chu?: string | null },
+  ) => send<{ payment: Payment; invoice: Invoice }>("POST", `/api/invoices/${id}/payments`, input),
+  removePayment: (paymentId: number) => send<{ ok: true }>("DELETE", `/api/payments/${paymentId}`),
+};
+
+/** Tenant-facing endpoints; the room is taken from the session, never sent. */
+export const me = {
+  room: () => request<{ room: RoomDetail }>("/api/me/phong"),
+  invoices: () => request<{ invoices: InvoiceWithRoom[] }>("/api/me/invoices"),
+  invoice: (id: number) => request<{ invoice: InvoiceDetail }>(`/api/me/invoices/${id}`),
+  readings: () => request<{ readings: ReadingDetail[] }>("/api/me/readings"),
+};
+
+function query(params: Record<string, string | number | undefined>): string {
+  const entries = Object.entries(params).filter(([, value]) => value !== undefined && value !== "");
+  if (entries.length === 0) return "";
+
+  return `?${entries.map(([key, value]) => `${key}=${encodeURIComponent(String(value))}`).join("&")}`;
+}

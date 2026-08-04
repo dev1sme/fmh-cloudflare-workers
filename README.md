@@ -200,6 +200,7 @@ Thực tế mỗi tháng chỉ ghi thêm vài chục dòng, nên gần như khô
 - [x] Đăng nhập + phân quyền quản lý / người thuê
 - [x] API: rooms / readings / invoices / payments
 - [x] Logic sinh hóa đơn từ chỉ số công tơ
+- [x] Giao diện: danh sách phòng, form nhập chỉ số, trang hóa đơn, trang người thuê
 - [ ] Sinh mã VietQR trên hóa đơn
 - [ ] (Tùy chọn) Webhook SePay tự động xác nhận thanh toán
-- [ ] Giao diện: danh sách phòng, form nhập chỉ số, trang hóa đơn
+- [ ] Deploy lần đầu + kiểm tra CPU time thực tế của route đăng nhập
