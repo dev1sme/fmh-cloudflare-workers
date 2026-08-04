@@ -193,7 +193,15 @@ npm run build            # Vite build frontend -> dist/
 npx wrangler deploy      # đưa Worker + static assets lên Cloudflare
 ```
 
-Sau khi deploy, gắn domain trong Cloudflare: **Workers & Pages → dự án → Settings → Domains/Routes**. Vì domain đã ở Cloudflare, DNS được cấu hình tự động, HTTPS có sẵn.
+Domain khai báo ngay trong `wrangler.toml`, không cần vào dashboard:
+
+```toml
+routes = [{ pattern = "fmh.dev1sme.cloud", custom_domain = true }]
+```
+
+`wrangler deploy` tự tạo DNS record trong zone và cấp HTTPS. Lưu ý: khi đã có `routes`, Cloudflare **tắt** URL `*.workers.dev`; muốn giữ thì thêm `workers_dev = true`.
+
+Bản đang chạy: **https://fmh.dev1sme.cloud**
 
 ## Ghi chú về chi phí
 
