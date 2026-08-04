@@ -33,12 +33,14 @@ Frontend build ra file tĩnh, được chính Worker phục vụ; các request `
 
 ```
 .
+├── index.html           # entry Vite, nạp src/client/main.tsx
 ├── src/
-│   ├── client/          # React SPA (Vite)
+│   ├── client/          # React SPA (Vite + Mantine)
 │   │   ├── main.tsx
+│   │   ├── App.tsx
 │   │   └── pages/
 │   └── server/          # API Hono chạy trên Worker
-│       ├── index.ts     # entry Worker: phục vụ static + route /api
+│       ├── index.ts     # entry Worker: route /api
 │       ├── routes/      # rooms, readings, invoices, payments, auth, webhook
 │       ├── auth.ts      # băm/verify mật khẩu, ký/verify JWT, middleware
 │       └── db.ts        # truy vấn D1
@@ -47,6 +49,8 @@ Frontend build ra file tĩnh, được chính Worker phục vụ; các request `
 ├── vite.config.ts
 └── package.json
 ```
+
+Build và dev chạy qua [`@cloudflare/vite-plugin`](https://developers.cloudflare.com/workers/vite-plugin/): một lệnh `npm run dev` chạy cả SPA (có HMR) lẫn Worker trong runtime workerd thật, kèm D1 local — không cần dựng 2 process rồi proxy. `vite build` xuất ra `dist/client/` (asset) và `dist/nha_tro/` (Worker), `wrangler deploy` đẩy cả hai lên trong một lần.
 
 ## Mô hình dữ liệu
 
@@ -61,6 +65,14 @@ payments    (id, invoice_id, so_tien, ngay_tt, phuong_thuc, ghi_chu)
 users       (id, username, password_hash)   -- 3 tài khoản cố định
 ```
 
+Ba bổ sung so với thiết kế ban đầu, đã nằm trong `migrations/0001_init.sql`:
+
+- `buildings` có thêm `don_gia_dien`, `don_gia_nuoc` — đơn giá **hiện hành** của từng nhà, dùng để điền vào hóa đơn mới. Trước đó không bảng nào giữ giá này.
+- `tenants` có thêm `ngay_ra` (NULL = đang thuê), kèm unique index đảm bảo mỗi phòng chỉ có một người thuê đang ở. Không có cột này thì khách cũ ra, khách mới vào cùng phòng sẽ không phân biệt được.
+- `readings` và `invoices` đều có `UNIQUE(room_id, ky)` — nhập chỉ số hai lần không sinh hai hóa đơn cho cùng một tháng.
+
+Tiền lưu bằng `INTEGER` (VND), ngày lưu bằng `TEXT` dạng ISO.
+
 Hai điểm cần lưu ý về thiết kế:
 
 - **Lưu đơn giá điện/nước ngay trên `invoices`** (`don_gia_dien`, `don_gia_nuoc`), không tính động theo giá hiện tại. Khi giá thay đổi, hóa đơn cũ vẫn giữ đúng giá tại thời điểm phát hành.
@@ -74,23 +86,30 @@ Hai điểm cần lưu ý về thiết kế:
 
 ## Cài đặt & chạy local
 
+Database D1 `nha-tro` đã được tạo sẵn, `database_id` đã nằm trong `wrangler.toml`.
+
 ```bash
 # 1. Cài phụ thuộc
 npm install
 
-# 2. Tạo database D1
-npx wrangler d1 create nha-tro
-# Copy database_id nhận được vào wrangler.toml (mục [[d1_databases]])
+# 2. Sinh type cho binding (worker-configuration.d.ts không commit)
+npm run cf-typegen
 
-# 3. Chạy migration tạo bảng
-npx wrangler d1 execute nha-tro --local --file ./migrations/0001_init.sql
+# 3. Chạy migration tạo bảng trên D1 local
+npm run db:migrate
 
-# 4. Đặt khóa ký JWT (dùng khi chạy thật)
-npx wrangler secret put JWT_SECRET
-
-# 5. Chạy môi trường phát triển
+# 4. Chạy môi trường phát triển  ->  http://localhost:5173
 npm run dev
 ```
+
+Khi cần chạy thật:
+
+```bash
+npm run db:migrate:remote                      # migration lên D1 remote
+./node_modules/.bin/wrangler secret put JWT_SECRET
+```
+
+> `npx` không dùng được trong môi trường này (bị hook viết lại thành `npm`). Gọi qua npm script hoặc `./node_modules/.bin/wrangler`.
 
 ## Cấu hình
 
@@ -98,16 +117,19 @@ npm run dev
 
 ```toml
 name = "nha-tro"
-main = "src/server/index.ts"
-compatibility_date = "2026-01-01"
+main = "./src/server/index.ts"
+compatibility_date = "2026-08-04"
 
 [assets]
-directory = "./dist"          # thư mục Vite build ra
+not_found_handling = "single-page-application"   # route không khớp asset -> trả index.html
+run_worker_first = ["/api/*"]                    # chỉ /api/* mới vào Worker
+# Không khai báo `directory`: vite-plugin tự trỏ vào thư mục build của client.
 
 [[d1_databases]]
 binding = "DB"
 database_name = "nha-tro"
-database_id = "<điền-id-của-bạn>"
+database_id = "5adee76f-9107-43c1-b428-4ba9b49bc1e5"
+migrations_dir = "./migrations"
 ```
 
 Biến bí mật (đặt bằng `wrangler secret put`, không để trong code):
@@ -149,7 +171,8 @@ Thực tế mỗi tháng chỉ ghi thêm vài chục dòng, nên gần như khô
 
 ## Việc cần làm
 
-- [ ] Khởi tạo dự án React (Vite) + Hono + Wrangler
+- [x] Khởi tạo dự án React (Vite) + Hono + Wrangler
+- [ ] Nhập số liệu thật: tên nhà, tên phòng, `gia_phong`, thông tin người thuê (seed hiện là giá trị tạm)
 - [ ] Viết migration tạo bảng, seed 3 tài khoản
 - [ ] API: rooms / readings / invoices / payments
 - [ ] Logic sinh hóa đơn từ chỉ số công tơ

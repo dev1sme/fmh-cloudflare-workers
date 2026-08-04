@@ -4,9 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Current state
 
-The repository is **greenfield**: it contains only `README.md` (the design spec, in Vietnamese) and `LICENSE`. There is no `package.json`, no source tree, and no `wrangler.toml` yet. Everything below describes the target design agreed in `README.md` — treat it as the contract to build against, and update this file once the real code diverges from it.
+Scaffold is in place: `package.json`, `wrangler.toml`, `vite.config.ts`, tsconfig project references, a Hono Worker with `/api/health`, a Mantine SPA shell, and `migrations/0001_init.sql` (schema + seed). The D1 database `nha-tro` exists (APAC, id in `wrangler.toml`); migration 0001 has been applied **locally only** — the remote database is still empty.
 
-The task list at the bottom of `README.md` ("Việc cần làm") is the authoritative backlog.
+Not built yet: auth, the rooms/readings/invoices/payments API, invoice generation, VietQR, the SePay webhook, and every real UI screen. `README.md` (Vietnamese) is the design spec and its task list at the bottom ("Việc cần làm") is the authoritative backlog.
+
+No test runner has been chosen yet.
 
 ## What the app is
 
@@ -16,37 +18,48 @@ Scale is deliberately tiny and must stay inside Cloudflare's free tier. Prefer t
 
 ## Architecture
 
-**One Worker serves everything.** The React SPA is built by Vite into `dist/`, served as static assets by the same Worker that handles `/api/*` via Hono. One deploy, one URL. Next.js/OpenNext was explicitly rejected to avoid the configuration overhead — do not reintroduce a meta-framework.
+**One Worker serves everything.** Vite builds the React SPA and the Worker together; the same Worker serves the static assets and handles `/api/*` via Hono. One deploy, one URL. Next.js/OpenNext was explicitly rejected to avoid the configuration overhead — do not reintroduce a meta-framework.
+
+Build and dev go through **`@cloudflare/vite-plugin`**, not a bare Vite build plus a hand-rolled `[assets] directory`. `npm run dev` runs the Worker in the real workerd runtime with a local D1 binding and client HMR in one process. Consequences worth knowing:
+
+- `assets.directory` is *not* set in `wrangler.toml` — the plugin points it at the client build output itself.
+- `vite build` emits `dist/client/` (assets) and `dist/nha_tro/` (Worker + a generated output `wrangler.json`). Deploy reads the generated config; `wrangler.toml` is the input.
+- `run_worker_first = ["/api/*"]` routes API calls to the Worker explicitly; everything else falls through to the SPA (`not_found_handling = "single-page-application"`).
 
 ```
-src/client/   React SPA (Vite)
-src/server/   Hono API on the Worker
-  index.ts    Worker entry: static assets + /api routes
-  routes/     rooms, readings, invoices, payments, auth, webhook
-  auth.ts     password hash/verify, JWT sign/verify, middleware
-  db.ts       D1 queries
-migrations/   SQL for D1
+index.html            Vite entry, loads src/client/main.tsx
+src/client/           React SPA (Mantine)
+src/server/           Hono API on the Worker
+  index.ts            Worker entry — currently only /api/health
+  routes/             rooms, readings, invoices, payments, auth, webhook (not written yet)
+  auth.ts             password hash/verify, JWT sign/verify, middleware (not written yet)
+  db.ts               D1 queries (not written yet)
+src/shared/           types shared between client and server (not created yet)
+migrations/           SQL for D1, applied via `wrangler d1 migrations apply`
 ```
+
+TypeScript is split into three project references — `tsconfig.app.json` (client, DOM libs), `tsconfig.worker.json` (Worker, workerd types), `tsconfig.node.json` (`vite.config.ts`). Client code must not import from `src/server/`, only from `src/shared/`.
 
 Stack: TypeScript, React + Vite, Mantine (UI), Hono, Cloudflare D1 (SQLite), `jose` for JWT.
 
 ## Commands
 
-Per `README.md`; the npm scripts do not exist yet and must be created alongside `package.json`.
-
 ```bash
 npm install
-npm run dev                                                              # local dev
-npm run build                                                            # Vite -> dist/
-npx wrangler deploy                                                      # Worker + static assets
-
-npx wrangler d1 create nha-tro                                           # then paste database_id into wrangler.toml
-npx wrangler d1 execute nha-tro --local --file ./migrations/0001_init.sql # local migration
-npx wrangler d1 execute nha-tro --remote --file ./migrations/0001_init.sql
-npx wrangler secret put JWT_SECRET
+npm run dev                  # Vite + workerd + local D1, one process, http://localhost:5173
+npm run build                # tsc -b && vite build -> dist/
+npm run deploy               # build + wrangler deploy
+npm run typecheck
+npm run cf-typegen           # regenerate worker-configuration.d.ts — rerun after editing wrangler.toml
+npm run db:migrate           # apply pending migrations to the LOCAL D1
+npm run db:migrate:remote    # apply pending migrations to the REMOTE D1 (needs approval)
 ```
 
-No test runner has been chosen yet.
+`worker-configuration.d.ts` is generated and gitignored, so a fresh clone must run `npm run cf-typegen` before `npm run typecheck` will pass.
+
+**`npx` does not work in this environment** — a shell hook rewrites it and it resolves to `npm`. Always go through an npm script, or call `./node_modules/.bin/wrangler` directly.
+
+`npm audit` reports vulnerabilities in `undici` reached through `miniflare`/`wrangler`. Those are local-toolchain-only dev dependencies and none of it ships to the Worker; do not "fix" them by downgrading `@cloudflare/vite-plugin`.
 
 ## MCP servers
 
@@ -66,16 +79,24 @@ Rules of use:
 
 Table/column names mix English table names with **Vietnamese column names** (`ten_phong`, `gia_phong`, `tien_dien`, `trang_thai`, `ngay_tao`). Keep this convention for new columns rather than normalizing to English.
 
+`migrations/0001_init.sql` is the source of truth. It follows `README.md` with three additions made during scaffolding (marked ⊕):
+
 ```
-buildings (id, name, address)
-rooms     (id, building_id, ten_phong, gia_phong, dien_tich)
-tenants   (id, room_id, ho_ten, sdt, ngay_vao)
-readings  (id, room_id, ky /YYYY-MM/, dien_cu, dien_moi, nuoc_cu, nuoc_moi, ngay_ghi)
+buildings (id, name, address, ⊕don_gia_dien, ⊕don_gia_nuoc)
+rooms     (id, building_id, ten_phong, gia_phong, dien_tich)          UNIQUE(building_id, ten_phong)
+tenants   (id, room_id, ho_ten, sdt, ngay_vao, ⊕ngay_ra)              UNIQUE(room_id) WHERE ngay_ra IS NULL
+readings  (id, room_id, ky /YYYY-MM/, dien_cu, dien_moi, nuoc_cu, nuoc_moi, ngay_ghi)   ⊕UNIQUE(room_id, ky)
 invoices  (id, room_id, ky, tien_phong, tien_dien, tien_nuoc, phi_khac,
-           don_gia_dien, don_gia_nuoc, tong_tien, trang_thai, ngay_tao)
+           don_gia_dien, don_gia_nuoc, tong_tien, trang_thai, ngay_tao)                 ⊕UNIQUE(room_id, ky)
 payments  (id, invoice_id, so_tien, ngay_tt, phuong_thuc, ghi_chu)
 users     (id, username, password_hash)
 ```
+
+- `buildings.don_gia_dien` / `don_gia_nuoc` hold the **current** tariff, per building (the two buildings may differ). It is what a newly generated invoice copies from; it is never read when displaying an existing invoice.
+- `tenants.ngay_ra` NULL means still renting. The partial unique index enforces at most one active tenant per room, while keeping past tenants for history.
+- The `UNIQUE(room_id, ky)` pairs stop a double meter entry from producing two invoices for the same month.
+
+Money is `INTEGER` VND — no floats, no minor units. Dates are ISO `TEXT`. `trang_thai` ∈ `chua_thanh_toan` | `da_thanh_toan` | `huy`; `phuong_thuc` ∈ `chuyen_khoan` | `tien_mat` (both CHECK-constrained).
 
 Two invariants that the design depends on:
 
@@ -83,6 +104,8 @@ Two invariants that the design depends on:
 - **`readings` holds meter numbers only; money lives in `invoices`.** This keeps reading history clean and lets a period's opening reading (`dien_cu`/`nuoc_cu`) be auto-filled from the previous period's closing reading.
 
 Billing period is `ky` in `YYYY-MM` form. Invoice line: `tien_dien = (dien_moi - dien_cu) * don_gia_dien`, same shape for water.
+
+Seed in 0001: one building (`Nhà trọ 1`, điện 3.000đ/kWh, nước 15.000đ/m³), two rooms (`P101`, `P102`, `gia_phong = 0`), one placeholder tenant. Names and `gia_phong` are placeholders awaiting real data — do not treat them as facts.
 
 ## Auth
 
