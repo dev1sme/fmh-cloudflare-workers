@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 
 import { requirePhong, requireQuanLy } from "./auth";
+import { securityHeaders } from "./headers";
 import { countRooms } from "./db/rooms";
 import { accountRoutes } from "./routes/accounts";
 import { authRoutes } from "./routes/auth";
@@ -15,6 +16,9 @@ import type { AppEnv } from "./types";
 import { ValidationError } from "./validate";
 
 const app = new Hono<AppEnv>();
+
+// First in the chain so it covers public routes, errors and 404s alike.
+app.use("*", securityHeaders);
 
 // Public.
 app.get("/api/health", (c) => c.json({ ok: true }));

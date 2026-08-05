@@ -1,0 +1,18 @@
+# Headers for the static SPA (HTML, JS, CSS).
+#
+# These cannot be set in the Worker: `run_worker_first = ["/api/*"]` in
+# wrangler.toml means Cloudflare serves every non-API path straight from the
+# assets store without ever invoking the Worker. API responses get their own
+# headers from `securityHeaders` in src/server/headers.ts — keep the two in
+# step when changing anything here.
+#
+# Vite copies this file verbatim into dist/client/, which is the assets
+# directory. Cloudflare reads it as configuration and does not serve it.
+
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: same-origin
+  X-Frame-Options: DENY
+  Permissions-Policy: accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'
