@@ -41,14 +41,14 @@ export function useThaoTacChiSo(period: string, reload: () => void) {
   const goiY = useCallback((roomId: number) => readingsApi.suggest(roomId, period), [period]);
 
   async function luu(
-    target: { roomId: number; readingId: number | null },
+    target: { roomId: number; readingCode: string | null },
     input: ChiSoNhap,
   ): Promise<boolean> {
     try {
-      if (target.readingId === null) {
+      if (target.readingCode === null) {
         await readingsApi.create({ room_id: target.roomId, period, ...input });
       } else {
-        await readingsApi.update(target.readingId, input);
+        await readingsApi.update(target.readingCode, input);
       }
       baoThanhCong("Đã lưu chỉ số.");
       reload();
@@ -59,9 +59,9 @@ export function useThaoTacChiSo(period: string, reload: () => void) {
     }
   }
 
-  async function xoa(id: number): Promise<boolean> {
+  async function xoa(code: string): Promise<boolean> {
     try {
-      await readingsApi.remove(id);
+      await readingsApi.remove(code);
       baoThanhCong("Đã xoá chỉ số.");
       reload();
       return true;

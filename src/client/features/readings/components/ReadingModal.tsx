@@ -21,7 +21,7 @@ export function ReadingModal({
   goiY: (roomId: number) => Promise<{ electricity_start: number; water_start: number; previous_period: string | null }>;
   onClose: () => void;
   onSubmit: (
-    target: { roomId: number; readingId: number | null },
+    target: { roomId: number; readingCode: string | null },
     input: ChiSoNhap,
   ) => Promise<boolean>;
 }) {
@@ -72,7 +72,7 @@ export function ReadingModal({
     setBusy(true);
 
     const ok = await onSubmit(
-      { roomId: target.room.id, readingId: target.reading?.id ?? null },
+      { roomId: target.room.id, readingCode: target.reading?.code ?? null },
       {
         electricity_start: Number(dienCu),
         electricity_end: Number(dienMoi),

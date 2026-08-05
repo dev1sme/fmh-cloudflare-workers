@@ -19,6 +19,8 @@ export const CODE_PREFIX = {
   room: "RM",
   tenant: "TN",
   account: "AC",
+  reading: "RD",
+  payment: "PM",
 } as const;
 
 export type CodePrefix = (typeof CODE_PREFIX)[keyof typeof CODE_PREFIX];

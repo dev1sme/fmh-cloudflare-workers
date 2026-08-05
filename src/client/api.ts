@@ -174,9 +174,9 @@ export const readings = {
       `/api/readings/suggest?room_id=${roomId}&period=${period}`,
     ),
   create: (input: ReadingInput) => send<{ reading: Reading }>("POST", "/api/readings", input),
-  update: (id: number, patch: Partial<Omit<ReadingInput, "room_id" | "period">>) =>
-    send<{ reading: Reading }>("PATCH", `/api/readings/${id}`, patch),
-  remove: (id: number) => send<{ ok: true }>("DELETE", `/api/readings/${id}`),
+  update: (code: string, patch: Partial<Omit<ReadingInput, "room_id" | "period">>) =>
+    send<{ reading: Reading }>("PATCH", `/api/readings/${code}`, patch),
+  remove: (code: string) => send<{ ok: true }>("DELETE", `/api/readings/${code}`),
 };
 
 export const invoices = {
@@ -195,7 +195,8 @@ export const invoices = {
     code: string,
     input: { amount: number; paid_on?: string; method?: string; note?: string | null },
   ) => send<{ payment: Payment; invoice: Invoice }>("POST", `/api/invoices/${code}/payments`, input),
-  removePayment: (paymentId: number) => send<{ ok: true }>("DELETE", `/api/payments/${paymentId}`),
+  removePayment: (paymentCode: string) =>
+    send<{ ok: true }>("DELETE", `/api/payments/${paymentCode}`),
 };
 
 /** Tenant-facing endpoints; the room is taken from the session, never sent. */

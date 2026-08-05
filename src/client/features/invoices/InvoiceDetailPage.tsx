@@ -48,7 +48,7 @@ export function InvoiceDetailPage() {
       title: "Xoá khoản thu",
       message: `Xoá khoản thu ${tien(payment.amount)}? Trạng thái hóa đơn sẽ được tính lại.`,
       confirmLabel: "Xoá",
-      onConfirm: () => xoaThanhToan(payment.id),
+      onConfirm: () => xoaThanhToan(payment.code),
     });
   }
 

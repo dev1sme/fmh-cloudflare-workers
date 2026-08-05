@@ -84,6 +84,8 @@ export type TenantDetail = Tenant & {
 
 export type Reading = {
   id: number;
+  /** Public code used in URLs instead of `id` — see the invoice note above. */
+  code: string;
   room_id: number;
   period: string;
   electricity_start: number;
@@ -164,6 +166,8 @@ export type PaymentMethod = "BANK_TRANSFER" | "CASH";
 
 export type Payment = {
   id: number;
+  /** Public code used in URLs instead of `id` — see the invoice note above. */
+  code: string;
   invoice_id: number;
   amount: number;
   paid_on: string;

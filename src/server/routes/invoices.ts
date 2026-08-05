@@ -13,7 +13,7 @@ import {
 import { createPayment, listPayments } from "../db/payments";
 import { bayGio, homNay } from "../domain/period";
 import { estimateInvoice, sinhMaHoaDon, tongTien } from "../domain/invoice";
-import { CODE_PREFIX } from "../domain/code";
+import { CODE_PREFIX, sinhMa } from "../domain/code";
 import { failure, notFound, ok } from "../envelope";
 import { capNhatTrangThai } from "./payments";
 import type { AppEnv } from "../types";
@@ -209,6 +209,7 @@ invoiceRoutes.post("/:code/payments", async (c) => {
   }
 
   const payment = await createPayment(c.env.DB, {
+    code: sinhMa(CODE_PREFIX.payment),
     invoice_id: invoiceId,
     amount: requireInt(body.amount, "amount"),
     paid_on: body.paid_on === undefined ? homNay() : requireDate(body.paid_on, "paid_on"),

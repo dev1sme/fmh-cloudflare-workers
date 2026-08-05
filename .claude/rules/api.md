@@ -25,11 +25,11 @@ Management (`requireQuanLy`): full CRUD on `/buildings`, `/rooms`, `/tenants`, `
 
 `GET /api/dashboard?period=` (defaults to the current month) is a read-only rollup for the manager's home screen: revenue for the period, outstanding debt per room **across every period**, occupancy, meter usage against the previous period, and the last 12 periods for the chart. Its fields are English (`billed`, `collected`, `outstanding`) because it mirrors no table.
 
-Paths address **invoices, rooms, tenants and accounts by their public code**, not the row id: `/api/rooms/RMC7AD24C8`, `/api/invoices/HD3C8EA506`. `parseCode(CODE_PREFIX.x, …)` checks the prefix as well as the shape, so a numeric id is 400 `INVALID_CODE` and so is a room code in an invoice path — neither reaches a lookup.
+Paths address **every resource except buildings by its public code**, not the row id: `/api/rooms/RMC7AD24C8`, `/api/invoices/HD3C8EA506`. `parseCode(CODE_PREFIX.x, …)` checks the prefix as well as the shape, so a numeric id is 400 `INVALID_CODE` and so is a room code in an invoice path — neither reaches a lookup.
 
 Ids remain in request bodies and responses (`room_id` on a tenant, `building_id` on a room) because foreign keys are still ids. What changed is what appears in a URL, a browser history entry, a server log and a referrer.
 
-`readings` and `payments` still take `:id`; they have no code column yet.
+`/api/buildings/:id` is the last route on a row id. It is manager-only and never reaches a tenant's URL or a QR, so it was left alone.
 
 `GET /api/me/dashboard` is the tenant's equivalent, deliberately much plainer: meter usage and money for their own room, month by month, newest first. Its periods come from a UNION of `readings` and `invoices`, not either alone — a month can have a reading the manager has not invoiced yet, and `total`/`status` stay null until it does.
 

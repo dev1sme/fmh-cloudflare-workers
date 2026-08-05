@@ -70,9 +70,9 @@ export function useThaoTacHoaDon(code: string, reload: () => void, onDeleted: ()
     }
   }
 
-  async function xoaThanhToan(paymentId: number): Promise<boolean> {
+  async function xoaThanhToan(paymentCode: string): Promise<boolean> {
     try {
-      await invoicesApi.removePayment(paymentId);
+      await invoicesApi.removePayment(paymentCode);
       baoThanhCong("Đã xoá khoản thu.");
       reload();
       return true;

@@ -23,7 +23,7 @@ export function ReadingsPage() {
       title: "Xoá chỉ số",
       message: `Xoá chỉ số ${reading.room_name} ${periodLabel(reading.period).toLowerCase()}? Hóa đơn của kỳ này sẽ không sinh lại được cho tới khi nhập lại.`,
       confirmLabel: "Xoá",
-      onConfirm: () => xoa(reading.id),
+      onConfirm: () => xoa(reading.code),
     });
   }
 

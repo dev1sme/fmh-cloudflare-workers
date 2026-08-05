@@ -2,10 +2,10 @@ import type { Reading, ReadingDetail } from "../../shared/types";
 import { buildSet, Where } from "./sql";
 
 const SELECT =
-  "SELECT id, room_id, period, electricity_start, electricity_end, water_start, water_end, recorded_on FROM readings";
+  "SELECT id, code, room_id, period, electricity_start, electricity_end, water_start, water_end, recorded_on FROM readings";
 
 const DETAIL_SELECT = `
-  SELECT rd.id, rd.room_id, rd.period, rd.electricity_start, rd.electricity_end, rd.water_start, rd.water_end, rd.recorded_on,
+  SELECT rd.id, rd.code, rd.room_id, rd.period, rd.electricity_start, rd.electricity_end, rd.water_start, rd.water_end, rd.recorded_on,
          r.room_name,
          rd.electricity_end - rd.electricity_start AS electricity_used,
          rd.water_end - rd.water_start AS water_used
@@ -28,6 +28,11 @@ export async function listReadings(
 
 export function getReading(db: D1Database, id: number): Promise<Reading | null> {
   return db.prepare(`${SELECT} WHERE id = ?`).bind(id).first<Reading>();
+}
+
+/** Paths carry the public code; ids stay internal and in foreign keys. */
+export function getReadingByCode(db: D1Database, code: string): Promise<Reading | null> {
+  return db.prepare(`${SELECT} WHERE code = ?`).bind(code).first<Reading>();
 }
 
 export function getReadingByRoomKy(
@@ -54,6 +59,7 @@ export function getPreviousReading(
 }
 
 export type ReadingInput = {
+  code: string;
   room_id: number;
   period: string;
   electricity_start: number;
@@ -69,8 +75,8 @@ export async function createReading(
 ): Promise<Reading | null> {
   const row = await db
     .prepare(
-      `INSERT INTO readings (room_id, period, electricity_start, electricity_end, water_start, water_end, recorded_on)
-       VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id`,
+      `INSERT INTO readings (code, room_id, period, electricity_start, electricity_end, water_start, water_end, recorded_on)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`,
     )
     .bind(
       input.room_id,

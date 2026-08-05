@@ -1,6 +1,6 @@
 import type { Payment, PaymentMethod } from "../../shared/types";
 
-const SELECT = "SELECT id, invoice_id, amount, paid_on, method, note FROM payments";
+const SELECT = "SELECT id, code, invoice_id, amount, paid_on, method, note FROM payments";
 
 export async function listPayments(db: D1Database, invoiceId: number): Promise<Payment[]> {
   const { results } = await db
@@ -14,6 +14,11 @@ export function getPayment(db: D1Database, id: number): Promise<Payment | null> 
   return db.prepare(`${SELECT} WHERE id = ?`).bind(id).first<Payment>();
 }
 
+/** Paths carry the public code; ids stay internal and in foreign keys. */
+export function getPaymentByCode(db: D1Database, code: string): Promise<Payment | null> {
+  return db.prepare(`${SELECT} WHERE code = ?`).bind(code).first<Payment>();
+}
+
 export async function sumPayments(db: D1Database, invoiceId: number): Promise<number> {
   const row = await db
     .prepare("SELECT COALESCE(SUM(amount), 0) AS total FROM payments WHERE invoice_id = ?")
@@ -23,6 +28,7 @@ export async function sumPayments(db: D1Database, invoiceId: number): Promise<nu
 }
 
 export type PaymentInput = {
+  code: string;
   invoice_id: number;
   amount: number;
   paid_on: string;
@@ -36,10 +42,10 @@ export async function createPayment(
 ): Promise<Payment | null> {
   const row = await db
     .prepare(
-      `INSERT INTO payments (invoice_id, amount, paid_on, method, note)
-       VALUES (?, ?, ?, ?, ?) RETURNING id`,
+      `INSERT INTO payments (code, invoice_id, amount, paid_on, method, note)
+       VALUES (?, ?, ?, ?, ?, ?) RETURNING id`,
     )
-    .bind(input.invoice_id, input.amount, input.paid_on, input.method, input.note)
+    .bind(input.code, input.invoice_id, input.amount, input.paid_on, input.method, input.note)
     .first<{ id: number }>();
 
   return row ? getPayment(db, row.id) : null;

@@ -1,11 +1,12 @@
 import { Hono } from "hono";
 
 import { getInvoice, updateInvoice } from "../db/invoices";
-import { deletePayment, getPayment, sumPayments } from "../db/payments";
+import { deletePayment, getPaymentByCode, sumPayments } from "../db/payments";
+import { CODE_PREFIX } from "../domain/code";
 import { notFound, ok } from "../envelope";
 import type { Invoice } from "../../shared/types";
 import type { AppEnv } from "../types";
-import { parseId } from "../validate";
+import { parseCode } from "../validate";
 
 /**
  * Re-derives the invoice status from what has actually been received, so
@@ -28,13 +29,12 @@ export async function capNhatTrangThai(
 
 export const paymentRoutes = new Hono<AppEnv>();
 
-paymentRoutes.delete("/:id", async (c) => {
-  const id = parseId(c.req.param("id"));
-
-  const payment = await getPayment(c.env.DB, id);
+// Paths carry the public code; the row id stays internal and in foreign keys.
+paymentRoutes.delete("/:code", async (c) => {
+  const payment = await getPaymentByCode(c.env.DB, parseCode(CODE_PREFIX.payment, c.req.param("code")));
   if (!payment) return notFound(c, "Payment not found.");
 
-  await deletePayment(c.env.DB, id);
+  await deletePayment(c.env.DB, payment.id);
   const invoice = await capNhatTrangThai(c.env.DB, payment.invoice_id);
 
   return ok(c, { ok: true, invoice }, "Payment deleted.");

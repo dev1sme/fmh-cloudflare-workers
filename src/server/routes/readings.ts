@@ -5,11 +5,12 @@ import {
   createReading,
   deleteReading,
   getPreviousReading,
-  getReading,
+  getReadingByCode,
   getReadingByRoomKy,
   listReadings,
   updateReading,
 } from "../db/readings";
+import { CODE_PREFIX, sinhMa } from "../domain/code";
 import { homNay } from "../domain/period";
 import { failure, notFound, ok } from "../envelope";
 import type { AppEnv } from "../types";
@@ -18,7 +19,7 @@ import {
   jsonBody,
   optionalDate,
   optionalInt,
-  parseId,
+  parseCode,
   queryId,
   requireId,
   requireInt,
@@ -61,8 +62,9 @@ readingRoutes.get("/suggest", async (c) => {
   );
 });
 
-readingRoutes.get("/:id", async (c) => {
-  const reading = await getReading(c.env.DB, parseId(c.req.param("id")));
+// Paths carry the public code; the row id stays internal and in foreign keys.
+readingRoutes.get("/:code", async (c) => {
+  const reading = await getReadingByCode(c.env.DB, parseCode(CODE_PREFIX.reading, c.req.param("code")));
   if (!reading) return notFound(c, "Reading not found.");
 
   return ok(c, { reading }, "Reading retrieved.");
@@ -95,6 +97,7 @@ readingRoutes.post("/", async (c) => {
   if (water_end < water_start) fail("WATER_END_BELOW_START");
 
   const reading = await createReading(c.env.DB, {
+    code: sinhMa(CODE_PREFIX.reading),
     room_id: roomId,
     period,
     electricity_start,
@@ -107,11 +110,10 @@ readingRoutes.post("/", async (c) => {
   return ok(c, { reading }, "Reading recorded.", 201);
 });
 
-readingRoutes.patch("/:id", async (c) => {
-  const id = parseId(c.req.param("id"));
+readingRoutes.patch("/:code", async (c) => {
   const body = await jsonBody(c.req);
 
-  const current = await getReading(c.env.DB, id);
+  const current = await getReadingByCode(c.env.DB, parseCode(CODE_PREFIX.reading, c.req.param("code")));
   if (!current) return notFound(c, "Reading not found.");
 
   const next = {
@@ -124,7 +126,7 @@ readingRoutes.patch("/:id", async (c) => {
   if (next.electricity_end < next.electricity_start) fail("ELECTRICITY_END_BELOW_START");
   if (next.water_end < next.water_start) fail("WATER_END_BELOW_START");
 
-  const reading = await updateReading(c.env.DB, id, {
+  const reading = await updateReading(c.env.DB, current.id, {
     ...next,
     recorded_on: body.recorded_on === undefined ? undefined : (optionalDate(body.recorded_on, "recorded_on") ?? undefined),
   });
@@ -132,7 +134,10 @@ readingRoutes.patch("/:id", async (c) => {
   return ok(c, { reading }, "Reading updated.");
 });
 
-readingRoutes.delete("/:id", async (c) => {
-  await deleteReading(c.env.DB, parseId(c.req.param("id")));
+readingRoutes.delete("/:code", async (c) => {
+  const reading = await getReadingByCode(c.env.DB, parseCode(CODE_PREFIX.reading, c.req.param("code")));
+  if (!reading) return notFound(c, "Reading not found.");
+
+  await deleteReading(c.env.DB, reading.id);
   return ok(c, { ok: true }, "Reading deleted.");
 });
