@@ -2,261 +2,40 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Current state
-
-Built so far: the Vite + Hono + Wrangler scaffold, `migrations/0001_init.sql` (schema + seed), cookie-session auth with two roles, the full management API (buildings, rooms, tenants, readings, invoices, payments), the read-only tenant API under `/api/me`, and the SPA screens for both roles.
-
-**Deployed** at `https://fmh.dev1sme.cloud` (account `letuanthong0305@gmail.com`, zone `dev1sme.cloud`). The custom domain is declared as `routes` in `wrangler.toml`, which **disables the `*.workers.dev` URL** — that is intentional; re-enable it with `workers_dev = true` if a fallback URL is ever wanted.
-
-All three migrations are applied to the remote D1, `JWT_SECRET` is set as a Worker secret, and one manager account exists in production (the owner renamed it and set their own password — do not assume it is still called `quanly`). Production data is otherwise just migration 0001's seed (building `FMH`, rooms `FMH-P01`/`FMH-P02`, two placeholder tenants) — the real building, room and tenant data has to be entered through the UI.
-
-The local D1 holds throwaway accounts (`quanly`, `phong01`, `phong02`, passwords `<name>-test-123`) plus test readings, invoices and a second building; none of that exists in production.
-
-Not built yet: the SePay webhook. `README.md` (Vietnamese) is the design spec and its task list at the bottom ("Việc cần làm") is the authoritative backlog.
-
-Deployment checks worth repeating after any change to auth or hashing:
-
-```bash
-./node_modules/.bin/wrangler tail nha-tro --format json    # cpuTime per request
-```
-
-
-No test runner has been chosen yet.
-
 ## What the app is
 
 Internal rental-property manager for 2 buildings ("nhà trọ"): record monthly electricity/water meter readings, generate invoices (room rent + electricity + water + other fees), show tenants a VietQR code to pay, keep meter-reading history. Three fixed admin accounts — no signup, no email verification, no password reset.
 
 Scale is deliberately tiny and must stay inside Cloudflare's free tier. Prefer the simplest thing that works; do not introduce infrastructure (queues, KV, Durable Objects, external services) without a concrete need.
 
-## Architecture
-
-**One Worker serves everything.** Vite builds the React SPA and the Worker together; the same Worker serves the static assets and handles `/api/*` via Hono. One deploy, one URL. Next.js/OpenNext was explicitly rejected to avoid the configuration overhead — do not reintroduce a meta-framework.
-
-Build and dev go through **`@cloudflare/vite-plugin`**, not a bare Vite build plus a hand-rolled `[assets] directory`. `npm run dev` runs the Worker in the real workerd runtime with a local D1 binding and client HMR in one process. Consequences worth knowing:
-
-- `assets.directory` is *not* set in `wrangler.toml` — the plugin points it at the client build output itself.
-- `vite build` emits `dist/client/` (assets) and `dist/nha_tro/` (Worker + a generated output `wrangler.json`). Deploy reads the generated config; `wrangler.toml` is the input.
-- `run_worker_first = ["/api/*"]` routes API calls to the Worker explicitly; everything else falls through to the SPA (`not_found_handling = "single-page-application"`).
-
-```
-index.html            Vite entry, loads src/client/main.tsx
-src/client/           React SPA (Mantine + react-router)
-  App.tsx             session gate only
-  routes.tsx          route table per role
-  api.ts              typed wrappers over every endpoint
-  errors.ts           API error code -> Vietnamese message, toasts
-  format.ts           tiền / ngày / kỳ formatting
-  hooks/              useResource (fetch + reload), useConfirm (dialog)
-  components/         cross-feature UI: AppLayout, InvoiceLines, PaymentsTable,
-                      KyPicker, PageState, TrangThaiBadge, ConfirmModal
-  features/<ten>/     dang-nhap, phong, nguoi-thue (manager), chi-so, hoa-don,
-                      cai-dat, cua-toi (the tenant's own screens)
-    XxxPage.tsx       composition only
-    components/       that feature's UI, one component per file
-    useXxx.ts         data loading + mutations, no JSX
-src/server/           Hono API on the Worker
-  index.ts            Worker entry: route table, error mapping
-  auth.ts             password verify, JWT sign/verify, the three middlewares
-  validate.ts         hand-rolled request validation
-  types.ts            SessionUser / AppEnv (server-only types)
-  routes/             auth, buildings, rooms, tenants, readings, invoices, payments, me
-  domain/             pure logic — invoice.ts (amounts, HD codes), ky.ts (periods)
-  db/                 one module per table + sql.ts helpers
-src/shared/types.ts   API shapes shared by client and server
-scripts/              hash-password.mjs (offline password hashing)
-migrations/           SQL for D1, applied via `wrangler d1 migrations apply`
-```
-
-`src/server/db/` replaces the single `db.ts` the spec sketched — same idea, one file per table. Route handlers validate and decide; they do not write SQL. Money arithmetic lives in `domain/invoice.ts` so it stays testable without a database.
-
-**Client layering, enforced by convention:**
-
-- A `*Page.tsx` composes — it holds screen-level state (which modal is open, which period is selected) and renders components. It must not call `api.ts` directly, contain a table/modal's JSX, or hold `try/catch` around a request.
-- A `use*.ts` in a feature owns data loading and mutations. Mutations return `Promise<boolean>` and raise their own toast, so the caller only decides whether to close a modal.
-- A component under `features/*/components/` takes props and callbacks. It never imports `api.ts`. UI used by more than one feature moves up to `src/client/components/`.
-
-The point is that adding an animation or reworking one table touches one file. When a page file starts growing again, split it rather than letting it absorb the next feature.
-
-A hook passed into a child's `useEffect` must be memoised — `useChiSo`'s `goiY` is wrapped in `useCallback` for exactly that reason, and dropping it produces an infinite render loop in `ReadingModal`.
-
-The SPA has no client-side auth guard beyond the route table: `App.tsx` asks `GET /api/auth/me` once, then `routes.tsx` renders the manager routes or the tenant routes and sends anything unknown to that role's home. That is navigation convenience, not security — the API enforces the roles.
-
-Data loading is `useResource` (fetch on mount, `reload()` after a mutation). No query library, no cache: one manager and two rooms do not need one. Errors surface through `errors.ts`, which maps API codes to Vietnamese and falls back to a readable message for generated codes like `invalid_gia_phong`.
-
-Confirmations go through `useConfirm` (`xacNhan({...})` + render `hopThoai`), never `window.confirm` — a native dialog cannot be styled or animated and blocks the whole tab.
-
-TypeScript is split into three project references — `tsconfig.app.json` (client, DOM libs), `tsconfig.worker.json` (Worker, workerd types), `tsconfig.node.json` (`vite.config.ts`). Client code must not import from `src/server/`, only from `src/shared/`.
-
-Stack: TypeScript, React + Vite, Mantine (UI), Hono, Cloudflare D1 (SQLite), `jose` for JWT.
-
-## Commands
-
-```bash
-npm install
-npm run dev                  # Vite + workerd + local D1, one process, http://localhost:5173
-npm run build                # tsc -b && vite build -> dist/
-npm run deploy               # build + wrangler deploy
-npm run typecheck
-npm run cf-typegen           # regenerate worker-configuration.d.ts — rerun after editing wrangler.toml
-npm run db:migrate           # apply pending migrations to the LOCAL D1
-npm run db:migrate:remote    # apply pending migrations to the REMOTE D1 (needs approval)
-```
-
-`worker-configuration.d.ts` is generated and gitignored, so a fresh clone must run `npm run cf-typegen` before `npm run typecheck` will pass.
-
-**`npx` does not work in this environment** — a shell hook rewrites it and it resolves to `npm`. Always go through an npm script, or call `./node_modules/.bin/wrangler` directly.
-
-`npm audit` reports vulnerabilities in `undici` reached through `miniflare`/`wrangler`. Those are local-toolchain-only dev dependencies and none of it ships to the Worker; do not "fix" them by downgrading `@cloudflare/vite-plugin`.
-
-## MCP servers
-
-`.mcp.json` wires up two Cloudflare MCP servers (streamable HTTP). Use them instead of guessing at API shapes or shelling out to `wrangler` for read-only lookups.
-
-- **`cloudflare-docs`** — no auth. `search_cloudflare_documentation` for anything about Workers, D1, static assets, Hono-on-Workers, `wrangler.toml` fields, free-tier limits. Consult it before inventing config; the docs move faster than model knowledge.
-- **`cloudflare-bindings`** — OAuth, account-scoped (run `/mcp` to authenticate if a call fails with an auth error). Relevant tools: `d1_databases_list`, `d1_database_create`, `d1_database_get`, `d1_database_query`, `workers_list`, `workers_get_worker`, `workers_get_worker_code`. KV / R2 / Hyperdrive tools exist too but this project does not use those bindings — do not provision them.
-
-Rules of use:
-
-- `d1_database_query` hits the **remote** D1 instance, not the local dev one. Reads (`SELECT`, `PRAGMA table_info`) are fine unprompted; anything that writes (`INSERT`/`UPDATE`/`DELETE`/`DROP`, running a migration) needs explicit approval first, same as any destructive operation.
-- Local development still goes through `npx wrangler d1 execute nha-tro --local`. MCP is for inspecting and operating the deployed environment.
-- `d1_database_create` is how `nha-tro` gets created; take the returned `database_id` and paste it into `wrangler.toml`.
-- MCP servers may be unavailable in headless/CI runs — never make a build or migration step depend on them.
-
-## Data model conventions
-
-Table/column names mix English table names with **Vietnamese column names** (`ten_phong`, `gia_phong`, `tien_dien`, `trang_thai`, `ngay_tao`). Keep this convention for new columns rather than normalizing to English.
-
-`migrations/0001_init.sql` is the source of truth. It follows `README.md` with three additions made during scaffolding (marked ⊕):
-
-```
-buildings (id, name, address, ⊕don_gia_dien, ⊕don_gia_nuoc)
-rooms     (id, building_id, ten_phong, gia_phong, dien_tich)          UNIQUE(building_id, ten_phong)
-tenants   (id, room_id, ho_ten, sdt, ⊕so_nguoi, ngay_vao, ⊕ngay_ra)   UNIQUE(room_id) WHERE ngay_ra IS NULL
-readings  (id, room_id, ky /YYYY-MM/, dien_cu, dien_moi, nuoc_cu, nuoc_moi, ngay_ghi)   ⊕UNIQUE(room_id, ky)
-invoices  (id, room_id, ky, tien_phong, tien_dien, tien_nuoc, phi_khac,
-           don_gia_dien, don_gia_nuoc, tong_tien, trang_thai, ngay_tao)                 ⊕UNIQUE(room_id, ky)
-payments  (id, invoice_id, so_tien, ngay_tt, phuong_thuc, ghi_chu)
-users     (id, username, password_hash)
-```
-
-- `buildings.don_gia_dien` / `don_gia_nuoc` hold the **current** tariff, per building (the two buildings may differ). It is what a newly generated invoice copies from; it is never read when displaying an existing invoice.
-- `tenants.ngay_ra` NULL means still renting. The partial unique index enforces at most one active tenant per room, while keeping past tenants for history. **One tenancy = one named tenant**; several people living in the room are counted in `so_nguoi` (≥ 1, includes the named tenant) rather than as extra rows. Do not "fix" this by allowing multiple active tenants — it is the agreed model.
-- The `UNIQUE(room_id, ky)` pairs stop a double meter entry from producing two invoices for the same month.
-
-Money is `INTEGER` VND — no floats, no minor units. Dates are ISO `TEXT`. `trang_thai` ∈ `chua_thanh_toan` | `da_thanh_toan` | `huy`; `phuong_thuc` ∈ `chuyen_khoan` | `tien_mat` (both CHECK-constrained).
-
-Two invariants that the design depends on:
-
-- **Unit prices are snapshotted onto `invoices`** (`don_gia_dien`, `don_gia_nuoc`). Never recompute a past invoice from today's tariff — a price change must not rewrite history.
-- **`readings` holds meter numbers only; money lives in `invoices`.** This keeps reading history clean and lets a period's opening reading (`dien_cu`/`nuoc_cu`) be auto-filled from the previous period's closing reading.
-
-Billing period is `ky` in `YYYY-MM` form. Invoice line: `tien_dien = (dien_moi - dien_cu) * don_gia_dien`, same shape for water.
-
-## API
-
-Everything below `/api` except `/api/health` and `/api/auth/*` requires a session.
-
-**Every response is wrapped in an envelope**, per `.claude/rules/envelop-conventions.md`:
-
-```jsonc
-// success
-{ "success": true,  "message": "Invoices retrieved.", "data": { "invoices": [] }, "meta": { "timestamp": 1785900251 } }
-// failure
-{ "success": false, "message": "Duplicate data.", "error": { "code": "trung_du_lieu", "details": null }, "meta": { "timestamp": 1785900251 } }
-```
-
-- Handlers **never call `c.json` directly** — they go through `ok` / `failure` / `notFound` in `src/server/envelope.ts`, so `success`, `message` and `meta.timestamp` cannot be present on one endpoint and missing on the next. `grep -rn "c\.json(" src/server/` should only ever match `envelope.ts`.
-- `data` keeps the inner shape each route always returned (`{ invoices }`, `{ room }`, `{ ok: true }`) rather than being flattened. That is why `request<T>` in `api.ts` unwraps exactly one level and every caller in the client was left untouched.
-- **Error codes stayed lowercase snake_case** (`trung_du_lieu`, `missing_ten_phong`) even though the rule's examples show `SCREAMING_SNAKE`. The rule states no case convention, and the codes are the contract `errors.ts` maps to Vietnamese. Do not rename them.
-- Validation keeps its **specific** code (`missing_ten_phong`), not a blanket `VALIDATION_ERROR`, and adds `details` on top: `{ "ten_phong": ["missing_ten_phong"] }`. `chiTietValidation` derives the field from the code, so domain codes that name no field (`dien_moi_nho_hon_dien_cu`) get `details: null`. Sending `VALIDATION_ERROR` instead would force the Vietnamese wording onto the server, which is not where it lives.
-- `message` is English prose for logs and integrators. The SPA never displays it — it renders its own Vietnamese from `error.code`. Never put an internal exception message there; `onError` logs the real error and returns `loi_he_thong`.
-
-Management (`requireQuanLy`): full CRUD on `/buildings`, `/rooms`, `/tenants`, `/readings`, `/invoices`, plus `DELETE /payments/:id` and `GET /summary`.
-
-The app is not hard-wired to two buildings and four rooms: the manager adds a building from **Cài đặt** (each with its own `don_gia_dien` / `don_gia_nuoc`) and rooms from **Phòng**. Deleting is FK-restricted — a building with rooms, or a room with readings/invoices/tenants, returns 409 `rang_buoc_du_lieu` rather than cascading. Room names are unique per building, not globally. A room cannot be moved to another building and a tenancy cannot be moved to another room; both would rewrite priced history, so the UI disables those selects when editing.
-
-Accounts (`/api/accounts`, manager only): `GET` lists them, `POST` creates one (password optional — omitted means the server generates a 20-character one), `PATCH` renames, `POST /:id/reset-password` resets **without asking for the current password**, `DELETE` removes. Two guards keep the app reachable: you cannot delete the account you are logged in as (`khong_tu_xoa`), and you cannot delete the last manager (`phai_con_mot_quan_ly`). One account per room is enforced by the partial unique index.
-
-`POST /api/auth/doi-mat-khau` is the self-service change, open to both roles, and it **does** require the current password — a session cookie alone must not be enough to lock the real owner out of an unattended device. The manager's reset is the opposite case and deliberately skips it.
-
-Sessions are stateless, so a reset does not kick out an existing session — the old JWT stays valid until it expires. That is acceptable here (three accounts, one manager); fixing it would need a token version column and a lookup per request.
-
-On `/tenants`: POST moves someone in, `PATCH { ngay_ra: "…" }` moves them out, `PATCH { ngay_ra: null }` undoes a mistaken move-out (409 if the room already has a new tenant), and DELETE erases a record entered by mistake. `GET /tenants` returns everyone ever, newest tenancy per room first, with `ten_phong` joined in; `?dang_thue=1` narrows it to current tenants and `?room_id=` to one room. Moving a tenancy to another room is not supported — that is a new tenancy.
-
-Tenant (`requirePhong`): `GET /api/me/phong`, `/api/me/invoices`, `/api/me/invoices/:id`, `/api/me/readings`. Read-only by design — tenants never mark an invoice paid; that is the manager's action, or the SePay webhook's.
-
-Behaviour worth preserving:
-
-- `POST /api/readings` fills `dien_cu`/`nuoc_cu` from the previous period's closing numbers when they are omitted; `GET /api/readings/goi-y?room_id=&ky=` returns the same suggestion for pre-filling a form. That route is registered **before** `/:id` — order matters in Hono.
-- `POST /api/invoices/generate` takes `{ ky, room_ids? }` and returns `{ created, skipped }`. Rooms with no reading or an existing invoice are reported in `skipped` rather than failing the batch, because the manager needs to know which rooms still need a meter entry. Inserts run in one `db.batch()`, so a period is created all-or-nothing.
-- `PATCH /api/invoices/:id` accepts `tien_phong`, `phi_khac` and `trang_thai` only, and recomputes `tong_tien`. **`don_gia_*` is deliberately not patchable** — fixing a wrong tariff means deleting the invoice and generating it again, so a stored invoice always matches the price it was issued at.
-- Recording or deleting a payment re-derives `trang_thai` from `SUM(payments)` vs `tong_tien` (`capNhatTrangThai` in `routes/payments.ts`). A `huy` invoice is never touched by that arithmetic and rejects new payments.
-- Errors: `ValidationError` → 400 with a stable code (`invalid_ky`, `dien_moi_nho_hon_dien_cu`, …); D1 UNIQUE → 409 `trung_du_lieu`; FOREIGN KEY → 409 `rang_buoc_du_lieu`; CHECK → 400. Codes are the API contract — the client maps them to Vietnamese, so do not reword them casually.
-
-Seed in 0001: one building (`Nhà trọ 1`, điện 3.000đ/kWh, nước 15.000đ/m³), two rooms (`P101`, `P102`, `gia_phong = 0`), one placeholder tenant. Names and `gia_phong` are placeholders awaiting real data — do not treat them as facts.
-
-## Auth
-
-No auth framework. Stateless — there is no session table, and there should not be one.
-
-**Three accounts, two roles.** `users.vai_tro` is `quan_ly` (one account — the owner, full management) or `nguoi_thue` (one account per room, read-only). A tenant account is bound to a **room**, not to a person, via `users.room_id`: when a tenant moves out, the password changes and the account stays. The schema enforces both halves — `quan_ly` must have a NULL `room_id`, `nguoi_thue` must have one, and a partial unique index allows at most one account per room.
-
-Three middlewares in `auth.ts`:
-
-- `requireAuth` — any valid session.
-- `requireQuanLy` — management endpoints; 403 for tenants.
-- `requirePhong` — `/api/me/*`; requires a `room_id` on the token, so the manager gets 403 there.
-
-The room in `/api/me/*` queries always comes from the token, never the request. `GET /api/me/invoices/:id` re-checks `room_id` and answers 404 (not 403) for another room's invoice, so ids cannot be probed.
-
-Password records are stored in `users.password_hash` as `pbkdf2$sha256$<iterations>$<salt_b64>$<hash_b64>`. The iteration count is part of the record, so raising it later is a re-hash plus an `UPDATE`, never a migration.
-
-Hashing runs **in the Worker** (`hashPassword` in `auth.ts`) so the manager can create accounts and reset passwords from the UI. `scripts/hash-password.mjs` produces the identical format offline and is still how the first manager account is bootstrapped into an empty database.
-
-**Plaintext passwords are never stored and never readable.** A generated or chosen password is returned exactly once, in the response to the create/reset call that produced it, so the manager can pass it to the tenant; `GET /api/accounts` never includes `password_hash` or any password. A forgotten password is replaced, not recovered — do not add an endpoint, column, or log line that keeps the plaintext, even if asked for a "view password" feature. Reset gives the same practical capability without the liability.
-
-**Iterations are 10,000, not the OWASP-recommended 600,000, and that is deliberate.** Workers Free allows 10 ms CPU per request. Measured **on the deployed Worker** (`wrangler tail --format json`, `cpuTime` field): 50k cost 11-17 ms and blew the limit on every login; at 10k a warm login is 2-3 ms, median 8 ms, with occasional 13 ms spikes on cold isolates. For reference `/api/summary` (JWT verify + D1 count) is ~3 ms and `/api/health` ~0 ms.
-
-**Never tune this from a local benchmark.** This dev machine runs 50k in ~6 ms — roughly three times faster than Cloudflare's CPU — which is exactly the mistake that shipped an over-limit login. Re-measure on the deployed Worker after any change, and remember that changing the constant only affects accounts whose passwords are re-hashed afterwards.
-
-Long random passwords carry the security here, not the work factor.
-
-Other details that are easy to break:
-
-- `POST /api/auth/login` verifies against a dummy record when the username does not exist, so a bad username and a bad password take the same time and cannot be distinguished.
-- Verification uses a constant-time byte compare, and Web Crypto (`crypto.subtle`), not Node `crypto`.
-- The session cookie is `session`: `httpOnly`, `secure`, `sameSite=Lax`, 7-day TTL, carrying an HS256 JWT signed with `jose` (`sub` = user id).
-- Route layout in `src/server/index.ts`: `/api/health` and `/api/auth/*` are public and registered **first**; everything else is mounted through a sub-app with `requireAuth`. Registration order is what makes this work in Hono — a new public route must go above the sub-app mount.
-- There is **no login rate limiting**. Adding one would need KV or Durable Objects, which the project deliberately avoids; three fixed accounts with long random passwords is the mitigation.
-
-## Security headers
-
-Set in **two places, and both are needed** — `run_worker_first = ["/api/*"]` means Cloudflare serves every non-API path straight from the assets store without invoking the Worker, so a Hono middleware can never reach the HTML.
-
-- `public/_headers` covers the SPA: CSP, HSTS, `nosniff`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`. Vite copies it into `dist/client/`; Cloudflare reads it as configuration and does not serve it. Startup logs `Parsed N valid header rule` — watch that number after editing.
-- `securityHeaders` in `src/server/headers.ts` covers `/api/*`: `Cache-Control: no-store` (invoices and tenant names must not sit in a cache), `nosniff`, `Referrer-Policy`, and a `default-src 'none'` CSP.
-
-The middleware sets its headers **before** `await next()`. Hono keeps them as prepared headers and merges them into whatever response the context finally builds, including `app.onError`'s 400s and `app.notFound`'s 404s. Moving them after `next()` silently drops every error response, because a thrown `ValidationError` never returns to the middleware.
-
-`style-src` needs `'unsafe-inline'`: Mantine injects a `<style>` element for its CSS variables at runtime. `script-src` does not — the Vite build emits no inline scripts. `src/client/components/VietQR.tsx` uses `dangerouslySetInnerHTML`, but the SVG comes from `@paulmillr/qr` as `<path>` data, not from interpolated text.
-
-`_headers` only applies to a real build — `npm run dev` does not serve it. Verify with `npm run build && ./node_modules/.bin/vite preview`, then check both an asset response and an API response.
-
-## Payments
-
-Default flow is manual: each invoice renders a VietQR code whose transfer memo carries the invoice code (e.g. `HD00123`); the admin marks it paid.
-
-**The QR payload is built in-house** (`src/server/domain/vietqr.ts`, EMVCo TLV with the NAPAS profile) and encoded to SVG in the browser with `@paulmillr/qr`. Do not replace this with `img.vietqr.io` or any QR image service: that would tell a third party who owes how much, and break the page whenever that service is down. The CRC is CRC-16/CCITT-FALSE over the payload including the trailing `6304` tag — verify against the standard vector (`"123456789"` → `29B1`) if you touch it.
-
-Bank details live on `buildings` (`bank_bin`, `bank_so_tk`, `bank_chu_tk`, migration 0002) because each building may collect into a different account. `GET /api/invoices/:id` returns `chuyen_khoan` with the payload, or **null** when the building has no bank details, the invoice is cancelled, or nothing is left to pay — the UI falls back to showing the invoice code as text. The amount encoded is `con_lai`, not `tong_tien`, so a partly paid invoice asks for the remainder.
-
-Optional automation: SePay balance-change webhook at `/api/webhook/sepay` parses the invoice code out of the transfer memo, sets `invoices.trang_thai = 'da_thanh_toan'`, and inserts a `payments` row. The webhook must authenticate with `SEPAY_WEBHOOK_TOKEN` before mutating anything.
-
-## Secrets
-
-Set via `wrangler secret put`, never committed: `JWT_SECRET`, and `SEPAY_WEBHOOK_TOKEN` if the SePay webhook is enabled.
-
-`wrangler.toml` declares `[secrets] required = ["JWT_SECRET"]`, so `wrangler deploy` fails if the secret is missing on the Worker instead of shipping a build that 500s on every login. Add new secret names there too.
-
-Locally the same values live in `.dev.vars` (gitignored; `.dev.vars.example` is the committed template). The Vite plugin copies `.dev.vars` into `dist/nha_tro/` so `vite preview` can run — that is build output, gitignored, and not served to browsers, but it does mean `dist/` holds a real secret on disk.
+## Rules
+
+The detail lives in `.claude/rules/`, one file per topic. Each is imported below, so it is loaded every session.
+
+**A rule file that is not imported here is a rule Claude never sees** — Claude Code loads `CLAUDE.md` automatically but does not read `.claude/rules/` on its own. When adding a rule file, add its `@` line too, or it is dead text.
+
+| File | What it covers |
+| --- | --- |
+| `project-state.md` | What is built, what is deployed, what is only in the local D1 |
+| `architecture.md` | One-Worker layout, the Vite plugin, the file tree, client layering |
+| `commands.md` | npm scripts, and the `npx` / `npm audit` traps |
+| `mcp-servers.md` | The two Cloudflare MCP servers and when a call needs approval |
+| `data-model.md` | Schema, Vietnamese column names, the two pricing invariants |
+| `api.md` | Response envelope, endpoint surface, behaviour to preserve, SQL safety |
+| `envelop-conventions.md` | The response format standard `api.md` implements |
+| `auth.md` | Roles, middlewares, password records, why PBKDF2 is 10k |
+| `security-headers.md` | Why headers are set in two places, and the `before next()` trap |
+| `payments.md` | VietQR built in-house, bank details per building, the SePay webhook |
+| `secrets.md` | Which secrets exist and where they live |
+
+@.claude/rules/project-state.md
+@.claude/rules/architecture.md
+@.claude/rules/commands.md
+@.claude/rules/mcp-servers.md
+@.claude/rules/data-model.md
+@.claude/rules/api.md
+@.claude/rules/envelop-conventions.md
+@.claude/rules/auth.md
+@.claude/rules/security-headers.md
+@.claude/rules/payments.md
+@.claude/rules/secrets.md
