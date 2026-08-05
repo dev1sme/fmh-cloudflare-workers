@@ -1,31 +1,8 @@
-import { Card, CopyButton, Group, Stack, Text } from "@mantine/core";
+import { Card, Stack, Text } from "@mantine/core";
 
 import type { MomoInfo } from "../../shared/types";
 import { tien } from "../format";
-
-function Dong({ label, value }: { label: string; value: string }) {
-  return (
-    <Group justify="space-between" gap="xl" wrap="nowrap">
-      <Text size="sm" c="dimmed">
-        {label}
-      </Text>
-      <CopyButton value={value}>
-        {({ copied, copy }) => (
-          <Text
-            size="sm"
-            fw={500}
-            ta="right"
-            style={{ cursor: "pointer" }}
-            onClick={copy}
-            title="Bấm để copy"
-          >
-            {copied ? "đã copy" : value}
-          </Text>
-        )}
-      </CopyButton>
-    </Group>
-  );
-}
+import { CopyableRow } from "./CopyableRow";
 
 /**
  * MoMo as an alternative to the bank transfer. Text only, deliberately: MoMo's
@@ -45,10 +22,10 @@ export function MomoCard({ momo, xemTruoc = false }: { momo: MomoInfo; xemTruoc?
           )}
         </div>
 
-        <Dong label="Số điện thoại" value={momo.phone} />
-        {momo.name && <Dong label="Người nhận" value={momo.name} />}
-        <Dong label="Số tiền" value={tien(momo.amount)} />
-        <Dong label="Nội dung" value={momo.transfer_note} />
+        <CopyableRow label="Số điện thoại" value={momo.phone} />
+        {momo.name && <CopyableRow label="Người nhận" value={momo.name} />}
+        <CopyableRow label="Số tiền" value={String(momo.amount)} display={tien(momo.amount)} />
+        <CopyableRow label="Nội dung" value={momo.transfer_note} />
 
         {!xemTruoc && (
           <Text size="xs" c="dimmed" mt="xs">

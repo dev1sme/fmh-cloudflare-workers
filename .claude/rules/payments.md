@@ -6,6 +6,10 @@ Default flow is manual: each invoice renders a VietQR code whose transfer memo c
 
 Bank details live on `buildings` (`bank_bin`, `bank_account_no`, `bank_account_name`, migration 0002) because each building may collect into a different account. `GET /api/invoices/:id` returns `bank_transfer` with the payload, or **null** when the building has no bank details, the invoice is cancelled, or nothing is left to pay — the UI falls back to showing the invoice code as text. The amount encoded is `outstanding`, not `total`, so a partly paid invoice asks for the remainder.
 
+Every payment detail is copyable through `CopyableRow` (`src/client/components/`): the account number, the amount and the memo each get a visible button. The tenant pays from a phone, so a `title` tooltip on the text is not a discoverable affordance — the button is a real control.
+
+**The amount copies as a raw integer** (`2415000`) while displaying as `2.415.000 đ`. Pasting the formatted string into a banking app transfers the wrong number or is rejected, so `CopyableRow` keeps `value` and `display` separate. Any new money row must do the same.
+
 MoMo is text only, never a QR: MoMo's personal QR payload format is unverified here, and a guessed one could send money to the wrong wallet.
 
 Optional automation: SePay balance-change webhook at `/api/webhook/sepay` parses the invoice code out of the transfer memo (`parseMaHoaDon`, case-insensitive, normalised to upper case) and looks it up with `getInvoiceByCode`, sets `invoices.status = 'PAID'`, and inserts a `payments` row. The webhook must authenticate with `SEPAY_WEBHOOK_TOKEN` before mutating anything, using a constant-time compare rather than `===`.
