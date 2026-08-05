@@ -21,7 +21,8 @@ src/client/           React SPA (Mantine + react-router)
   components/         cross-feature UI: AppLayout, InvoiceLines, PaymentsTable,
                       KyPicker, PageState, TrangThaiBadge, ConfirmModal
   features/<ten>/     dang-nhap, phong, nguoi-thue (manager), chi-so, hoa-don,
-                      cai-dat, cua-toi (the tenant's own screens)
+                      cai-dat, tai-khoan, doi-mat-khau, khong-tim-thay (404),
+                      cua-toi (the tenant's own screens)
     XxxPage.tsx       composition only
     components/       that feature's UI, one component per file
     useXxx.ts         data loading + mutations, no JSX
@@ -54,7 +55,11 @@ The point is that adding an animation or reworking one table touches one file. W
 
 A hook passed into a child's `useEffect` must be memoised — `useChiSo`'s `goiY` is wrapped in `useCallback` for exactly that reason, and dropping it produces an infinite render loop in `ReadingModal`. The same applies to any array a child seeds state from: `useXemTruocSinh` memoises `phong` with `useMemo` so `SinhHoaDonModal`'s selection effect does not loop.
 
-The SPA has no client-side auth guard beyond the route table: `App.tsx` asks `GET /api/auth/me` once, then `routes.tsx` renders the manager routes or the tenant routes and sends anything unknown to that role's home. That is navigation convenience, not security — the API enforces the roles.
+The SPA has no client-side auth guard beyond the route table: `App.tsx` asks `GET /api/auth/me` once, then `routes.tsx` renders the manager routes or the tenant routes. That is navigation convenience, not security — the API enforces the roles.
+
+Unknown paths render `NotFoundPage`, not a redirect. Only the bare `/` redirects to the role's home (`/phong` or `/hoa-don-cua-toi`); bouncing everything else would hide a mistyped or stale link instead of reporting it. The 404 deliberately does not distinguish "no such page" from "that page belongs to the other role" — saying which would leak the manager's route names to a tenant.
+
+`not_found_handling = "single-page-application"` means Cloudflare answers **200 with `index.html`** for any non-asset path, so the 404 is a client-side screen; the HTTP status is not 404 and cannot be from the assets layer.
 
 Data loading is `useResource` (fetch on mount, `reload()` after a mutation). No query library, no cache: one manager and two rooms do not need one. Errors surface through `errors.ts`, which maps API codes to Vietnamese and falls back to a readable message for generated codes like `invalid_gia_phong`.
 

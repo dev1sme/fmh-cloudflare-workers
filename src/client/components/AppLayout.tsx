@@ -55,7 +55,9 @@ export function AppLayout({ user, onLogout }: { user: SessionUser; onLogout: () 
             component={Link}
             to={link.to}
             label={link.label}
-            active={pathname.startsWith(link.to)}
+            // Match on a path segment, not a raw prefix: plain startsWith lights
+            // "Hóa đơn" up on /hoa-don-cua-toi, which is a different screen.
+            active={pathname === link.to || pathname.startsWith(`${link.to}/`)}
             onClick={close}
           />
         ))}
