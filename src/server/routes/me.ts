@@ -16,7 +16,8 @@ import { optionalKy, parseId } from "../validate";
  */
 export const meRoutes = new Hono<AppEnv>();
 
-meRoutes.get("/phong", async (c) => {
+// Singular: a tenant account is bound to exactly one room.
+meRoutes.get("/room", async (c) => {
   const room = await getRoom(c.env.DB, c.get("user").room_id!);
   if (!room) return notFound(c, "Room not found.");
 

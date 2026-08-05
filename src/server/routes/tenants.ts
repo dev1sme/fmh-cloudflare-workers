@@ -28,7 +28,7 @@ export const tenantRoutes = new Hono<AppEnv>();
 tenantRoutes.get("/", async (c) => {
   const tenants = await listTenants(c.env.DB, {
     room_id: queryId(c.req.query("room_id"), "room_id"),
-    dang_thue: c.req.query("dang_thue") === "1",
+    active: c.req.query("active") === "1",
   });
 
   return ok(c, { tenants }, "Tenants retrieved.");

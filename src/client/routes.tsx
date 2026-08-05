@@ -2,18 +2,18 @@ import { Navigate, Route, Routes } from "react-router-dom";
 
 import type { SessionUser } from "./api";
 import { AppLayout } from "./components/AppLayout";
-import { SettingsPage } from "./features/cai-dat/SettingsPage";
-import { ChangePasswordPage } from "./features/doi-mat-khau/ChangePasswordPage";
-import { ReadingsPage } from "./features/chi-so/ReadingsPage";
-import { InvoiceDetailPage } from "./features/hoa-don/InvoiceDetailPage";
-import { InvoicesPage } from "./features/hoa-don/InvoicesPage";
-import { MyInvoiceDetailPage } from "./features/cua-toi/MyInvoiceDetailPage";
-import { MyInvoicesPage } from "./features/cua-toi/MyInvoicesPage";
-import { MyReadingsPage } from "./features/cua-toi/MyReadingsPage";
-import { NotFoundPage } from "./features/khong-tim-thay/NotFoundPage";
-import { TenantsPage } from "./features/nguoi-thue/TenantsPage";
-import { RoomsPage } from "./features/phong/RoomsPage";
-import { AccountsPage } from "./features/tai-khoan/AccountsPage";
+import { SettingsPage } from "./features/settings/SettingsPage";
+import { ChangePasswordPage } from "./features/change-password/ChangePasswordPage";
+import { ReadingsPage } from "./features/readings/ReadingsPage";
+import { InvoiceDetailPage } from "./features/invoices/InvoiceDetailPage";
+import { InvoicesPage } from "./features/invoices/InvoicesPage";
+import { MyInvoiceDetailPage } from "./features/my/MyInvoiceDetailPage";
+import { MyInvoicesPage } from "./features/my/MyInvoicesPage";
+import { MyReadingsPage } from "./features/my/MyReadingsPage";
+import { NotFoundPage } from "./features/not-found/NotFoundPage";
+import { TenantsPage } from "./features/tenants/TenantsPage";
+import { RoomsPage } from "./features/rooms/RoomsPage";
+import { AccountsPage } from "./features/accounts/AccountsPage";
 
 /**
  * Which screens exist depends on the role. This is navigation convenience,
@@ -21,13 +21,13 @@ import { AccountsPage } from "./features/tai-khoan/AccountsPage";
  */
 export function AppRoutes({ user, onLogout }: { user: SessionUser; onLogout: () => void }) {
   const quanLy = user.vai_tro === "quan_ly";
-  const home = quanLy ? "/phong" : "/hoa-don-cua-toi";
+  const home = quanLy ? "/rooms" : "/my-invoices";
 
   return (
     <Routes>
       <Route element={<AppLayout user={user} onLogout={onLogout} />}>
         {/* Available to both roles. */}
-        <Route path="/doi-mat-khau" element={<ChangePasswordPage />} />
+        <Route path="/change-password" element={<ChangePasswordPage />} />
 
         {/* Only the bare root redirects. Everything else unknown is a 404 —
             silently bouncing a mistyped or stale link hides the mistake. */}
@@ -35,19 +35,19 @@ export function AppRoutes({ user, onLogout }: { user: SessionUser; onLogout: () 
 
         {quanLy ? (
           <>
-            <Route path="/phong" element={<RoomsPage />} />
-            <Route path="/nguoi-thue" element={<TenantsPage />} />
-            <Route path="/chi-so" element={<ReadingsPage />} />
-            <Route path="/hoa-don" element={<InvoicesPage />} />
-            <Route path="/hoa-don/:id" element={<InvoiceDetailPage />} />
-            <Route path="/tai-khoan" element={<AccountsPage user={user} />} />
-            <Route path="/cai-dat" element={<SettingsPage />} />
+            <Route path="/rooms" element={<RoomsPage />} />
+            <Route path="/tenants" element={<TenantsPage />} />
+            <Route path="/readings" element={<ReadingsPage />} />
+            <Route path="/invoices" element={<InvoicesPage />} />
+            <Route path="/invoices/:id" element={<InvoiceDetailPage />} />
+            <Route path="/accounts" element={<AccountsPage user={user} />} />
+            <Route path="/settings" element={<SettingsPage />} />
           </>
         ) : (
           <>
-            <Route path="/hoa-don-cua-toi" element={<MyInvoicesPage />} />
-            <Route path="/hoa-don-cua-toi/:id" element={<MyInvoiceDetailPage />} />
-            <Route path="/chi-so-cua-toi" element={<MyReadingsPage />} />
+            <Route path="/my-invoices" element={<MyInvoicesPage />} />
+            <Route path="/my-invoices/:id" element={<MyInvoiceDetailPage />} />
+            <Route path="/my-readings" element={<MyReadingsPage />} />
           </>
         )}
 

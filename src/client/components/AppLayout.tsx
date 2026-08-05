@@ -5,19 +5,19 @@ import { Link, Outlet, useLocation } from "react-router-dom";
 import type { SessionUser } from "../api";
 
 const QUAN_LY_LINKS = [
-  { to: "/phong", label: "Phòng" },
-  { to: "/nguoi-thue", label: "Người thuê" },
-  { to: "/chi-so", label: "Chỉ số điện nước" },
-  { to: "/hoa-don", label: "Hóa đơn" },
-  { to: "/tai-khoan", label: "Tài khoản" },
-  { to: "/cai-dat", label: "Cài đặt" },
-  { to: "/doi-mat-khau", label: "Đổi mật khẩu" },
+  { to: "/rooms", label: "Phòng" },
+  { to: "/tenants", label: "Người thuê" },
+  { to: "/readings", label: "Chỉ số điện nước" },
+  { to: "/invoices", label: "Hóa đơn" },
+  { to: "/accounts", label: "Tài khoản" },
+  { to: "/settings", label: "Cài đặt" },
+  { to: "/change-password", label: "Đổi mật khẩu" },
 ];
 
 const NGUOI_THUE_LINKS = [
-  { to: "/hoa-don-cua-toi", label: "Hóa đơn của tôi" },
-  { to: "/chi-so-cua-toi", label: "Lịch sử chỉ số" },
-  { to: "/doi-mat-khau", label: "Đổi mật khẩu" },
+  { to: "/my-invoices", label: "Hóa đơn của tôi" },
+  { to: "/my-readings", label: "Lịch sử chỉ số" },
+  { to: "/change-password", label: "Đổi mật khẩu" },
 ];
 
 export function AppLayout({ user, onLogout }: { user: SessionUser; onLogout: () => void }) {
@@ -56,7 +56,7 @@ export function AppLayout({ user, onLogout }: { user: SessionUser; onLogout: () 
             to={link.to}
             label={link.label}
             // Match on a path segment, not a raw prefix: plain startsWith lights
-            // "Hóa đơn" up on /hoa-don-cua-toi, which is a different screen.
+            // "Hóa đơn" up on /my-invoices, which is a different screen.
             active={pathname === link.to || pathname.startsWith(`${link.to}/`)}
             onClick={close}
           />

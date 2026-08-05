@@ -67,7 +67,7 @@ export const auth = {
     send<{ user: SessionUser }>("POST", "/api/auth/login", { username, password }),
   logout: () => send<{ ok: true }>("POST", "/api/auth/logout"),
   doiMatKhau: (matKhauCu: string, matKhauMoi: string) =>
-    send<{ ok: true }>("POST", "/api/auth/doi-mat-khau", {
+    send<{ ok: true }>("POST", "/api/auth/change-password", {
       mat_khau_cu: matKhauCu,
       mat_khau_moi: matKhauMoi,
     }),
@@ -141,7 +141,7 @@ export type TenantPatch = Partial<Omit<TenantInput, "room_id">> & {
 };
 
 export const tenants = {
-  list: (params: { room_id?: number; dang_thue?: 1 } = {}) =>
+  list: (params: { room_id?: number; active?: 1 } = {}) =>
     request<{ tenants: TenantDetail[] }>(`/api/tenants${query(params)}`),
   create: (input: TenantInput) => send<{ tenant: Tenant }>("POST", "/api/tenants", input),
   update: (id: number, patch: TenantPatch) =>
@@ -164,7 +164,7 @@ export const readings = {
     request<{ readings: ReadingDetail[] }>(`/api/readings${query(params)}`),
   suggest: (roomId: number, ky: string) =>
     request<{ dien_cu: number; nuoc_cu: number; ky_truoc: string | null }>(
-      `/api/readings/goi-y?room_id=${roomId}&ky=${ky}`,
+      `/api/readings/suggest?room_id=${roomId}&ky=${ky}`,
     ),
   create: (input: ReadingInput) => send<{ reading: Reading }>("POST", "/api/readings", input),
   update: (id: number, patch: Partial<Omit<ReadingInput, "room_id" | "ky">>) =>
@@ -193,7 +193,7 @@ export const invoices = {
 
 /** Tenant-facing endpoints; the room is taken from the session, never sent. */
 export const me = {
-  room: () => request<{ room: RoomDetail }>("/api/me/phong"),
+  room: () => request<{ room: RoomDetail }>("/api/me/room"),
   invoices: () => request<{ invoices: InvoiceWithRoom[] }>("/api/me/invoices"),
   invoice: (id: number) => request<{ invoice: InvoiceDetail }>(`/api/me/invoices/${id}`),
   readings: () => request<{ readings: ReadingDetail[] }>("/api/me/readings"),

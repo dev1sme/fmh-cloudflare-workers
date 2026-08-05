@@ -41,7 +41,7 @@ readingRoutes.get("/", async (c) => {
  * Opening numbers for a new period, so the form can be pre-filled: the closing
  * numbers of the most recent earlier period, or zeros for a brand new room.
  */
-readingRoutes.get("/goi-y", async (c) => {
+readingRoutes.get("/suggest", async (c) => {
   const roomId = queryId(c.req.query("room_id"), "room_id");
   const ky = optionalKy(c.req.query("ky"));
   if (roomId === undefined || ky === undefined) fail("missing_room_id_hoac_ky");

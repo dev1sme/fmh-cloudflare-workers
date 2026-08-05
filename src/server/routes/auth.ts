@@ -71,7 +71,7 @@ authRoutes.get("/me", async (c) => {
  * session cookie alone should not be enough to lock the real owner out if a
  * logged-in device is left unattended.
  */
-authRoutes.post("/doi-mat-khau", async (c) => {
+authRoutes.post("/change-password", async (c) => {
   const session = await currentUser(c);
   if (!session) return failure(c, "unauthorized", "Authentication required.", 401);
 

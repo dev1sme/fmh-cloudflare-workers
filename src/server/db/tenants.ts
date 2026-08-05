@@ -12,11 +12,11 @@ const DETAIL_SELECT = `
 /** Everyone who has ever rented, unless filtered down. */
 export async function listTenants(
   db: D1Database,
-  filters: { room_id?: number; dang_thue?: boolean } = {},
+  filters: { room_id?: number; active?: boolean } = {},
 ): Promise<TenantDetail[]> {
   const where = new Where()
     .add("t.room_id = ?", filters.room_id)
-    .addRaw("t.ngay_ra IS NULL", filters.dang_thue === true);
+    .addRaw("t.ngay_ra IS NULL", filters.active === true);
 
   const { results } = await db
     .prepare(

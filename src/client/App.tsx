@@ -1,7 +1,7 @@
 import { Center, Loader } from "@mantine/core";
 
-import { LoginPage } from "./features/dang-nhap/LoginPage";
-import { useSession } from "./features/dang-nhap/useSession";
+import { LoginPage } from "./features/login/LoginPage";
+import { useSession } from "./features/login/useSession";
 import { AppRoutes } from "./routes";
 
 export function App() {
