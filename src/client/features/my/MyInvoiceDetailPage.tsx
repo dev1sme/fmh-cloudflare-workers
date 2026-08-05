@@ -12,13 +12,13 @@ import { TransferInstructions } from "./components/TransferInstructions";
 import { useInvoicesCuaToiChiTiet } from "./useMine";
 
 export function MyInvoiceDetailPage() {
-  const id = Number(useParams().id);
-  const { hoaDon, loading, error } = useInvoicesCuaToiChiTiet(id);
+  const code = (useParams().code ?? "").toUpperCase();
+  const { hoaDon, loading, error } = useInvoicesCuaToiChiTiet(code);
 
   return (
     <Stack>
       <Group justify="space-between">
-        <Title order={3}>{hoaDon ? hoaDon.invoice_code : "Hóa đơn"}</Title>
+        <Title order={3}>{hoaDon ? hoaDon.code : "Hóa đơn"}</Title>
         <Button variant="subtle" component={Link} to="/my-invoices">
           ← Danh sách
         </Button>
@@ -49,7 +49,7 @@ export function MyInvoiceDetailPage() {
               !hoaDon.momo &&
               hoaDon.outstanding > 0 &&
               hoaDon.status !== "CANCELLED" && (
-                <TransferInstructions maHoaDon={hoaDon.invoice_code} />
+                <TransferInstructions maHoaDon={hoaDon.code} />
               )
             )}
 

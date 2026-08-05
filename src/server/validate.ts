@@ -106,6 +106,18 @@ export function optionalEnum<T extends string>(
   return requireEnum(value, field, allowed);
 }
 
+/**
+ * Invoice code from a path, e.g. `HD3C8EA506`.
+ *
+ * Validated rather than passed through so a probe cannot turn the path into a
+ * wildcard, and so a mistyped code fails the same way a missing one does.
+ */
+export function parseInvoiceCode(value: string | undefined): string {
+  const code = (value ?? "").toUpperCase();
+  if (!/^HD[0-9A-F]{8}$/.test(code)) fail("INVALID_CODE");
+  return code;
+}
+
 /** Query string number, e.g. `?room_id=3`. */
 export function queryId(value: string | undefined, field: string): number | undefined {
   if (value === undefined || value === "") return undefined;

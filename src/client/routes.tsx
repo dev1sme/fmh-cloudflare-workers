@@ -43,7 +43,7 @@ export function AppRoutes({ user, onLogout }: { user: SessionUser; onLogout: () 
             <Route path="/tenants" element={<TenantsPage />} />
             <Route path="/readings" element={<ReadingsPage />} />
             <Route path="/invoices" element={<InvoicesPage />} />
-            <Route path="/invoices/:id" element={<InvoiceDetailPage />} />
+            <Route path="/invoices/:code" element={<InvoiceDetailPage />} />
             <Route path="/accounts" element={<AccountsPage user={user} />} />
             <Route path="/settings" element={<SettingsPage />} />
           </>
@@ -51,7 +51,7 @@ export function AppRoutes({ user, onLogout }: { user: SessionUser; onLogout: () 
           <>
             <Route path="/dashboard" element={<MyDashboardPage />} />
             <Route path="/my-invoices" element={<MyInvoicesPage />} />
-            <Route path="/my-invoices/:id" element={<MyInvoiceDetailPage />} />
+            <Route path="/my-invoices/:code" element={<MyInvoiceDetailPage />} />
             <Route path="/my-readings" element={<MyReadingsPage />} />
           </>
         )}

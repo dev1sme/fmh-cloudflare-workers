@@ -31,7 +31,7 @@ export function InvoicesTable({
         <Table.Tbody>
           {hoaDon.map((invoice) => (
             <Table.Tr key={invoice.id}>
-              <Table.Td>{invoice.invoice_code}</Table.Td>
+              <Table.Td>{invoice.code}</Table.Td>
               <Table.Td fw={500}>{invoice.room_name}</Table.Td>
               <Table.Td>{tien(invoice.rent_amount)}</Table.Td>
               <Table.Td>{tien(invoice.electricity_amount)}</Table.Td>
@@ -42,7 +42,7 @@ export function InvoicesTable({
                 <StatusBadge value={invoice.status} />
               </Table.Td>
               <Table.Td>
-                <Button size="xs" variant="light" component={Link} to={`/invoices/${invoice.id}`}>
+                <Button size="xs" variant="light" component={Link} to={`/invoices/${invoice.code}`}>
                   Chi tiết
                 </Button>
               </Table.Td>

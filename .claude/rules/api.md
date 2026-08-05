@@ -25,6 +25,8 @@ Management (`requireQuanLy`): full CRUD on `/buildings`, `/rooms`, `/tenants`, `
 
 `GET /api/dashboard?period=` (defaults to the current month) is a read-only rollup for the manager's home screen: revenue for the period, outstanding debt per room **across every period**, occupancy, meter usage against the previous period, and the last 12 periods for the chart. Its fields are English (`billed`, `collected`, `outstanding`) because it mirrors no table.
 
+Invoice routes take the **code**, not the row id: `/api/invoices/:code`, `/api/me/invoices/:code`, `/api/invoices/:code/payments`. `parseInvoiceCode` rejects anything not matching `^HD[0-9A-F]{8}$` with 400 `INVALID_CODE`, so an old numeric id is a syntax error rather than a lookup. Every other resource still uses `:id` — rooms, tenants and accounts never appear in a tenant's URL or on a QR.
+
 `GET /api/me/dashboard` is the tenant's equivalent, deliberately much plainer: meter usage and money for their own room, month by month, newest first. Its periods come from a UNION of `readings` and `invoices`, not either alone — a month can have a reading the manager has not invoiced yet, and `total`/`status` stay null until it does.
 
 Two things the manager dashboard must keep doing: `CANCELLED` invoices are excluded from every money figure — a cancelled invoice was never owed — and all six statements go out in one `db.batch()`, because a serial chain of awaits spends most of the Worker's ~10 ms CPU budget waiting.

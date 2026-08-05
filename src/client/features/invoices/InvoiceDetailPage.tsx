@@ -15,11 +15,11 @@ import { OtherFeesCard } from "./components/OtherFeesCard";
 import { useInvoiceDetail, useThaoTacHoaDon } from "./useInvoiceDetail";
 
 export function InvoiceDetailPage() {
-  const id = Number(useParams().id);
+  const code = (useParams().code ?? "").toUpperCase();
   const navigate = useNavigate();
 
-  const { hoaDon, loading, error, reload } = useInvoiceDetail(id);
-  const { luuPhiKhac, huy, xoa, ghiNhanThanhToan, xoaThanhToan } = useThaoTacHoaDon(id, reload, () =>
+  const { hoaDon, loading, error, reload } = useInvoiceDetail(code);
+  const { luuPhiKhac, huy, xoa, ghiNhanThanhToan, xoaThanhToan } = useThaoTacHoaDon(code, reload, () =>
     navigate("/invoices"),
   );
   const { xacNhan, hopThoai } = useConfirm();
@@ -56,7 +56,7 @@ export function InvoiceDetailPage() {
     <Stack>
       <Group justify="space-between">
         <Title order={3}>
-          {hoaDon ? `${hoaDon.invoice_code} — ${hoaDon.room_name}` : "Hóa đơn"}
+          {hoaDon ? `${hoaDon.code} — ${hoaDon.room_name}` : "Hóa đơn"}
         </Title>
         <Button variant="subtle" component={Link} to="/invoices">
           ← Danh sách

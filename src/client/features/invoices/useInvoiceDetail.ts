@@ -9,8 +9,8 @@ export type ThanhToanMoi = {
   note: string | null;
 };
 
-export function useInvoiceDetail(id: number) {
-  const { data, loading, error, reload } = useResource(() => invoicesApi.get(id), [id]);
+export function useInvoiceDetail(code: string) {
+  const { data, loading, error, reload } = useResource(() => invoicesApi.get(code), [code]);
   return { hoaDon: data?.invoice ?? null, loading, error, reload };
 }
 
@@ -21,10 +21,10 @@ export function useInvoiceDetail(id: number) {
  * stored invoice must keep the tariff it was issued at. Wrong price means
  * delete and regenerate.
  */
-export function useThaoTacHoaDon(id: number, reload: () => void, onDeleted: () => void) {
+export function useThaoTacHoaDon(code: string, reload: () => void, onDeleted: () => void) {
   async function luuPhiKhac(phiKhac: number): Promise<boolean> {
     try {
-      await invoicesApi.update(id, { other_fees: phiKhac });
+      await invoicesApi.update(code, { other_fees: phiKhac });
       baoThanhCong("Đã cập nhật phí khác.");
       reload();
       return true;
@@ -36,7 +36,7 @@ export function useThaoTacHoaDon(id: number, reload: () => void, onDeleted: () =
 
   async function huy(): Promise<boolean> {
     try {
-      await invoicesApi.update(id, { status: "CANCELLED" });
+      await invoicesApi.update(code, { status: "CANCELLED" });
       baoThanhCong("Đã huỷ hóa đơn.");
       reload();
       return true;
@@ -48,7 +48,7 @@ export function useThaoTacHoaDon(id: number, reload: () => void, onDeleted: () =
 
   async function xoa(): Promise<boolean> {
     try {
-      await invoicesApi.remove(id);
+      await invoicesApi.remove(code);
       baoThanhCong("Đã xoá hóa đơn.");
       onDeleted();
       return true;
@@ -60,7 +60,7 @@ export function useThaoTacHoaDon(id: number, reload: () => void, onDeleted: () =
 
   async function ghiNhanThanhToan(input: ThanhToanMoi): Promise<boolean> {
     try {
-      await invoicesApi.pay(id, input);
+      await invoicesApi.pay(code, input);
       baoThanhCong("Đã ghi nhận thanh toán.");
       reload();
       return true;

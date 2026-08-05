@@ -18,8 +18,8 @@ export function useInvoicesCuaToi() {
   return { hoaDon: data?.invoices ?? [], loading, error };
 }
 
-export function useInvoicesCuaToiChiTiet(id: number) {
-  const { data, loading, error } = useResource(() => me.invoice(id), [id]);
+export function useInvoicesCuaToiChiTiet(code: string) {
+  const { data, loading, error } = useResource(() => me.invoice(code), [code]);
   return { hoaDon: data?.invoice ?? null, loading, error };
 }
 

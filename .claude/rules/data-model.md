@@ -10,9 +10,9 @@ tenants   (id, room_id, full_name, phone, occupants,
            moved_in, moved_out)                                 UNIQUE(room_id) WHERE moved_out IS NULL
 readings  (id, room_id, period /YYYY-MM/, electricity_start, electricity_end,
            water_start, water_end, recorded_on)                 UNIQUE(room_id, period)
-invoices  (id, room_id, period, rent_amount, electricity_amount, water_amount,
-           other_fees, electricity_rate, water_rate, total,
-           status, created_at)                                  UNIQUE(room_id, period)
+invoices  (id, code, room_id, period, rent_amount, electricity_amount,
+           water_amount, other_fees, electricity_rate, water_rate, total,
+           status, created_at)                    UNIQUE(room_id, period), UNIQUE(code)
 payments  (id, invoice_id, amount, paid_on, method, note)
 users     (id, username, password_hash, role, room_id)
 ```
@@ -22,6 +22,7 @@ users     (id, username, password_hash, role, room_id)
 - `buildings.electricity_rate` / `water_rate` hold the **current** tariff, per building (the two buildings may differ). It is what a newly generated invoice copies from; it is never read when displaying an existing invoice.
 - `tenants.moved_out` NULL means still renting. The partial unique index enforces at most one active tenant per room, while keeping past tenants for history. **One tenancy = one named tenant**; several people living in the room are counted in `occupants` (≥ 1, includes the named tenant) rather than as extra rows. Do not "fix" this by allowing multiple active tenants — it is the agreed model.
 - The `UNIQUE(room_id, period)` pairs stop a double meter entry from producing two invoices for the same month.
+- `invoices.code` (`HD3C8EA506`) is **random, never derived from `id`**. It is the transfer memo, the URL segment, and what a tenant reads off the invoice. Four random bytes as uppercase hex: `0-9A-F` has no O/I/l to misread when typing it into a bank app, and the unique index catches a collision. Migration 0005 added it nullable rather than rebuilding the table, because `payments` holds a foreign key into `invoices`; the TypeScript input type requires it, so nothing writes a NULL.
 
 Money is `INTEGER` VND — no floats, no minor units. Dates are ISO `TEXT`.
 

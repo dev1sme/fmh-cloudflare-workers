@@ -1,17 +1,38 @@
 import type { Invoice, Reading, InvoiceEstimate } from "../../shared/types";
 
-/** Code printed on the invoice and used as the bank transfer memo, e.g. HD00123. */
-export function maHoaDon(invoiceId: number): string {
-  return `HD${String(invoiceId).padStart(5, "0")}`;
+/**
+ * The invoice code: printed on the invoice, used as the bank transfer memo,
+ * and used in the URL instead of the row id.
+ *
+ * Random, not derived from the id. A sequential code told anyone holding one
+ * invoice how many exist and what the neighbouring ones are called, in a
+ * string that is also printed on the payment QR.
+ *
+ * Uppercase hex because a human types this into a transfer memo: `0-9A-F`
+ * has no O/I/l to be misread as 0/1. Four bytes give 4.3 billion codes, and
+ * the unique index catches the birthday collision that a few thousand
+ * invoices will never actually reach.
+ */
+const CODE_BYTES = 4;
+
+export function sinhMaHoaDon(): string {
+  const bytes = crypto.getRandomValues(new Uint8Array(CODE_BYTES));
+  const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+  return `HD${hex.toUpperCase()}`;
 }
 
-/** Extracts an invoice id from a transfer memo. Used by the SePay webhook. */
-export function parseMaHoaDon(text: string): number | null {
-  const match = /HD(\d{1,10})/i.exec(text);
-  if (!match) return null;
+/** Pattern the code must match, used to tell a code from a row id in a path. */
+export const MA_HOA_DON_PATTERN = /^HD[0-9A-F]{8}$/;
 
-  const id = Number(match[1]);
-  return Number.isInteger(id) && id > 0 ? id : null;
+/**
+ * Extracts an invoice code from a transfer memo. Used by the SePay webhook.
+ *
+ * Banks upper-case and strip memos unpredictably, so the match is
+ * case-insensitive and the result is normalised back to upper case.
+ */
+export function parseMaHoaDon(text: string): string | null {
+  const match = /HD([0-9A-Fa-f]{8})/.exec(text);
+  return match ? `HD${match[1]!.toUpperCase()}` : null;
 }
 
 export type InvoiceAmounts = Pick<

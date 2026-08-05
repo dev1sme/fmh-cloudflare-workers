@@ -6,7 +6,7 @@ import { getTenantDashboard } from "../db/dashboard";
 import { getRoom } from "../db/rooms";
 import { notFound, ok } from "../envelope";
 import type { AppEnv } from "../types";
-import { optionalPeriod, parseId } from "../validate";
+import { optionalPeriod, parseInvoiceCode } from "../validate";
 
 /**
  * Read-only view for a tenant account.
@@ -39,10 +39,11 @@ meRoutes.get("/invoices", async (c) => {
   return ok(c, { invoices }, "Invoices retrieved.");
 });
 
-meRoutes.get("/invoices/:id", async (c) => {
-  const invoice = await getInvoiceDetail(c.env.DB, parseId(c.req.param("id")));
+meRoutes.get("/invoices/:code", async (c) => {
+  const invoice = await getInvoiceDetail(c.env.DB, parseInvoiceCode(c.req.param("code")));
   if (!invoice || invoice.room_id !== c.get("user").room_id) {
-    // 404, not 403 — another room's invoice must not be probeable by id.
+    // 404, not 403 — another room's invoice must not be probeable, and the
+    // code being random means there is nothing to walk through anyway.
     return notFound(c, "Invoice not found.");
   }
 

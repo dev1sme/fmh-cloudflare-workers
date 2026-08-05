@@ -4,7 +4,7 @@ import type { GenerationCandidate } from "../db/invoices";
 import {
   createInvoices,
   deleteInvoice,
-  getInvoice,
+  getInvoiceByCode,
   getInvoiceDetail,
   listGenerationCandidates,
   listInvoices,
@@ -12,7 +12,7 @@ import {
 } from "../db/invoices";
 import { createPayment, listPayments } from "../db/payments";
 import { bayGio, homNay } from "../domain/period";
-import { estimateInvoice, tongTien } from "../domain/invoice";
+import { estimateInvoice, sinhMaHoaDon, tongTien } from "../domain/invoice";
 import { failure, notFound, ok } from "../envelope";
 import { capNhatTrangThai } from "./payments";
 import type { AppEnv } from "../types";
@@ -30,7 +30,7 @@ import {
   optionalInt,
   optionalPeriod,
   optionalString,
-  parseId,
+  parseInvoiceCode,
   queryId,
   requireDate,
   requireEnum,
@@ -88,6 +88,8 @@ invoiceRoutes.post("/generate", async (c) => {
     const { electricity_used, water_used, ...tien } = amounts;
 
     inputs.push({
+      // Random per invoice, never derived from the row id it will get.
+      code: sinhMaHoaDon(),
       room_id,
       period,
       ...tien,
@@ -147,8 +149,9 @@ function parseRoomIds(value: unknown): number[] | undefined {
   return value.map((item) => requireId(item, "room_ids"));
 }
 
-invoiceRoutes.get("/:id", async (c) => {
-  const invoice = await getInvoiceDetail(c.env.DB, parseId(c.req.param("id")));
+// Paths carry the invoice `code`, not the row id — see domain/invoice.ts.
+invoiceRoutes.get("/:code", async (c) => {
+  const invoice = await getInvoiceDetail(c.env.DB, parseInvoiceCode(c.req.param("code")));
   if (!invoice) return notFound(c, "Invoice not found.");
 
   return ok(c, { invoice }, "Invoice retrieved.");
@@ -159,17 +162,16 @@ invoiceRoutes.get("/:id", async (c) => {
  * not patchable on purpose — a wrong tariff means deleting the invoice and
  * generating it again, so history stays honest.
  */
-invoiceRoutes.patch("/:id", async (c) => {
-  const id = parseId(c.req.param("id"));
+invoiceRoutes.patch("/:code", async (c) => {
   const body = await jsonBody(c.req);
 
-  const current = await getInvoice(c.env.DB, id);
+  const current = await getInvoiceByCode(c.env.DB, parseInvoiceCode(c.req.param("code")));
   if (!current) return notFound(c, "Invoice not found.");
 
   const rent_amount = optionalInt(body.rent_amount, "rent_amount") ?? current.rent_amount;
   const other_fees = optionalInt(body.other_fees, "other_fees") ?? current.other_fees;
 
-  const invoice = await updateInvoice(c.env.DB, id, {
+  const invoice = await updateInvoice(c.env.DB, current.id, {
     rent_amount,
     other_fees,
     status: optionalEnum(body.status, "status", STATUSES),
@@ -179,23 +181,28 @@ invoiceRoutes.patch("/:id", async (c) => {
   return ok(c, { invoice }, "Invoice updated.");
 });
 
-invoiceRoutes.delete("/:id", async (c) => {
-  await deleteInvoice(c.env.DB, parseId(c.req.param("id")));
+invoiceRoutes.delete("/:code", async (c) => {
+  const invoice = await getInvoiceByCode(c.env.DB, parseInvoiceCode(c.req.param("code")));
+  if (!invoice) return notFound(c, "Invoice not found.");
+
+  await deleteInvoice(c.env.DB, invoice.id);
   return ok(c, { ok: true }, "Invoice deleted.");
 });
 
-invoiceRoutes.get("/:id/payments", async (c) => {
-  const payments = await listPayments(c.env.DB, parseId(c.req.param("id")));
-  return ok(c, { payments }, "Payments retrieved.");
+invoiceRoutes.get("/:code/payments", async (c) => {
+  const invoice = await getInvoiceByCode(c.env.DB, parseInvoiceCode(c.req.param("code")));
+  if (!invoice) return notFound(c, "Invoice not found.");
+
+  return ok(c, { payments: await listPayments(c.env.DB, invoice.id) }, "Payments retrieved.");
 });
 
 /** Records money received. Marks the invoice paid once the total is covered. */
-invoiceRoutes.post("/:id/payments", async (c) => {
-  const invoiceId = parseId(c.req.param("id"));
+invoiceRoutes.post("/:code/payments", async (c) => {
   const body = await jsonBody(c.req);
 
-  const invoice = await getInvoice(c.env.DB, invoiceId);
+  const invoice = await getInvoiceByCode(c.env.DB, parseInvoiceCode(c.req.param("code")));
   if (!invoice) return notFound(c, "Invoice not found.");
+  const invoiceId = invoice.id;
   if (invoice.status === "CANCELLED") {
     return failure(c, "INVOICE_CANCELLED", "This invoice is cancelled.", 409);
   }

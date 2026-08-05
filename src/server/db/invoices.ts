@@ -5,17 +5,16 @@ import type {
   InvoiceStatus,
   InvoiceWithRoom,
 } from "../../shared/types";
-import { maHoaDon } from "../domain/invoice";
 import { chuanHoaNoiDung, nganHangHopLe, taoVietQR } from "../domain/vietqr";
 import { getReadingByRoomKy } from "./readings";
 import { listPayments, sumPayments } from "./payments";
 import { buildSet, Where } from "./sql";
 
-const COLUMNS = `id, room_id, period, rent_amount, electricity_amount, water_amount, other_fees,
+const COLUMNS = `id, code, room_id, period, rent_amount, electricity_amount, water_amount, other_fees,
                  electricity_rate, water_rate, total, status, created_at`;
 
 const WITH_ROOM_SELECT = `
-  SELECT i.id, i.room_id, i.period, i.rent_amount, i.electricity_amount, i.water_amount, i.other_fees,
+  SELECT i.id, i.code, i.room_id, i.period, i.rent_amount, i.electricity_amount, i.water_amount, i.other_fees,
          i.electricity_rate, i.water_rate, i.total, i.status, i.created_at,
          r.room_name
   FROM invoices i
@@ -24,7 +23,7 @@ const WITH_ROOM_SELECT = `
 
 /** Same row, plus the bank details the VietQR code is built from. */
 const DETAIL_SELECT = `
-  SELECT i.id, i.room_id, i.period, i.rent_amount, i.electricity_amount, i.water_amount, i.other_fees,
+  SELECT i.id, i.code, i.room_id, i.period, i.rent_amount, i.electricity_amount, i.water_amount, i.other_fees,
          i.electricity_rate, i.water_rate, i.total, i.status, i.created_at,
          r.room_name, b.bank_bin, b.bank_account_no, b.bank_account_name, b.momo_phone, b.momo_name
   FROM invoices i
@@ -44,9 +43,9 @@ export async function listInvoices(
   const { results } = await db
     .prepare(`${WITH_ROOM_SELECT}${where.clause()} ORDER BY i.period DESC, r.room_name`)
     .bind(...where.bindings())
-    .all<Omit<InvoiceWithRoom, "invoice_code">>();
+    .all<InvoiceWithRoom>();
 
-  return results.map((row) => ({ ...row, invoice_code: maHoaDon(row.id) }));
+  return results;
 }
 
 export function getInvoice(db: D1Database, id: number): Promise<Invoice | null> {
@@ -64,12 +63,16 @@ export function getInvoiceByRoomKy(
     .first<Invoice>();
 }
 
+export function getInvoiceByCode(db: D1Database, code: string): Promise<Invoice | null> {
+  return db.prepare(`SELECT ${COLUMNS} FROM invoices WHERE code = ?`).bind(code).first<Invoice>();
+}
+
 /** Full invoice view: line items, the reading behind them, and what was paid. */
 export async function getInvoiceDetail(
   db: D1Database,
-  id: number,
+  code: string,
 ): Promise<InvoiceDetail | null> {
-  type DetailRow = Omit<InvoiceWithRoom, "invoice_code"> & {
+  type DetailRow = InvoiceWithRoom & {
     bank_bin: string | null;
     bank_account_no: string | null;
     bank_account_name: string | null;
@@ -77,23 +80,22 @@ export async function getInvoiceDetail(
     momo_name: string | null;
   };
 
-  const row = await db.prepare(`${DETAIL_SELECT} WHERE i.id = ?`).bind(id).first<DetailRow>();
+  const row = await db.prepare(`${DETAIL_SELECT} WHERE i.code = ?`).bind(code).first<DetailRow>();
   if (!row) return null;
 
   const [reading, payments, daThu] = await Promise.all([
     getReadingByRoomKy(db, row.room_id, row.period),
-    listPayments(db, id),
-    sumPayments(db, id),
+    listPayments(db, row.id),
+    sumPayments(db, row.id),
   ]);
 
   const { bank_bin, bank_account_no, bank_account_name, momo_phone, momo_name, ...invoice } = row;
   const conLai = row.total - daThu;
-  const maHd = maHoaDon(row.id);
+  const maHd = row.code;
   const conNo = conLai > 0 && row.status !== "CANCELLED";
 
   return {
     ...invoice,
-    invoice_code: maHd,
     reading,
     payments,
     paid: daThu,
@@ -200,12 +202,13 @@ export async function createInvoices(
   const statements = inputs.map((input) =>
     db
       .prepare(
-        `INSERT INTO invoices (room_id, period, rent_amount, electricity_amount, water_amount, other_fees,
-                               electricity_rate, water_rate, total, status, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `INSERT INTO invoices (code, room_id, period, rent_amount, electricity_amount, water_amount,
+                               other_fees, electricity_rate, water_rate, total, status, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
          RETURNING ${COLUMNS}`,
       )
       .bind(
+        input.code,
         input.room_id,
         input.period,
         input.rent_amount,

@@ -7,12 +7,12 @@ import { periodLabel, tien } from "../../../format";
 
 export function InvoiceCard({ hoaDon }: { hoaDon: InvoiceWithRoom }) {
   return (
-    <Card withBorder padding="md" component={Link} to={`/my-invoices/${hoaDon.id}`}>
+    <Card withBorder padding="md" component={Link} to={`/my-invoices/${hoaDon.code}`}>
       <Group justify="space-between" wrap="nowrap">
         <div>
           <Text fw={500}>{periodLabel(hoaDon.period)}</Text>
           <Text size="xs" c="dimmed">
-            {hoaDon.invoice_code}
+            {hoaDon.code}
           </Text>
         </div>
         <Stack gap={4} align="flex-end">

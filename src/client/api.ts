@@ -182,19 +182,19 @@ export const readings = {
 export const invoices = {
   list: (params: { period?: string; room_id?: number; status?: string } = {}) =>
     request<{ invoices: InvoiceWithRoom[] }>(`/api/invoices${query(params)}`),
-  get: (id: number) => request<{ invoice: InvoiceDetail }>(`/api/invoices/${id}`),
+  get: (code: string) => request<{ invoice: InvoiceDetail }>(`/api/invoices/${code}`),
   /** What generation would produce for a period. Writes nothing. */
   preview: (period: string) => request<GeneratePreview>(`/api/invoices/generate-preview?period=${period}`),
   /** Omit `roomIds` to bill every room. */
   generate: (period: string, roomIds?: number[]) =>
     send<GenerateResult>("POST", "/api/invoices/generate", { period, room_ids: roomIds }),
-  update: (id: number, patch: { other_fees?: number; rent_amount?: number; status?: string }) =>
-    send<{ invoice: Invoice }>("PATCH", `/api/invoices/${id}`, patch),
-  remove: (id: number) => send<{ ok: true }>("DELETE", `/api/invoices/${id}`),
+  update: (code: string, patch: { other_fees?: number; rent_amount?: number; status?: string }) =>
+    send<{ invoice: Invoice }>("PATCH", `/api/invoices/${code}`, patch),
+  remove: (code: string) => send<{ ok: true }>("DELETE", `/api/invoices/${code}`),
   pay: (
-    id: number,
+    code: string,
     input: { amount: number; paid_on?: string; method?: string; note?: string | null },
-  ) => send<{ payment: Payment; invoice: Invoice }>("POST", `/api/invoices/${id}/payments`, input),
+  ) => send<{ payment: Payment; invoice: Invoice }>("POST", `/api/invoices/${code}/payments`, input),
   removePayment: (paymentId: number) => send<{ ok: true }>("DELETE", `/api/payments/${paymentId}`),
 };
 
@@ -203,7 +203,7 @@ export const me = {
   dashboard: () => request<TenantDashboard>("/api/me/dashboard"),
   room: () => request<{ room: RoomDetail }>("/api/me/room"),
   invoices: () => request<{ invoices: InvoiceWithRoom[] }>("/api/me/invoices"),
-  invoice: (id: number) => request<{ invoice: InvoiceDetail }>(`/api/me/invoices/${id}`),
+  invoice: (code: string) => request<{ invoice: InvoiceDetail }>(`/api/me/invoices/${code}`),
   readings: () => request<{ readings: ReadingDetail[] }>("/api/me/readings"),
 };
 

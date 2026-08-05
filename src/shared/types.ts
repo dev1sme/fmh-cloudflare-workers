@@ -99,6 +99,12 @@ export type InvoiceStatus = "UNPAID" | "PAID" | "CANCELLED";
 
 export type Invoice = {
   id: number;
+  /**
+   * Random code, e.g. `HD3C8EA506`. Shown to tenants, carried in the transfer
+   * memo, and used in URLs in place of `id` — so neither the memo nor a link
+   * reveals how many invoices exist. Never derive it from `id`.
+   */
+  code: string;
   room_id: number;
   period: string;
   rent_amount: number;
@@ -115,8 +121,6 @@ export type Invoice = {
 /** What list endpoints return: the invoice plus the room it belongs to. */
 export type InvoiceWithRoom = Invoice & {
   room_name: string;
-  /** Code shown to tenants and carried in the transfer memo, e.g. HD00123. */
-  invoice_code: string;
 };
 
 /** What the tenant needs to pay: the QR payload plus the same data as text. */
