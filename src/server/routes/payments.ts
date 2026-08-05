@@ -2,6 +2,7 @@ import { Hono } from "hono";
 
 import { getInvoice, updateInvoice } from "../db/invoices";
 import { deletePayment, getPayment, sumPayments } from "../db/payments";
+import { notFound, ok } from "../envelope";
 import type { Invoice } from "../../shared/types";
 import type { AppEnv } from "../types";
 import { parseId } from "../validate";
@@ -31,10 +32,10 @@ paymentRoutes.delete("/:id", async (c) => {
   const id = parseId(c.req.param("id"));
 
   const payment = await getPayment(c.env.DB, id);
-  if (!payment) return c.json({ error: "not_found" }, 404);
+  if (!payment) return notFound(c, "Payment not found.");
 
   await deletePayment(c.env.DB, id);
   const invoice = await capNhatTrangThai(c.env.DB, payment.invoice_id);
 
-  return c.json({ ok: true, invoice });
+  return ok(c, { ok: true, invoice }, "Payment deleted.");
 });

@@ -1,5 +1,36 @@
 /** Shapes exchanged by the API. Field names follow the D1 schema. */
 
+/**
+ * Every API response is wrapped in an envelope — see
+ * `.claude/rules/envelop-conventions.md`. `success` is what a client branches
+ * on; `data` carries the payload, `error.code` the stable failure contract.
+ */
+export type ApiMeta = {
+  /** Unix seconds. Must be a number, never a string. */
+  timestamp: number;
+};
+
+export type ApiSuccess<T> = {
+  success: true;
+  message: string;
+  data: T;
+  meta: ApiMeta;
+};
+
+export type ApiFailure = {
+  success: false;
+  message: string;
+  error: {
+    /** Stable machine-readable code, e.g. `trung_du_lieu`. The client maps it. */
+    code: string;
+    /** Field-keyed validation messages; null for everything else. */
+    details: Record<string, string[]> | null;
+  };
+  meta: ApiMeta;
+};
+
+export type ApiResponse<T> = ApiSuccess<T> | ApiFailure;
+
 export type Building = {
   id: number;
   name: string;

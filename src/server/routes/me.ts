@@ -3,6 +3,7 @@ import { Hono } from "hono";
 import { getInvoiceDetail, listInvoices } from "../db/invoices";
 import { listReadings } from "../db/readings";
 import { getRoom } from "../db/rooms";
+import { notFound, ok } from "../envelope";
 import type { AppEnv } from "../types";
 import { optionalKy, parseId } from "../validate";
 
@@ -17,9 +18,9 @@ export const meRoutes = new Hono<AppEnv>();
 
 meRoutes.get("/phong", async (c) => {
   const room = await getRoom(c.env.DB, c.get("user").room_id!);
-  if (!room) return c.json({ error: "not_found" }, 404);
+  if (!room) return notFound(c, "Room not found.");
 
-  return c.json({ room });
+  return ok(c, { room }, "Room retrieved.");
 });
 
 meRoutes.get("/invoices", async (c) => {
@@ -28,16 +29,17 @@ meRoutes.get("/invoices", async (c) => {
     ky: optionalKy(c.req.query("ky")),
   });
 
-  return c.json({ invoices });
+  return ok(c, { invoices }, "Invoices retrieved.");
 });
 
 meRoutes.get("/invoices/:id", async (c) => {
   const invoice = await getInvoiceDetail(c.env.DB, parseId(c.req.param("id")));
   if (!invoice || invoice.room_id !== c.get("user").room_id) {
-    return c.json({ error: "not_found" }, 404);
+    // 404, not 403 — another room's invoice must not be probeable by id.
+    return notFound(c, "Invoice not found.");
   }
 
-  return c.json({ invoice });
+  return ok(c, { invoice }, "Invoice retrieved.");
 });
 
 meRoutes.get("/readings", async (c) => {
@@ -46,5 +48,5 @@ meRoutes.get("/readings", async (c) => {
     ky: optionalKy(c.req.query("ky")),
   });
 
-  return c.json({ readings });
+  return ok(c, { readings }, "Readings retrieved.");
 });

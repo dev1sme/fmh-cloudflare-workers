@@ -1,5 +1,7 @@
 import type {
   Account,
+  ApiFailure,
+  ApiResponse,
   Building,
   GeneratePreview,
   GenerateResult,
@@ -18,21 +20,35 @@ export class ApiError extends Error {
   constructor(
     readonly status: number,
     readonly code: string,
+    /** Field-keyed validation codes, when the failure names fields. */
+    readonly details: ApiFailure["error"]["details"] = null,
   ) {
     super(code);
   }
 }
 
+/**
+ * Unwraps the response envelope (`.claude/rules/envelop-conventions.md`).
+ *
+ * `T` is the shape inside `data`, which is the same object the routes always
+ * returned (`{ invoices }`, `{ room }`, …) — so every caller below is unchanged
+ * by the envelope. A non-2xx, a `success: false`, or a body that is not JSON
+ * all end up as one ApiError carrying the code the UI maps to Vietnamese.
+ */
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(path, {
     ...init,
     headers: { "Content-Type": "application/json", ...init?.headers },
   });
 
-  const body = (await res.json().catch(() => null)) as (T & { error?: string }) | null;
+  const body = (await res.json().catch(() => null)) as ApiResponse<T> | null;
 
-  if (!res.ok) throw new ApiError(res.status, body?.error ?? `http_${res.status}`);
-  return body as T;
+  if (!res.ok || !body || body.success !== true) {
+    const failure = body && body.success === false ? body.error : null;
+    throw new ApiError(res.status, failure?.code ?? `http_${res.status}`, failure?.details ?? null);
+  }
+
+  return body.data;
 }
 
 const send = <T>(method: string, path: string, body?: unknown) =>

@@ -7,6 +7,7 @@ import {
   listBuildings,
   updateBuilding,
 } from "../db/buildings";
+import { notFound, ok } from "../envelope";
 import type { AppEnv } from "../types";
 import {
   fail,
@@ -20,13 +21,15 @@ import {
 
 export const buildingRoutes = new Hono<AppEnv>();
 
-buildingRoutes.get("/", async (c) => c.json({ buildings: await listBuildings(c.env.DB) }));
+buildingRoutes.get("/", async (c) =>
+  ok(c, { buildings: await listBuildings(c.env.DB) }, "Buildings retrieved."),
+);
 
 buildingRoutes.get("/:id", async (c) => {
   const building = await getBuilding(c.env.DB, parseId(c.req.param("id")));
-  if (!building) return c.json({ error: "not_found" }, 404);
+  if (!building) return notFound(c, "Building not found.");
 
-  return c.json({ building });
+  return ok(c, { building }, "Building retrieved.");
 });
 
 /** 6-digit NAPAS acquirer id; anything else would produce an unscannable QR. */
@@ -63,7 +66,7 @@ buildingRoutes.post("/", async (c) => {
     momo_ten: optionalString(body.momo_ten, "momo_ten", 100),
   });
 
-  return c.json({ building }, 201);
+  return ok(c, { building }, "Building created.", 201);
 });
 
 /**
@@ -89,13 +92,13 @@ buildingRoutes.patch("/:id", async (c) => {
     momo_ten:
       body.momo_ten === undefined ? undefined : optionalString(body.momo_ten, "momo_ten", 100),
   });
-  if (!building) return c.json({ error: "not_found" }, 404);
+  if (!building) return notFound(c, "Building not found.");
 
-  return c.json({ building });
+  return ok(c, { building }, "Building updated.");
 });
 
 /** Fails with 409 while the building still has rooms. */
 buildingRoutes.delete("/:id", async (c) => {
   await deleteBuilding(c.env.DB, parseId(c.req.param("id")));
-  return c.json({ ok: true });
+  return ok(c, { ok: true }, "Building deleted.");
 });

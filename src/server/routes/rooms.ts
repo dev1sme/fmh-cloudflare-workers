@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 
 import { createRoom, deleteRoom, getRoom, listRooms, updateRoom } from "../db/rooms";
+import { notFound, ok } from "../envelope";
 import type { AppEnv } from "../types";
 import {
   jsonBody,
@@ -14,13 +15,13 @@ import {
 
 export const roomRoutes = new Hono<AppEnv>();
 
-roomRoutes.get("/", async (c) => c.json({ rooms: await listRooms(c.env.DB) }));
+roomRoutes.get("/", async (c) => ok(c, { rooms: await listRooms(c.env.DB) }, "Rooms retrieved."));
 
 roomRoutes.get("/:id", async (c) => {
   const room = await getRoom(c.env.DB, parseId(c.req.param("id")));
-  if (!room) return c.json({ error: "not_found" }, 404);
+  if (!room) return notFound(c, "Room not found.");
 
-  return c.json({ room });
+  return ok(c, { room }, "Room retrieved.");
 });
 
 roomRoutes.post("/", async (c) => {
@@ -33,7 +34,7 @@ roomRoutes.post("/", async (c) => {
     dien_tich: optionalArea(body.dien_tich, "dien_tich"),
   });
 
-  return c.json({ room }, 201);
+  return ok(c, { room }, "Room created.", 201);
 });
 
 roomRoutes.patch("/:id", async (c) => {
@@ -47,13 +48,13 @@ roomRoutes.patch("/:id", async (c) => {
     gia_phong: optionalInt(body.gia_phong, "gia_phong"),
     dien_tich: body.dien_tich === undefined ? undefined : optionalArea(body.dien_tich, "dien_tich"),
   });
-  if (!room) return c.json({ error: "not_found" }, 404);
+  if (!room) return notFound(c, "Room not found.");
 
-  return c.json({ room });
+  return ok(c, { room }, "Room updated.");
 });
 
 /** Fails with 409 if readings, invoices, tenants or an account still point here. */
 roomRoutes.delete("/:id", async (c) => {
   await deleteRoom(c.env.DB, parseId(c.req.param("id")));
-  return c.json({ ok: true });
+  return ok(c, { ok: true }, "Room deleted.");
 });

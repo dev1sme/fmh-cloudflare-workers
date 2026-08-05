@@ -2,6 +2,7 @@ import { Hono } from "hono";
 
 import { createTenant, deleteTenant, getTenant, listTenants, updateTenant } from "../db/tenants";
 import { homNay } from "../domain/ky";
+import { notFound, ok } from "../envelope";
 import type { AppEnv } from "../types";
 import {
   fail,
@@ -30,7 +31,7 @@ tenantRoutes.get("/", async (c) => {
     dang_thue: c.req.query("dang_thue") === "1",
   });
 
-  return c.json({ tenants });
+  return ok(c, { tenants }, "Tenants retrieved.");
 });
 
 /** Moves a tenant in. The DB rejects a second active tenant for the same room. */
@@ -45,7 +46,7 @@ tenantRoutes.post("/", async (c) => {
     ngay_vao: body.ngay_vao === undefined ? homNay() : requireDate(body.ngay_vao, "ngay_vao"),
   });
 
-  return c.json({ tenant }, 201);
+  return ok(c, { tenant }, "Tenant moved in.", 201);
 });
 
 /**
@@ -56,7 +57,7 @@ tenantRoutes.patch("/:id", async (c) => {
   const id = parseId(c.req.param("id"));
   const body = await jsonBody(c.req);
 
-  if (!(await getTenant(c.env.DB, id))) return c.json({ error: "not_found" }, 404);
+  if (!(await getTenant(c.env.DB, id))) return notFound(c, "Tenant not found.");
 
   const tenant = await updateTenant(c.env.DB, id, {
     ho_ten: body.ho_ten === undefined ? undefined : requireString(body.ho_ten, "ho_ten", 100),
@@ -66,11 +67,11 @@ tenantRoutes.patch("/:id", async (c) => {
     ngay_ra: body.ngay_ra === undefined ? undefined : optionalDate(body.ngay_ra, "ngay_ra"),
   });
 
-  return c.json({ tenant });
+  return ok(c, { tenant }, "Tenant updated.");
 });
 
 /** For records entered by mistake — moving out is a PATCH, not a delete. */
 tenantRoutes.delete("/:id", async (c) => {
   await deleteTenant(c.env.DB, parseId(c.req.param("id")));
-  return c.json({ ok: true });
+  return ok(c, { ok: true }, "Tenant deleted.");
 });

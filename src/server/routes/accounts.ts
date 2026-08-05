@@ -11,6 +11,7 @@ import {
   setPasswordHash,
 } from "../db/users";
 import { DO_DAI_TOI_THIEU, sinhMatKhau } from "../domain/password";
+import { failure, notFound, ok } from "../envelope";
 import type { AppEnv, Role } from "../types";
 import { fail, jsonBody, parseId, requireEnum, requireId, requireString } from "../validate";
 
@@ -34,7 +35,9 @@ function chonMatKhau(value: unknown): string {
   return value;
 }
 
-accountRoutes.get("/", async (c) => c.json({ accounts: await listAccounts(c.env.DB) }));
+accountRoutes.get("/", async (c) =>
+  ok(c, { accounts: await listAccounts(c.env.DB) }, "Accounts retrieved."),
+);
 
 accountRoutes.post("/", async (c) => {
   const body = await jsonBody(c.req);
@@ -50,17 +53,19 @@ accountRoutes.post("/", async (c) => {
     room_id: roomId,
   });
 
-  return c.json({ account, password }, 201);
+  // The only time the plaintext is ever returned — hand it to the tenant now,
+  // because no endpoint can read it back afterwards.
+  return ok(c, { account, password }, "Account created.", 201);
 });
 
 accountRoutes.patch("/:id", async (c) => {
   const id = parseId(c.req.param("id"));
   const body = await jsonBody(c.req);
 
-  if (!(await getAccount(c.env.DB, id))) return c.json({ error: "not_found" }, 404);
+  if (!(await getAccount(c.env.DB, id))) return notFound(c, "Account not found.");
 
   const account = await renameAccount(c.env.DB, id, requireString(body.username, "username", 50));
-  return c.json({ account });
+  return ok(c, { account }, "Account renamed.");
 });
 
 /**
@@ -72,26 +77,28 @@ accountRoutes.post("/:id/reset-password", async (c) => {
   const body = await jsonBody(c.req).catch(() => ({}) as Record<string, unknown>);
 
   const account = await getAccount(c.env.DB, id);
-  if (!account) return c.json({ error: "not_found" }, 404);
+  if (!account) return notFound(c, "Account not found.");
 
   const password = chonMatKhau(body.password);
   await setPasswordHash(c.env.DB, id, await hashPassword(password));
 
-  return c.json({ account, password });
+  return ok(c, { account, password }, "Password reset.");
 });
 
 accountRoutes.delete("/:id", async (c) => {
   const id = parseId(c.req.param("id"));
 
   const account = await getAccount(c.env.DB, id);
-  if (!account) return c.json({ error: "not_found" }, 404);
+  if (!account) return notFound(c, "Account not found.");
 
   // Two ways to lock everyone out of the app; both refused.
-  if (id === c.get("user").id) return c.json({ error: "khong_tu_xoa" }, 409);
+  if (id === c.get("user").id) {
+    return failure(c, "khong_tu_xoa", "You cannot delete the account you are signed in as.", 409);
+  }
   if (account.vai_tro === "quan_ly" && (await countManagers(c.env.DB)) <= 1) {
-    return c.json({ error: "phai_con_mot_quan_ly" }, 409);
+    return failure(c, "phai_con_mot_quan_ly", "At least one manager account must remain.", 409);
   }
 
   await deleteAccount(c.env.DB, id);
-  return c.json({ ok: true });
+  return ok(c, { ok: true }, "Account deleted.");
 });

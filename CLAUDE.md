@@ -157,6 +157,21 @@ Billing period is `ky` in `YYYY-MM` form. Invoice line: `tien_dien = (dien_moi -
 
 Everything below `/api` except `/api/health` and `/api/auth/*` requires a session.
 
+**Every response is wrapped in an envelope**, per `.claude/rules/envelop-conventions.md`:
+
+```jsonc
+// success
+{ "success": true,  "message": "Invoices retrieved.", "data": { "invoices": [] }, "meta": { "timestamp": 1785900251 } }
+// failure
+{ "success": false, "message": "Duplicate data.", "error": { "code": "trung_du_lieu", "details": null }, "meta": { "timestamp": 1785900251 } }
+```
+
+- Handlers **never call `c.json` directly** — they go through `ok` / `failure` / `notFound` in `src/server/envelope.ts`, so `success`, `message` and `meta.timestamp` cannot be present on one endpoint and missing on the next. `grep -rn "c\.json(" src/server/` should only ever match `envelope.ts`.
+- `data` keeps the inner shape each route always returned (`{ invoices }`, `{ room }`, `{ ok: true }`) rather than being flattened. That is why `request<T>` in `api.ts` unwraps exactly one level and every caller in the client was left untouched.
+- **Error codes stayed lowercase snake_case** (`trung_du_lieu`, `missing_ten_phong`) even though the rule's examples show `SCREAMING_SNAKE`. The rule states no case convention, and the codes are the contract `errors.ts` maps to Vietnamese. Do not rename them.
+- Validation keeps its **specific** code (`missing_ten_phong`), not a blanket `VALIDATION_ERROR`, and adds `details` on top: `{ "ten_phong": ["missing_ten_phong"] }`. `chiTietValidation` derives the field from the code, so domain codes that name no field (`dien_moi_nho_hon_dien_cu`) get `details: null`. Sending `VALIDATION_ERROR` instead would force the Vietnamese wording onto the server, which is not where it lives.
+- `message` is English prose for logs and integrators. The SPA never displays it — it renders its own Vietnamese from `error.code`. Never put an internal exception message there; `onError` logs the real error and returns `loi_he_thong`.
+
 Management (`requireQuanLy`): full CRUD on `/buildings`, `/rooms`, `/tenants`, `/readings`, `/invoices`, plus `DELETE /payments/:id` and `GET /summary`.
 
 The app is not hard-wired to two buildings and four rooms: the manager adds a building from **Cài đặt** (each with its own `don_gia_dien` / `don_gia_nuoc`) and rooms from **Phòng**. Deleting is FK-restricted — a building with rooms, or a room with readings/invoices/tenants, returns 409 `rang_buoc_du_lieu` rather than cascading. Room names are unique per building, not globally. A room cannot be moved to another building and a tenancy cannot be moved to another room; both would rewrite priced history, so the UI disables those selects when editing.

@@ -3,6 +3,7 @@ import { createMiddleware } from "hono/factory";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import { SignJWT, jwtVerify } from "jose";
 
+import { failure } from "./envelope";
 import type { AppEnv, Role, SessionUser } from "./types";
 
 const ROLES: readonly Role[] = ["quan_ly", "nguoi_thue"];
@@ -177,7 +178,7 @@ export async function currentUser(c: Context<AppEnv>): Promise<SessionUser | nul
 /** Rejects the request with 401 unless a valid session cookie is present. */
 export const requireAuth = createMiddleware<AppEnv>(async (c, next) => {
   const user = await currentUser(c);
-  if (!user) return c.json({ error: "unauthorized" }, 401);
+  if (!user) return failure(c, "unauthorized", "Authentication required.", 401);
 
   c.set("user", user);
   await next();
@@ -186,8 +187,10 @@ export const requireAuth = createMiddleware<AppEnv>(async (c, next) => {
 /** Management endpoints: everything that writes to rooms, readings or money. */
 export const requireQuanLy = createMiddleware<AppEnv>(async (c, next) => {
   const user = await currentUser(c);
-  if (!user) return c.json({ error: "unauthorized" }, 401);
-  if (user.vai_tro !== "quan_ly") return c.json({ error: "forbidden" }, 403);
+  if (!user) return failure(c, "unauthorized", "Authentication required.", 401);
+  if (user.vai_tro !== "quan_ly") {
+    return failure(c, "forbidden", "Manager role required.", 403);
+  }
 
   c.set("user", user);
   await next();
@@ -199,8 +202,10 @@ export const requireQuanLy = createMiddleware<AppEnv>(async (c, next) => {
  */
 export const requirePhong = createMiddleware<AppEnv>(async (c, next) => {
   const user = await currentUser(c);
-  if (!user) return c.json({ error: "unauthorized" }, 401);
-  if (user.room_id === null) return c.json({ error: "khong_gan_phong" }, 403);
+  if (!user) return failure(c, "unauthorized", "Authentication required.", 401);
+  if (user.room_id === null) {
+    return failure(c, "khong_gan_phong", "This account is not bound to a room.", 403);
+  }
 
   c.set("user", user);
   await next();

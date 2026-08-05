@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 
 import { requirePhong, requireQuanLy } from "./auth";
+import { chiTietValidation, failure, notFound, ok } from "./envelope";
 import { securityHeaders } from "./headers";
 import { countRooms } from "./db/rooms";
 import { accountRoutes } from "./routes/accounts";
@@ -21,7 +22,7 @@ const app = new Hono<AppEnv>();
 app.use("*", securityHeaders);
 
 // Public.
-app.get("/api/health", (c) => c.json({ ok: true }));
+app.get("/api/health", (c) => ok(c, { ok: true }, "Service is healthy."));
 app.route("/api/auth", authRoutes);
 
 // Tenant accounts: read-only, always scoped to the room in their token.
@@ -34,7 +35,9 @@ app.route("/api/me", me);
 // Management: everything that writes to rooms, readings or money.
 const admin = new Hono<AppEnv>();
 admin.use("*", requireQuanLy);
-admin.get("/summary", async (c) => c.json({ user: c.get("user"), rooms: await countRooms(c.env.DB) }));
+admin.get("/summary", async (c) =>
+  ok(c, { user: c.get("user"), rooms: await countRooms(c.env.DB) }, "Summary retrieved."),
+);
 admin.route("/accounts", accountRoutes);
 admin.route("/buildings", buildingRoutes);
 admin.route("/rooms", roomRoutes);
@@ -44,24 +47,36 @@ admin.route("/invoices", invoiceRoutes);
 admin.route("/payments", paymentRoutes);
 app.route("/api", admin);
 
-app.notFound((c) => c.json({ error: "not_found" }, 404));
+app.notFound((c) => notFound(c, "Endpoint not found."));
 
 app.onError((err, c) => {
   if (err instanceof ValidationError) {
-    return c.json({ error: err.message }, 400);
+    // The code stays the contract; details name the offending field on top.
+    return failure(
+      c,
+      err.message,
+      "The given data was invalid.",
+      400,
+      chiTietValidation(err.message),
+    );
   }
 
   // D1 surfaces schema violations as plain errors; map the ones that are the
   // caller's fault to 409 instead of a blanket 500.
   const message = err.message ?? "";
-  if (message.includes("UNIQUE constraint failed")) return c.json({ error: "trung_du_lieu" }, 409);
-  if (message.includes("FOREIGN KEY constraint failed")) {
-    return c.json({ error: "rang_buoc_du_lieu" }, 409);
+  if (message.includes("UNIQUE constraint failed")) {
+    return failure(c, "trung_du_lieu", "Duplicate data.", 409);
   }
-  if (message.includes("CHECK constraint failed")) return c.json({ error: "du_lieu_khong_hop_le" }, 400);
+  if (message.includes("FOREIGN KEY constraint failed")) {
+    return failure(c, "rang_buoc_du_lieu", "Related data still references this record.", 409);
+  }
+  if (message.includes("CHECK constraint failed")) {
+    return failure(c, "du_lieu_khong_hop_le", "The given data was invalid.", 400);
+  }
 
+  // Logged, never returned: the convention forbids leaking internal messages.
   console.error(err);
-  return c.json({ error: "loi_he_thong" }, 500);
+  return failure(c, "loi_he_thong", "Internal server error.", 500);
 });
 
 export default app;

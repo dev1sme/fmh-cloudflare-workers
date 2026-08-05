@@ -13,6 +13,7 @@ import {
 import { createPayment, listPayments } from "../db/payments";
 import { bayGio, homNay } from "../domain/ky";
 import { tamTinhHoaDon, tongTien } from "../domain/invoice";
+import { failure, notFound, ok } from "../envelope";
 import { capNhatTrangThai } from "./payments";
 import type { AppEnv } from "../types";
 import type {
@@ -50,7 +51,7 @@ invoiceRoutes.get("/", async (c) => {
     trang_thai: optionalEnum(c.req.query("trang_thai"), "trang_thai", STATUSES),
   });
 
-  return c.json({ invoices });
+  return ok(c, { invoices }, "Invoices retrieved.");
 });
 
 /**
@@ -97,7 +98,12 @@ invoiceRoutes.post("/generate", async (c) => {
 
   const created = await createInvoices(c.env.DB, inputs);
 
-  return c.json({ created, skipped } satisfies GenerateResult, created.length > 0 ? 201 : 200);
+  return ok(
+    c,
+    { created, skipped } satisfies GenerateResult,
+    `Generated ${created.length} invoice(s), skipped ${skipped.length}.`,
+    created.length > 0 ? 201 : 200,
+  );
 });
 
 /**
@@ -110,7 +116,11 @@ invoiceRoutes.get("/generate-preview", async (c) => {
   const ky = requireKy(c.req.query("ky"));
   const candidates = await listGenerationCandidates(c.env.DB, ky);
 
-  return c.json({ ky, phong: candidates.map(xemTruocPhong) } satisfies GeneratePreview);
+  return ok(
+    c,
+    { ky, phong: candidates.map(xemTruocPhong) } satisfies GeneratePreview,
+    "Generation preview retrieved.",
+  );
 });
 
 function xemTruocPhong(candidate: GenerationCandidate): GenerationPreviewRoom {
@@ -139,9 +149,9 @@ function parseRoomIds(value: unknown): number[] | undefined {
 
 invoiceRoutes.get("/:id", async (c) => {
   const invoice = await getInvoiceDetail(c.env.DB, parseId(c.req.param("id")));
-  if (!invoice) return c.json({ error: "not_found" }, 404);
+  if (!invoice) return notFound(c, "Invoice not found.");
 
-  return c.json({ invoice });
+  return ok(c, { invoice }, "Invoice retrieved.");
 });
 
 /**
@@ -154,7 +164,7 @@ invoiceRoutes.patch("/:id", async (c) => {
   const body = await jsonBody(c.req);
 
   const current = await getInvoice(c.env.DB, id);
-  if (!current) return c.json({ error: "not_found" }, 404);
+  if (!current) return notFound(c, "Invoice not found.");
 
   const tien_phong = optionalInt(body.tien_phong, "tien_phong") ?? current.tien_phong;
   const phi_khac = optionalInt(body.phi_khac, "phi_khac") ?? current.phi_khac;
@@ -166,17 +176,17 @@ invoiceRoutes.patch("/:id", async (c) => {
     tong_tien: tongTien({ ...current, tien_phong, phi_khac }),
   });
 
-  return c.json({ invoice });
+  return ok(c, { invoice }, "Invoice updated.");
 });
 
 invoiceRoutes.delete("/:id", async (c) => {
   await deleteInvoice(c.env.DB, parseId(c.req.param("id")));
-  return c.json({ ok: true });
+  return ok(c, { ok: true }, "Invoice deleted.");
 });
 
 invoiceRoutes.get("/:id/payments", async (c) => {
   const payments = await listPayments(c.env.DB, parseId(c.req.param("id")));
-  return c.json({ payments });
+  return ok(c, { payments }, "Payments retrieved.");
 });
 
 /** Records money received. Marks the invoice paid once the total is covered. */
@@ -185,8 +195,10 @@ invoiceRoutes.post("/:id/payments", async (c) => {
   const body = await jsonBody(c.req);
 
   const invoice = await getInvoice(c.env.DB, invoiceId);
-  if (!invoice) return c.json({ error: "not_found" }, 404);
-  if (invoice.trang_thai === "huy") return c.json({ error: "hoa_don_da_huy" }, 409);
+  if (!invoice) return notFound(c, "Invoice not found.");
+  if (invoice.trang_thai === "huy") {
+    return failure(c, "hoa_don_da_huy", "This invoice is cancelled.", 409);
+  }
 
   const payment = await createPayment(c.env.DB, {
     invoice_id: invoiceId,
@@ -201,5 +213,5 @@ invoiceRoutes.post("/:id/payments", async (c) => {
 
   const updated = await capNhatTrangThai(c.env.DB, invoiceId);
 
-  return c.json({ payment, invoice: updated }, 201);
+  return ok(c, { payment, invoice: updated }, "Payment recorded.", 201);
 });

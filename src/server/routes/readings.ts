@@ -11,6 +11,7 @@ import {
   updateReading,
 } from "../db/readings";
 import { homNay } from "../domain/ky";
+import { failure, notFound, ok } from "../envelope";
 import type { AppEnv } from "../types";
 import {
   fail,
@@ -33,7 +34,7 @@ readingRoutes.get("/", async (c) => {
     room_id: queryId(c.req.query("room_id"), "room_id"),
   });
 
-  return c.json({ readings });
+  return ok(c, { readings }, "Readings retrieved.");
 });
 
 /**
@@ -47,20 +48,24 @@ readingRoutes.get("/goi-y", async (c) => {
 
   const previous = await getPreviousReading(c.env.DB, roomId, ky);
 
-  return c.json({
-    ky,
-    room_id: roomId,
-    dien_cu: previous?.dien_moi ?? 0,
-    nuoc_cu: previous?.nuoc_moi ?? 0,
-    ky_truoc: previous?.ky ?? null,
-  });
+  return ok(
+    c,
+    {
+      ky,
+      room_id: roomId,
+      dien_cu: previous?.dien_moi ?? 0,
+      nuoc_cu: previous?.nuoc_moi ?? 0,
+      ky_truoc: previous?.ky ?? null,
+    },
+    "Opening numbers suggested.",
+  );
 });
 
 readingRoutes.get("/:id", async (c) => {
   const reading = await getReading(c.env.DB, parseId(c.req.param("id")));
-  if (!reading) return c.json({ error: "not_found" }, 404);
+  if (!reading) return notFound(c, "Reading not found.");
 
-  return c.json({ reading });
+  return ok(c, { reading }, "Reading retrieved.");
 });
 
 /**
@@ -73,9 +78,11 @@ readingRoutes.post("/", async (c) => {
   const roomId = requireId(body.room_id, "room_id");
   const ky = requireKy(body.ky);
 
-  if (!(await getRoom(c.env.DB, roomId))) return c.json({ error: "phong_khong_ton_tai" }, 404);
+  if (!(await getRoom(c.env.DB, roomId))) {
+    return failure(c, "phong_khong_ton_tai", "Room not found.", 404);
+  }
   if (await getReadingByRoomKy(c.env.DB, roomId, ky)) {
-    return c.json({ error: "da_co_chi_so_ky_nay" }, 409);
+    return failure(c, "da_co_chi_so_ky_nay", "This room already has a reading for the period.", 409);
   }
 
   const previous = await getPreviousReading(c.env.DB, roomId, ky);
@@ -97,7 +104,7 @@ readingRoutes.post("/", async (c) => {
     ngay_ghi: optionalDate(body.ngay_ghi, "ngay_ghi") ?? homNay(),
   });
 
-  return c.json({ reading }, 201);
+  return ok(c, { reading }, "Reading recorded.", 201);
 });
 
 readingRoutes.patch("/:id", async (c) => {
@@ -105,7 +112,7 @@ readingRoutes.patch("/:id", async (c) => {
   const body = await jsonBody(c.req);
 
   const current = await getReading(c.env.DB, id);
-  if (!current) return c.json({ error: "not_found" }, 404);
+  if (!current) return notFound(c, "Reading not found.");
 
   const next = {
     dien_cu: optionalInt(body.dien_cu, "dien_cu") ?? current.dien_cu,
@@ -122,10 +129,10 @@ readingRoutes.patch("/:id", async (c) => {
     ngay_ghi: body.ngay_ghi === undefined ? undefined : (optionalDate(body.ngay_ghi, "ngay_ghi") ?? undefined),
   });
 
-  return c.json({ reading });
+  return ok(c, { reading }, "Reading updated.");
 });
 
 readingRoutes.delete("/:id", async (c) => {
   await deleteReading(c.env.DB, parseId(c.req.param("id")));
-  return c.json({ ok: true });
+  return ok(c, { ok: true }, "Reading deleted.");
 });
