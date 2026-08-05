@@ -11,7 +11,7 @@ export function ResetPasswordModal({
 }: {
   account: Account | null;
   onClose: () => void;
-  onSubmit: (id: number, password?: string) => Promise<boolean>;
+  onSubmit: (code: string, password?: string) => Promise<boolean>;
 }) {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
@@ -24,7 +24,7 @@ export function ResetPasswordModal({
     if (!account) return;
     setBusy(true);
 
-    const ok = await onSubmit(account.id, tuSinh ? undefined : password);
+    const ok = await onSubmit(account.code, tuSinh ? undefined : password);
 
     setBusy(false);
     if (ok) onClose();

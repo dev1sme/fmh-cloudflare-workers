@@ -4,9 +4,10 @@ import { getInvoiceDetail, listInvoices } from "../db/invoices";
 import { listReadings } from "../db/readings";
 import { getTenantDashboard } from "../db/dashboard";
 import { getRoom } from "../db/rooms";
+import { CODE_PREFIX } from "../domain/code";
 import { notFound, ok } from "../envelope";
 import type { AppEnv } from "../types";
-import { optionalPeriod, parseInvoiceCode } from "../validate";
+import { optionalPeriod, parseCode } from "../validate";
 
 /**
  * Read-only view for a tenant account.
@@ -40,7 +41,7 @@ meRoutes.get("/invoices", async (c) => {
 });
 
 meRoutes.get("/invoices/:code", async (c) => {
-  const invoice = await getInvoiceDetail(c.env.DB, parseInvoiceCode(c.req.param("code")));
+  const invoice = await getInvoiceDetail(c.env.DB, parseCode(CODE_PREFIX.invoice, c.req.param("code")));
   if (!invoice || invoice.room_id !== c.get("user").room_id) {
     // 404, not 403 — another room's invoice must not be probeable, and the
     // code being random means there is nothing to walk through anyway.

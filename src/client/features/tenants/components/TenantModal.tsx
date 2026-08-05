@@ -19,7 +19,7 @@ export function TenantModal({
   phong: RoomDetail[];
   onClose: () => void;
   onCreate: (input: TenantInput) => Promise<boolean>;
-  onUpdate: (id: number, patch: TenantPatch) => Promise<boolean>;
+  onUpdate: (code: string, patch: TenantPatch) => Promise<boolean>;
 }) {
   const dangSua = target?.tenant ?? null;
 
@@ -54,7 +54,7 @@ export function TenantModal({
     setBusy(true);
 
     const ok = dangSua
-      ? await onUpdate(dangSua.id, {
+      ? await onUpdate(dangSua.code, {
           full_name: hoTen,
           phone: phone || null,
           occupants: Number(soNguoi),

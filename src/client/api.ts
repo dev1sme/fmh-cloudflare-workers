@@ -99,11 +99,11 @@ export type AccountWithPassword = { account: Account; password: string };
 export const accounts = {
   list: () => request<{ accounts: Account[] }>("/api/accounts"),
   create: (input: AccountInput) => send<AccountWithPassword>("POST", "/api/accounts", input),
-  rename: (id: number, username: string) =>
-    send<{ account: Account }>("PATCH", `/api/accounts/${id}`, { username }),
-  resetPassword: (id: number, password?: string) =>
-    send<AccountWithPassword>("POST", `/api/accounts/${id}/reset-password`, { password }),
-  remove: (id: number) => send<{ ok: true }>("DELETE", `/api/accounts/${id}`),
+  rename: (code: string, username: string) =>
+    send<{ account: Account }>("PATCH", `/api/accounts/${code}`, { username }),
+  resetPassword: (code: string, password?: string) =>
+    send<AccountWithPassword>("POST", `/api/accounts/${code}/reset-password`, { password }),
+  remove: (code: string) => send<{ ok: true }>("DELETE", `/api/accounts/${code}`),
 };
 
 export const dashboard = {
@@ -129,9 +129,9 @@ export type RoomInput = {
 export const rooms = {
   list: () => request<{ rooms: RoomDetail[] }>("/api/rooms"),
   create: (input: RoomInput) => send<{ room: RoomDetail }>("POST", "/api/rooms", input),
-  update: (id: number, patch: Partial<RoomInput>) =>
-    send<{ room: RoomDetail }>("PATCH", `/api/rooms/${id}`, patch),
-  remove: (id: number) => send<{ ok: true }>("DELETE", `/api/rooms/${id}`),
+  update: (code: string, patch: Partial<RoomInput>) =>
+    send<{ room: RoomDetail }>("PATCH", `/api/rooms/${code}`, patch),
+  remove: (code: string) => send<{ ok: true }>("DELETE", `/api/rooms/${code}`),
 };
 
 export type TenantInput = {
@@ -151,9 +151,9 @@ export const tenants = {
   list: (params: { room_id?: number; active?: 1 } = {}) =>
     request<{ tenants: TenantDetail[] }>(`/api/tenants${query(params)}`),
   create: (input: TenantInput) => send<{ tenant: Tenant }>("POST", "/api/tenants", input),
-  update: (id: number, patch: TenantPatch) =>
-    send<{ tenant: Tenant }>("PATCH", `/api/tenants/${id}`, patch),
-  remove: (id: number) => send<{ ok: true }>("DELETE", `/api/tenants/${id}`),
+  update: (code: string, patch: TenantPatch) =>
+    send<{ tenant: Tenant }>("PATCH", `/api/tenants/${code}`, patch),
+  remove: (code: string) => send<{ ok: true }>("DELETE", `/api/tenants/${code}`),
 };
 
 export type ReadingInput = {

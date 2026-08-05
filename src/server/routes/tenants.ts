@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 
-import { createTenant, deleteTenant, getTenant, listTenants, updateTenant } from "../db/tenants";
+import { createTenant, deleteTenant, getTenantByCode, listTenants, updateTenant } from "../db/tenants";
+import { CODE_PREFIX, sinhMa } from "../domain/code";
 import { homNay } from "../domain/period";
 import { notFound, ok } from "../envelope";
 import type { AppEnv } from "../types";
@@ -9,7 +10,7 @@ import {
   jsonBody,
   optionalDate,
   optionalString,
-  parseId,
+  parseCode,
   queryId,
   requireDate,
   requireId,
@@ -39,6 +40,7 @@ tenantRoutes.post("/", async (c) => {
   const body = await jsonBody(c.req);
 
   const tenant = await createTenant(c.env.DB, {
+    code: sinhMa(CODE_PREFIX.tenant),
     room_id: requireId(body.room_id, "room_id"),
     full_name: requireString(body.full_name, "full_name", 100),
     phone: optionalString(body.phone, "phone", 20),
@@ -53,13 +55,14 @@ tenantRoutes.post("/", async (c) => {
  * Setting `moved_out` moves the tenant out and frees the room; sending null puts
  * them back as the current tenant, which is how a mistaken move-out is undone.
  */
-tenantRoutes.patch("/:id", async (c) => {
-  const id = parseId(c.req.param("id"));
+// Paths carry the public code; the row id stays internal and in foreign keys.
+tenantRoutes.patch("/:code", async (c) => {
   const body = await jsonBody(c.req);
 
-  if (!(await getTenant(c.env.DB, id))) return notFound(c, "Tenant not found.");
+  const current = await getTenantByCode(c.env.DB, parseCode(CODE_PREFIX.tenant, c.req.param("code")));
+  if (!current) return notFound(c, "Tenant not found.");
 
-  const tenant = await updateTenant(c.env.DB, id, {
+  const tenant = await updateTenant(c.env.DB, current.id, {
     full_name: body.full_name === undefined ? undefined : requireString(body.full_name, "full_name", 100),
     phone: body.phone === undefined ? undefined : optionalString(body.phone, "phone", 20),
     occupants: soNguoi(body.occupants),
@@ -71,7 +74,10 @@ tenantRoutes.patch("/:id", async (c) => {
 });
 
 /** For records entered by mistake — moving out is a PATCH, not a delete. */
-tenantRoutes.delete("/:id", async (c) => {
-  await deleteTenant(c.env.DB, parseId(c.req.param("id")));
+tenantRoutes.delete("/:code", async (c) => {
+  const tenant = await getTenantByCode(c.env.DB, parseCode(CODE_PREFIX.tenant, c.req.param("code")));
+  if (!tenant) return notFound(c, "Tenant not found.");
+
+  await deleteTenant(c.env.DB, tenant.id);
   return ok(c, { ok: true }, "Tenant deleted.");
 });

@@ -46,9 +46,9 @@ export function useThaoTacPhong(reload: () => void) {
     }
   }
 
-  async function capNhatPhong(id: number, patch: Partial<RoomInput>): Promise<boolean> {
+  async function capNhatPhong(code: string, patch: Partial<RoomInput>): Promise<boolean> {
     try {
-      await roomsApi.update(id, patch);
+      await roomsApi.update(code, patch);
       baoThanhCong("Đã lưu phòng.");
       reload();
       return true;
@@ -59,9 +59,9 @@ export function useThaoTacPhong(reload: () => void) {
   }
 
   /** Rejected by the API while readings, invoices or tenants reference the room. */
-  async function xoaPhong(id: number): Promise<boolean> {
+  async function xoaPhong(code: string): Promise<boolean> {
     try {
-      await roomsApi.remove(id);
+      await roomsApi.remove(code);
       baoThanhCong("Đã xoá phòng.");
       reload();
       return true;
@@ -89,9 +89,9 @@ export function useThaoTacPhong(reload: () => void) {
     }
   }
 
-  async function chuyenDi(tenantId: number): Promise<boolean> {
+  async function chuyenDi(tenantCode: string): Promise<boolean> {
     try {
-      await tenantsApi.update(tenantId, { moved_out: homNay() });
+      await tenantsApi.update(tenantCode, { moved_out: homNay() });
       baoThanhCong("Đã ghi nhận chuyển đi.");
       reload();
       return true;

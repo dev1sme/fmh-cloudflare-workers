@@ -48,6 +48,8 @@ export type Building = {
 
 export type Room = {
   id: number;
+  /** Public code used in URLs instead of `id` — see the invoice note above. */
+  code: string;
   building_id: number;
   room_name: string;
   rent: number;
@@ -64,6 +66,8 @@ export type RoomDetail = Room & {
 
 export type Tenant = {
   id: number;
+  /** Public code used in URLs instead of `id` — see the invoice note above. */
+  code: string;
   room_id: number;
   full_name: string;
   phone: string | null;
@@ -172,6 +176,8 @@ export type Role = "MANAGER" | "TENANT";
 /** An account as the management screen sees it — never carries a password. */
 export type Account = {
   id: number;
+  /** Public code used in URLs instead of `id` — see the invoice note above. */
+  code: string;
   username: string;
   role: Role;
   room_id: number | null;

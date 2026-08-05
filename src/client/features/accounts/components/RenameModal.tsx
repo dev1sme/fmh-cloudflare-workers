@@ -10,7 +10,7 @@ export function RenameModal({
 }: {
   account: Account | null;
   onClose: () => void;
-  onSubmit: (id: number, username: string) => Promise<boolean>;
+  onSubmit: (code: string, username: string) => Promise<boolean>;
 }) {
   const [username, setUsername] = useState("");
   const [busy, setBusy] = useState(false);
@@ -23,7 +23,7 @@ export function RenameModal({
     if (!account) return;
     setBusy(true);
 
-    const ok = await onSubmit(account.id, username);
+    const ok = await onSubmit(account.code, username);
 
     setBusy(false);
     if (ok) onClose();

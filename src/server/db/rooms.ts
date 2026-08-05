@@ -6,6 +6,7 @@ type RoomDetailRow = Room & {
   electricity_rate: number;
   water_rate: number;
   tenant_id: number | null;
+  tenant_code: string | null;
   tenant_full_name: string | null;
   tenant_phone: string | null;
   tenant_occupants: number | null;
@@ -13,9 +14,9 @@ type RoomDetailRow = Room & {
 };
 
 const DETAIL_SELECT = `
-  SELECT r.id, r.building_id, r.room_name, r.rent, r.area,
+  SELECT r.id, r.code, r.building_id, r.room_name, r.rent, r.area,
          b.name AS building_name, b.electricity_rate, b.water_rate,
-         t.id AS tenant_id, t.full_name AS tenant_full_name, t.phone AS tenant_phone,
+         t.id AS tenant_id, t.code AS tenant_code, t.full_name AS tenant_full_name, t.phone AS tenant_phone,
          t.occupants AS tenant_occupants, t.moved_in AS tenant_moved_in
   FROM rooms r
   JOIN buildings b ON b.id = r.building_id
@@ -25,6 +26,7 @@ const DETAIL_SELECT = `
 function toDetail(row: RoomDetailRow): RoomDetail {
   const {
     tenant_id,
+    tenant_code,
     tenant_full_name,
     tenant_phone,
     tenant_occupants,
@@ -39,6 +41,7 @@ function toDetail(row: RoomDetailRow): RoomDetail {
         ? null
         : {
             id: tenant_id,
+            code: tenant_code ?? "",
             room_id: row.id,
             full_name: tenant_full_name ?? "",
             phone: tenant_phone,
@@ -61,7 +64,17 @@ export async function getRoom(db: D1Database, id: number): Promise<RoomDetail | 
   return row ? toDetail(row) : null;
 }
 
+/** Paths carry the public code; ids stay internal and in foreign keys. */
+export async function getRoomByCode(db: D1Database, code: string): Promise<RoomDetail | null> {
+  const row = await db
+    .prepare(`${DETAIL_SELECT} WHERE r.code = ?`)
+    .bind(code)
+    .first<RoomDetailRow>();
+  return row ? toDetail(row) : null;
+}
+
 export type RoomInput = {
+  code: string;
   building_id: number;
   room_name: string;
   rent: number;
@@ -71,10 +84,10 @@ export type RoomInput = {
 export async function createRoom(db: D1Database, input: RoomInput): Promise<RoomDetail | null> {
   const row = await db
     .prepare(
-      `INSERT INTO rooms (building_id, room_name, rent, area)
-       VALUES (?, ?, ?, ?) RETURNING id`,
+      `INSERT INTO rooms (code, building_id, room_name, rent, area)
+       VALUES (?, ?, ?, ?, ?) RETURNING id`,
     )
-    .bind(input.building_id, input.room_name, input.rent, input.area)
+    .bind(input.code, input.building_id, input.room_name, input.rent, input.area)
     .first<{ id: number }>();
 
   return row ? getRoom(db, row.id) : null;

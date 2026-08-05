@@ -25,7 +25,7 @@ export function RoomsPage() {
       message: `${room.tenant.full_name} đã chuyển khỏi ${room.room_name}? Phòng sẽ được đánh dấu trống từ hôm nay.`,
       confirmLabel: "Đã chuyển đi",
       color: "orange",
-      onConfirm: () => chuyenDi(room.tenant!.id),
+      onConfirm: () => chuyenDi(room.tenant!.code),
     });
   }
 
@@ -34,7 +34,7 @@ export function RoomsPage() {
       title: "Xoá phòng",
       message: `Xoá ${room.room_name}? Chỉ xoá được khi phòng chưa có chỉ số, hóa đơn hay người thuê nào.`,
       confirmLabel: "Xoá",
-      onConfirm: () => xoaPhong(room.id),
+      onConfirm: () => xoaPhong(room.code),
     });
   }
 

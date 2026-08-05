@@ -5,15 +5,16 @@ import {
   countManagers,
   createAccount,
   deleteAccount,
-  getAccount,
+  getAccountByCode,
   listAccounts,
   renameAccount,
   setPasswordHash,
 } from "../db/users";
+import { CODE_PREFIX, sinhMa } from "../domain/code";
 import { DO_DAI_TOI_THIEU, sinhMatKhau } from "../domain/password";
 import { failure, notFound, ok } from "../envelope";
 import type { AppEnv, Role } from "../types";
-import { fail, jsonBody, parseId, requireEnum, requireId, requireString } from "../validate";
+import { fail, jsonBody, parseCode, requireEnum, requireId, requireString } from "../validate";
 
 const ROLES: readonly Role[] = ["MANAGER", "TENANT"];
 
@@ -47,6 +48,7 @@ accountRoutes.post("/", async (c) => {
   const password = chonMatKhau(body.password);
 
   const account = await createAccount(c.env.DB, {
+    code: sinhMa(CODE_PREFIX.account),
     username: requireString(body.username, "username", 50),
     password_hash: await hashPassword(password),
     role: vaiTro,
@@ -58,13 +60,18 @@ accountRoutes.post("/", async (c) => {
   return ok(c, { account, password }, "Account created.", 201);
 });
 
-accountRoutes.patch("/:id", async (c) => {
-  const id = parseId(c.req.param("id"));
+// Paths carry the public code; the row id stays internal and in foreign keys.
+accountRoutes.patch("/:code", async (c) => {
   const body = await jsonBody(c.req);
 
-  if (!(await getAccount(c.env.DB, id))) return notFound(c, "Account not found.");
+  const current = await getAccountByCode(c.env.DB, parseCode(CODE_PREFIX.account, c.req.param("code")));
+  if (!current) return notFound(c, "Account not found.");
 
-  const account = await renameAccount(c.env.DB, id, requireString(body.username, "username", 50));
+  const account = await renameAccount(
+    c.env.DB,
+    current.id,
+    requireString(body.username, "username", 50),
+  );
   return ok(c, { account }, "Account renamed.");
 });
 
@@ -72,24 +79,23 @@ accountRoutes.patch("/:id", async (c) => {
  * Resets without asking for the current password — the manager is resetting
  * someone else's access, and would not know it.
  */
-accountRoutes.post("/:id/reset-password", async (c) => {
-  const id = parseId(c.req.param("id"));
+accountRoutes.post("/:code/reset-password", async (c) => {
   const body = await jsonBody(c.req).catch(() => ({}) as Record<string, unknown>);
 
-  const account = await getAccount(c.env.DB, id);
+  const account = await getAccountByCode(c.env.DB, parseCode(CODE_PREFIX.account, c.req.param("code")));
   if (!account) return notFound(c, "Account not found.");
 
   const password = chonMatKhau(body.password);
-  await setPasswordHash(c.env.DB, id, await hashPassword(password));
+  await setPasswordHash(c.env.DB, account.id, await hashPassword(password));
 
   return ok(c, { account, password }, "Password reset.");
 });
 
-accountRoutes.delete("/:id", async (c) => {
-  const id = parseId(c.req.param("id"));
-
-  const account = await getAccount(c.env.DB, id);
+accountRoutes.delete("/:code", async (c) => {
+  const account = await getAccountByCode(c.env.DB, parseCode(CODE_PREFIX.account, c.req.param("code")));
   if (!account) return notFound(c, "Account not found.");
+
+  const id = account.id;
 
   // Two ways to lock everyone out of the app; both refused.
   if (id === c.get("user").id) {

@@ -35,9 +35,9 @@ export function useThaoTacNguoiThue(reload: () => void) {
     }
   }
 
-  async function capNhat(id: number, patch: TenantPatch): Promise<boolean> {
+  async function capNhat(code: string, patch: TenantPatch): Promise<boolean> {
     try {
-      await tenantsApi.update(id, patch);
+      await tenantsApi.update(code, patch);
       baoThanhCong("Đã lưu người thuê.");
       reload();
       return true;
@@ -47,14 +47,14 @@ export function useThaoTacNguoiThue(reload: () => void) {
     }
   }
 
-  const chuyenDi = (id: number) => capNhat(id, { moved_out: homNay() });
+  const chuyenDi = (code: string) => capNhat(code, { moved_out: homNay() });
 
   /** Undo a move-out recorded by mistake. Fails if the room is taken again. */
-  const huyChuyenDi = (id: number) => capNhat(id, { moved_out: null });
+  const huyChuyenDi = (code: string) => capNhat(code, { moved_out: null });
 
-  async function xoa(id: number): Promise<boolean> {
+  async function xoa(code: string): Promise<boolean> {
     try {
-      await tenantsApi.remove(id);
+      await tenantsApi.remove(code);
       baoThanhCong("Đã xoá bản ghi người thuê.");
       reload();
       return true;

@@ -44,9 +44,9 @@ export function useThaoTacTaiKhoan(reload: () => void) {
     }
   }
 
-  async function doiTen(id: number, username: string): Promise<boolean> {
+  async function doiTen(code: string, username: string): Promise<boolean> {
     try {
-      await accountsApi.rename(id, username);
+      await accountsApi.rename(code, username);
       baoThanhCong("Đã đổi tên đăng nhập.");
       reload();
       return true;
@@ -57,9 +57,9 @@ export function useThaoTacTaiKhoan(reload: () => void) {
   }
 
   /** No current password required — the manager is resetting someone else's. */
-  async function datLaiMatKhau(id: number, password?: string): Promise<boolean> {
+  async function datLaiMatKhau(code: string, password?: string): Promise<boolean> {
     try {
-      setMatKhauMoi(await accountsApi.resetPassword(id, password));
+      setMatKhauMoi(await accountsApi.resetPassword(code, password));
       baoThanhCong("Đã đặt lại mật khẩu.");
       return true;
     } catch (err) {
@@ -68,9 +68,9 @@ export function useThaoTacTaiKhoan(reload: () => void) {
     }
   }
 
-  async function xoa(id: number): Promise<boolean> {
+  async function xoa(code: string): Promise<boolean> {
     try {
-      await accountsApi.remove(id);
+      await accountsApi.remove(code);
       baoThanhCong("Đã xoá tài khoản.");
       reload();
       return true;

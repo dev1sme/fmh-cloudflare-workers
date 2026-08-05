@@ -26,7 +26,7 @@ export function AccountsPage({ user }: { user: SessionUser }) {
       title: "Xoá tài khoản",
       message: `Xoá "${account.username}"? Người dùng này sẽ không đăng nhập được nữa. Hóa đơn và dữ liệu phòng không bị ảnh hưởng.`,
       confirmLabel: "Xoá",
-      onConfirm: () => xoa(account.id),
+      onConfirm: () => xoa(account.code),
     });
   }
 

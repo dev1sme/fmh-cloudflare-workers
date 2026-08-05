@@ -22,7 +22,7 @@ export function TenantsPage() {
       message: `${tenant.full_name} đã chuyển khỏi ${tenant.room_name}? Phòng sẽ trống từ hôm nay và có thể nhận người mới.`,
       confirmLabel: "Đã chuyển đi",
       color: "orange",
-      onConfirm: () => chuyenDi(tenant.id),
+      onConfirm: () => chuyenDi(tenant.code),
     });
   }
 
@@ -32,7 +32,7 @@ export function TenantsPage() {
       message: `Đưa ${tenant.full_name} trở lại thành người đang thuê ${tenant.room_name} (đã ghi chuyển đi ngày ${ngay(tenant.moved_out)}). Không được nếu phòng đã có người khác.`,
       confirmLabel: "Đưa trở lại",
       color: "teal",
-      onConfirm: () => huyChuyenDi(tenant.id),
+      onConfirm: () => huyChuyenDi(tenant.code),
     });
   }
 
@@ -41,7 +41,7 @@ export function TenantsPage() {
       title: "Xoá bản ghi người thuê",
       message: `Xoá hẳn ${tenant.full_name} khỏi lịch sử ${tenant.room_name}. Chỉ dùng khi nhập nhầm — người đã chuyển đi nên giữ lại để tra cứu.`,
       confirmLabel: "Xoá",
-      onConfirm: () => xoa(tenant.id),
+      onConfirm: () => xoa(tenant.code),
     });
   }
 

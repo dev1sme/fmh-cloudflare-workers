@@ -1,4 +1,5 @@
 import type { Invoice, Reading, InvoiceEstimate } from "../../shared/types";
+import { CODE_PREFIX, sinhMa } from "./code";
 
 /**
  * The invoice code: printed on the invoice, used as the bank transfer memo,
@@ -13,16 +14,9 @@ import type { Invoice, Reading, InvoiceEstimate } from "../../shared/types";
  * the unique index catches the birthday collision that a few thousand
  * invoices will never actually reach.
  */
-const CODE_BYTES = 4;
-
 export function sinhMaHoaDon(): string {
-  const bytes = crypto.getRandomValues(new Uint8Array(CODE_BYTES));
-  const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
-  return `HD${hex.toUpperCase()}`;
+  return sinhMa(CODE_PREFIX.invoice);
 }
-
-/** Pattern the code must match, used to tell a code from a row id in a path. */
-export const MA_HOA_DON_PATTERN = /^HD[0-9A-F]{8}$/;
 
 /**
  * Extracts an invoice code from a transfer memo. Used by the SePay webhook.

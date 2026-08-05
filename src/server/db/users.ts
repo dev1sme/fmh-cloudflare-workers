@@ -11,6 +11,7 @@ export type UserRow = {
 /** What the account screen shows. Never includes password_hash. */
 export type AccountRow = {
   id: number;
+  code: string;
   username: string;
   role: Role;
   room_id: number | null;
@@ -27,7 +28,7 @@ export function getUserByUsername(db: D1Database, username: string): Promise<Use
 export async function listAccounts(db: D1Database): Promise<AccountRow[]> {
   const { results } = await db
     .prepare(
-      `SELECT u.id, u.username, u.role, u.room_id, r.room_name
+      `SELECT u.id, u.code, u.username, u.role, u.room_id, r.room_name
        FROM users u
        LEFT JOIN rooms r ON r.id = u.room_id
        ORDER BY u.role, r.room_name, u.username`,
@@ -36,10 +37,23 @@ export async function listAccounts(db: D1Database): Promise<AccountRow[]> {
   return results;
 }
 
+/** Paths carry the public code; ids stay internal and in foreign keys. */
+export function getAccountByCode(db: D1Database, code: string): Promise<AccountRow | null> {
+  return db
+    .prepare(
+      `SELECT u.id, u.code, u.username, u.role, u.room_id, r.room_name
+       FROM users u
+       LEFT JOIN rooms r ON r.id = u.room_id
+       WHERE u.code = ?`,
+    )
+    .bind(code)
+    .first<AccountRow>();
+}
+
 export function getAccount(db: D1Database, id: number): Promise<AccountRow | null> {
   return db
     .prepare(
-      `SELECT u.id, u.username, u.role, u.room_id, r.room_name
+      `SELECT u.id, u.code, u.username, u.role, u.room_id, r.room_name
        FROM users u
        LEFT JOIN rooms r ON r.id = u.room_id
        WHERE u.id = ?`,
@@ -49,6 +63,7 @@ export function getAccount(db: D1Database, id: number): Promise<AccountRow | nul
 }
 
 export type AccountInput = {
+  code: string;
   username: string;
   password_hash: string;
   role: Role;
@@ -61,10 +76,10 @@ export async function createAccount(
 ): Promise<AccountRow | null> {
   const row = await db
     .prepare(
-      `INSERT INTO users (username, password_hash, role, room_id)
-       VALUES (?, ?, ?, ?) RETURNING id`,
+      `INSERT INTO users (code, username, password_hash, role, room_id)
+       VALUES (?, ?, ?, ?, ?) RETURNING id`,
     )
-    .bind(input.username, input.password_hash, input.role, input.room_id)
+    .bind(input.code, input.username, input.password_hash, input.role, input.room_id)
     .first<{ id: number }>();
 
   return row ? getAccount(db, row.id) : null;

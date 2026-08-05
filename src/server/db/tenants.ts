@@ -1,10 +1,10 @@
 import type { Tenant, TenantDetail } from "../../shared/types";
 import { buildSet, Where } from "./sql";
 
-const SELECT = "SELECT id, room_id, full_name, phone, occupants, moved_in, moved_out FROM tenants";
+const SELECT = "SELECT id, code, room_id, full_name, phone, occupants, moved_in, moved_out FROM tenants";
 
 const DETAIL_SELECT = `
-  SELECT t.id, t.room_id, t.full_name, t.phone, t.occupants, t.moved_in, t.moved_out, r.room_name
+  SELECT t.id, t.code, t.room_id, t.full_name, t.phone, t.occupants, t.moved_in, t.moved_out, r.room_name
   FROM tenants t
   JOIN rooms r ON r.id = t.room_id
 `;
@@ -32,7 +32,13 @@ export function getTenant(db: D1Database, id: number): Promise<Tenant | null> {
   return db.prepare(`${SELECT} WHERE id = ?`).bind(id).first<Tenant>();
 }
 
+/** Paths carry the public code; ids stay internal and in foreign keys. */
+export function getTenantByCode(db: D1Database, code: string): Promise<Tenant | null> {
+  return db.prepare(`${SELECT} WHERE code = ?`).bind(code).first<Tenant>();
+}
+
 export type TenantInput = {
+  code: string;
   room_id: number;
   full_name: string;
   phone: string | null;
@@ -43,10 +49,10 @@ export type TenantInput = {
 export async function createTenant(db: D1Database, input: TenantInput): Promise<Tenant | null> {
   const row = await db
     .prepare(
-      `INSERT INTO tenants (room_id, full_name, phone, occupants, moved_in)
-       VALUES (?, ?, ?, ?, ?) RETURNING id`,
+      `INSERT INTO tenants (code, room_id, full_name, phone, occupants, moved_in)
+       VALUES (?, ?, ?, ?, ?, ?) RETURNING id`,
     )
-    .bind(input.room_id, input.full_name, input.phone, input.occupants, input.moved_in)
+    .bind(input.code, input.room_id, input.full_name, input.phone, input.occupants, input.moved_in)
     .first<{ id: number }>();
 
   return row ? getTenant(db, row.id) : null;

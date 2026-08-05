@@ -1,3 +1,5 @@
+import { maPattern, type CodePrefix } from "./domain/code";
+
 /**
  * Hand-rolled request validation. Every failure throws a ValidationError whose
  * message is a stable UPPER_SNAKE code (`MISSING_ROOM_NAME`, `INVALID_PERIOD`,
@@ -107,14 +109,16 @@ export function optionalEnum<T extends string>(
 }
 
 /**
- * Invoice code from a path, e.g. `HD3C8EA506`.
+ * Public code from a path, e.g. `HD3C8EA506` or `RMC7AD24C8`.
  *
- * Validated rather than passed through so a probe cannot turn the path into a
- * wildcard, and so a mistyped code fails the same way a missing one does.
+ * The prefix is checked, not just the shape: a room code in an invoice path
+ * is a 400 rather than a lookup that happens to miss. Validated up front so a
+ * probe cannot turn the path into a wildcard, and so a mistyped code fails
+ * the same way a missing one does.
  */
-export function parseInvoiceCode(value: string | undefined): string {
+export function parseCode(prefix: CodePrefix, value: string | undefined): string {
   const code = (value ?? "").toUpperCase();
-  if (!/^HD[0-9A-F]{8}$/.test(code)) fail("INVALID_CODE");
+  if (!maPattern(prefix).test(code)) fail("INVALID_CODE");
   return code;
 }
 

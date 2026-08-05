@@ -18,7 +18,7 @@ export function RoomModal({
   nha: Building[];
   onClose: () => void;
   onCreate: (input: RoomInput) => Promise<boolean>;
-  onUpdate: (id: number, patch: Partial<RoomInput>) => Promise<boolean>;
+  onUpdate: (code: string, patch: Partial<RoomInput>) => Promise<boolean>;
 }) {
   const dangSua = target?.room ?? null;
 
@@ -56,7 +56,7 @@ export function RoomModal({
     };
 
     const ok = dangSua
-      ? await onUpdate(dangSua.id, chung)
+      ? await onUpdate(dangSua.code, chung)
       : await onCreate({ building_id: Number(buildingId), ...chung });
 
     setBusy(false);

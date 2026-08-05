@@ -13,6 +13,7 @@ import {
 import { createPayment, listPayments } from "../db/payments";
 import { bayGio, homNay } from "../domain/period";
 import { estimateInvoice, sinhMaHoaDon, tongTien } from "../domain/invoice";
+import { CODE_PREFIX } from "../domain/code";
 import { failure, notFound, ok } from "../envelope";
 import { capNhatTrangThai } from "./payments";
 import type { AppEnv } from "../types";
@@ -30,7 +31,7 @@ import {
   optionalInt,
   optionalPeriod,
   optionalString,
-  parseInvoiceCode,
+  parseCode,
   queryId,
   requireDate,
   requireEnum,
@@ -151,7 +152,7 @@ function parseRoomIds(value: unknown): number[] | undefined {
 
 // Paths carry the invoice `code`, not the row id — see domain/invoice.ts.
 invoiceRoutes.get("/:code", async (c) => {
-  const invoice = await getInvoiceDetail(c.env.DB, parseInvoiceCode(c.req.param("code")));
+  const invoice = await getInvoiceDetail(c.env.DB, parseCode(CODE_PREFIX.invoice, c.req.param("code")));
   if (!invoice) return notFound(c, "Invoice not found.");
 
   return ok(c, { invoice }, "Invoice retrieved.");
@@ -165,7 +166,7 @@ invoiceRoutes.get("/:code", async (c) => {
 invoiceRoutes.patch("/:code", async (c) => {
   const body = await jsonBody(c.req);
 
-  const current = await getInvoiceByCode(c.env.DB, parseInvoiceCode(c.req.param("code")));
+  const current = await getInvoiceByCode(c.env.DB, parseCode(CODE_PREFIX.invoice, c.req.param("code")));
   if (!current) return notFound(c, "Invoice not found.");
 
   const rent_amount = optionalInt(body.rent_amount, "rent_amount") ?? current.rent_amount;
@@ -182,7 +183,7 @@ invoiceRoutes.patch("/:code", async (c) => {
 });
 
 invoiceRoutes.delete("/:code", async (c) => {
-  const invoice = await getInvoiceByCode(c.env.DB, parseInvoiceCode(c.req.param("code")));
+  const invoice = await getInvoiceByCode(c.env.DB, parseCode(CODE_PREFIX.invoice, c.req.param("code")));
   if (!invoice) return notFound(c, "Invoice not found.");
 
   await deleteInvoice(c.env.DB, invoice.id);
@@ -190,7 +191,7 @@ invoiceRoutes.delete("/:code", async (c) => {
 });
 
 invoiceRoutes.get("/:code/payments", async (c) => {
-  const invoice = await getInvoiceByCode(c.env.DB, parseInvoiceCode(c.req.param("code")));
+  const invoice = await getInvoiceByCode(c.env.DB, parseCode(CODE_PREFIX.invoice, c.req.param("code")));
   if (!invoice) return notFound(c, "Invoice not found.");
 
   return ok(c, { payments: await listPayments(c.env.DB, invoice.id) }, "Payments retrieved.");
@@ -200,7 +201,7 @@ invoiceRoutes.get("/:code/payments", async (c) => {
 invoiceRoutes.post("/:code/payments", async (c) => {
   const body = await jsonBody(c.req);
 
-  const invoice = await getInvoiceByCode(c.env.DB, parseInvoiceCode(c.req.param("code")));
+  const invoice = await getInvoiceByCode(c.env.DB, parseCode(CODE_PREFIX.invoice, c.req.param("code")));
   if (!invoice) return notFound(c, "Invoice not found.");
   const invoiceId = invoice.id;
   if (invoice.status === "CANCELLED") {
