@@ -1,9 +1,10 @@
-import { Button, Group, Stack, Text, Title } from "@mantine/core";
+import { Box, Button, Group, Stack, Text, Title } from "@mantine/core";
 import { useState } from "react";
 
 import { PeriodPicker } from "../../components/PeriodPicker";
 import { PageState } from "../../components/PageState";
 import { currentPeriod, periodLabel } from "../../format";
+import { InvoiceCards } from "./components/InvoiceCards";
 import { InvoicesTable } from "./components/InvoicesTable";
 import { GenerateInvoicesModal } from "./components/GenerateInvoicesModal";
 import { SkippedAlert } from "./components/SkippedAlert";
@@ -39,7 +40,15 @@ export function InvoicesPage() {
         {hoaDon.length === 0 ? (
           <Text c="dimmed">Chưa có hóa đơn nào cho {periodLabel(period).toLowerCase()}.</Text>
         ) : (
-          <InvoicesTable hoaDon={hoaDon} tongTien={tongTien} />
+          <>
+            {/* Nine columns do not fit a phone; cards carry the same facts. */}
+            <Box visibleFrom="sm">
+              <InvoicesTable hoaDon={hoaDon} tongTien={tongTien} />
+            </Box>
+            <Box hiddenFrom="sm">
+              <InvoiceCards hoaDon={hoaDon} />
+            </Box>
+          </>
         )}
       </PageState>
 

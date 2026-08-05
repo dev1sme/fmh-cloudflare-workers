@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 
 import type { SessionUser } from "./api";
 import { AppLayout } from "./components/AppLayout";
+import { TenantLayout } from "./components/TenantLayout";
 import { QuickSearch } from "./components/QuickSearch";
 import { DashboardPage } from "./features/dashboard/DashboardPage";
 import { SettingsPage } from "./features/settings/SettingsPage";
@@ -9,10 +10,8 @@ import { ChangePasswordPage } from "./features/change-password/ChangePasswordPag
 import { ReadingsPage } from "./features/readings/ReadingsPage";
 import { InvoiceDetailPage } from "./features/invoices/InvoiceDetailPage";
 import { InvoicesPage } from "./features/invoices/InvoicesPage";
-import { MyDashboardPage } from "./features/my/MyDashboardPage";
+import { MyHomePage } from "./features/my/MyHomePage";
 import { MyInvoiceDetailPage } from "./features/my/MyInvoiceDetailPage";
-import { MyInvoicesPage } from "./features/my/MyInvoicesPage";
-import { MyReadingsPage } from "./features/my/MyReadingsPage";
 import { NotFoundPage } from "./features/not-found/NotFoundPage";
 import { TenantsPage } from "./features/tenants/TenantsPage";
 import { RoomsPage } from "./features/rooms/RoomsPage";
@@ -24,8 +23,6 @@ import { AccountsPage } from "./features/accounts/AccountsPage";
  */
 export function AppRoutes({ user, onLogout }: { user: SessionUser; onLogout: () => void }) {
   const quanLy = user.role === "MANAGER";
-  // Both roles land on /dashboard; the route table below decides which one.
-  const home = "/dashboard";
 
   return (
     <>
@@ -33,16 +30,9 @@ export function AppRoutes({ user, onLogout }: { user: SessionUser; onLogout: () 
       {quanLy && <QuickSearch />}
 
       <Routes>
-        <Route element={<AppLayout user={user} onLogout={onLogout} />}>
-        {/* Available to both roles. */}
-        <Route path="/change-password" element={<ChangePasswordPage />} />
-
-        {/* Only the bare root redirects. Everything else unknown is a 404 —
-            silently bouncing a mistyped or stale link hides the mistake. */}
-        <Route path="/" element={<Navigate to={home} replace />} />
-
         {quanLy ? (
-          <>
+          <Route element={<AppLayout user={user} onLogout={onLogout} />}>
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/rooms" element={<RoomsPage />} />
             <Route path="/tenants" element={<TenantsPage />} />
@@ -51,18 +41,23 @@ export function AppRoutes({ user, onLogout }: { user: SessionUser; onLogout: () 
             <Route path="/invoices/:code" element={<InvoiceDetailPage />} />
             <Route path="/accounts" element={<AccountsPage user={user} />} />
             <Route path="/settings" element={<SettingsPage />} />
-          </>
+            <Route path="/change-password" element={<ChangePasswordPage />} />
+            <Route path="*" element={<NotFoundPage home="/dashboard" />} />
+          </Route>
         ) : (
-          <>
-            <Route path="/dashboard" element={<MyDashboardPage />} />
-            <Route path="/my-invoices" element={<MyInvoicesPage />} />
+          <Route element={<TenantLayout user={user} onLogout={onLogout} />}>
+            {/* One screen. `/dashboard`, `/my-invoices` and `/my-readings` all
+                showed slices of the same table, so they collapse into it and
+                the old paths redirect rather than 404 on a stale bookmark. */}
+            <Route path="/" element={<MyHomePage />} />
             <Route path="/my-invoices/:code" element={<MyInvoiceDetailPage />} />
-            <Route path="/my-readings" element={<MyReadingsPage />} />
-          </>
+            <Route path="/change-password" element={<ChangePasswordPage />} />
+            <Route path="/dashboard" element={<Navigate to="/" replace />} />
+            <Route path="/my-invoices" element={<Navigate to="/" replace />} />
+            <Route path="/my-readings" element={<Navigate to="/" replace />} />
+            <Route path="*" element={<NotFoundPage home="/" />} />
+          </Route>
         )}
-
-          <Route path="*" element={<NotFoundPage home={home} />} />
-        </Route>
       </Routes>
     </>
   );

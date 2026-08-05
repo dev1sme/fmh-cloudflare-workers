@@ -145,6 +145,7 @@ export async function getTenantDashboard(
            SELECT period FROM invoices WHERE room_id = ?1
          )
          SELECT p.period,
+                i.code,
                 rd.electricity_end - rd.electricity_start AS electricity_used,
                 rd.water_end - rd.water_start             AS water_used,
                 i.total,
@@ -164,6 +165,7 @@ export async function getTenantDashboard(
 
   type MonthRow = {
     period: string;
+    code: string | null;
     electricity_used: number | null;
     water_used: number | null;
     total: number | null;

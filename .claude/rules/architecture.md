@@ -57,6 +57,18 @@ A hook passed into a child's `useEffect` must be memoised — `useReadings`' `go
 
 The SPA has no client-side auth guard beyond the route table: `App.tsx` asks `GET /api/auth/me` once, then `routes.tsx` renders the manager routes or the tenant routes. That is navigation convenience, not security — the API enforces the roles.
 
+## Two shells, not one
+
+`AppLayout` is the manager's admin panel — sidebar, quick search, dense tables. `TenantLayout` is a single centred column with a header and an account menu, and no navigation at all.
+
+They were the same shell once, which was a coding convenience rather than a design decision. A tenant has one room, opens the app once or twice a month, on a phone, to see what they owe and scan a QR — and was being shown a sidebar whose three items all led to slices of the same table.
+
+So the tenant has **one screen** (`MyHomePage`): the newest month in full with its QR, then earlier months as one-line rows that open on demand. `/dashboard`, `/my-invoices` and `/my-readings` redirect to `/` rather than 404, so an old bookmark still lands somewhere useful. `MyDashboardPage`, `MyInvoicesPage`, `MyReadingsPage`, `MonthsTable`, `InvoiceCard` and `ReadingsHistoryTable` were deleted, not kept "just in case".
+
+Only the newest month is fetched in full (`me.invoice(code)`); the rest come from `me.dashboard()` as summaries. `useInvoicesCuaToiChiTiet("")` resolves to null so a period with a reading but no invoice yet does not fire a request.
+
+**Manager tables below `sm` become cards.** Nine columns on a 390 px screen is a sideways scroll with the room name off-screen, which defeats the point of columns. `InvoicesPage` renders `InvoicesTable` above `sm` and `InvoiceCards` below it — same facts, one card per invoice. Other manager tables still scroll horizontally; convert them the same way when they start being used on a phone.
+
 **Everything a caller can see is English**: URLs, directory names, DB columns, API fields, error codes and enum values. Vietnamese survives only in UI copy and in internal identifiers (`xacNhan`, `thongBaoLoi`, `tien`) — see `data-model.md` and `api.md`.
 
 Both roles land on `/dashboard`, which the role branch in `routes.tsx` resolves to a different component — the manager's rollup or the tenant's own months. Unknown paths render `NotFoundPage`, not a redirect. Only the bare `/` redirects to `/dashboard`; bouncing everything else would hide a mistyped or stale link instead of reporting it. The 404 deliberately does not distinguish "no such page" from "that page belongs to the other role" — saying which would leak the manager's route names to a tenant.

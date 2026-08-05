@@ -100,3 +100,13 @@ textarea {
 .fmh-account[aria-expanded="true"] {
   background-color: var(--mantine-color-default-hover);
 }
+
+/* A whole list row acting as a link needs to look pressable on touch too. */
+.fmh-row-link {
+  transition: background-color 120ms ease;
+}
+
+.fmh-row-link:hover,
+.fmh-row-link:active {
+  background-color: var(--mantine-color-default-hover);
+}

@@ -308,6 +308,8 @@ export type Dashboard = {
  */
 export type TenantMonth = {
   period: string;
+  /** Invoice code, or null until the manager generates one for this period. */
+  code: string | null;
   electricity_used: number | null;
   water_used: number | null;
   /** Null until the manager generates the invoice for this period. */
