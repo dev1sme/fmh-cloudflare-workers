@@ -1,7 +1,7 @@
 import { Table } from "@mantine/core";
 
 import type { ReadingDetail } from "../../../../shared/types";
-import { ngay, nhanKy } from "../../../format";
+import { ngay, periodLabel } from "../../../format";
 
 export function ReadingsHistoryTable({ chiSo }: { chiSo: ReadingDetail[] }) {
   return (
@@ -20,16 +20,16 @@ export function ReadingsHistoryTable({ chiSo }: { chiSo: ReadingDetail[] }) {
         <Table.Tbody>
           {chiSo.map((reading) => (
             <Table.Tr key={reading.id}>
-              <Table.Td fw={500}>{nhanKy(reading.ky)}</Table.Td>
+              <Table.Td fw={500}>{periodLabel(reading.period)}</Table.Td>
               <Table.Td>
-                {reading.dien_cu} → {reading.dien_moi}
+                {reading.electricity_start} → {reading.electricity_end}
               </Table.Td>
-              <Table.Td>{reading.so_dien} kWh</Table.Td>
+              <Table.Td>{reading.electricity_used} kWh</Table.Td>
               <Table.Td>
-                {reading.nuoc_cu} → {reading.nuoc_moi}
+                {reading.water_start} → {reading.water_end}
               </Table.Td>
-              <Table.Td>{reading.so_nuoc} m³</Table.Td>
-              <Table.Td>{ngay(reading.ngay_ghi)}</Table.Td>
+              <Table.Td>{reading.water_used} m³</Table.Td>
+              <Table.Td>{ngay(reading.recorded_on)}</Table.Td>
             </Table.Tr>
           ))}
         </Table.Tbody>

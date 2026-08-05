@@ -6,8 +6,8 @@ export function tien(value: number): string {
 }
 
 /** "2026-08" -> "Tháng 08/2026" */
-export function nhanKy(ky: string): string {
-  const [year, month] = ky.split("-");
+export function periodLabel(period: string): string {
+  const [year, month] = period.split("-");
   return `Tháng ${month}/${year}`;
 }
 
@@ -18,7 +18,7 @@ export function ngay(value: string | null): string {
   return `${day}/${month}/${year}`;
 }
 
-export function kyHienTai(): string {
+export function currentPeriod(): string {
   return new Date().toISOString().slice(0, 7);
 }
 

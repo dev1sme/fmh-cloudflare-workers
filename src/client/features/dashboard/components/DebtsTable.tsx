@@ -2,7 +2,7 @@ import { Anchor, Card, Table, Text, Title } from "@mantine/core";
 import { Link } from "react-router-dom";
 
 import type { DashboardDebt } from "../../../../shared/types";
-import { nhanKy, tien } from "../../../format";
+import { periodLabel, tien } from "../../../format";
 
 /**
  * Who still owes money, worst first, across every period — not just the one
@@ -42,7 +42,7 @@ export function DebtsTable({ debts }: { debts: DashboardDebt[] }) {
                     </Anchor>
                   </Table.Td>
                   <Table.Td>{debt.invoice_count}</Table.Td>
-                  <Table.Td c="dimmed">{nhanKy(debt.oldest_period)}</Table.Td>
+                  <Table.Td c="dimmed">{periodLabel(debt.oldest_period)}</Table.Td>
                   <Table.Td ta="right" fw={600} c="orange">
                     {tien(debt.amount)}
                   </Table.Td>

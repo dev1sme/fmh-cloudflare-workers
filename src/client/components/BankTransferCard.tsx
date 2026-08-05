@@ -1,6 +1,6 @@
 import { Card, CopyButton, Group, Stack, Text } from "@mantine/core";
 
-import type { ChuyenKhoan } from "../../shared/types";
+import type { BankTransfer } from "../../shared/types";
 import { tien } from "../format";
 import { VietQR } from "./VietQR";
 
@@ -36,11 +36,11 @@ function Dong({ label, value }: { label: string; value: string }) {
  * mode, purely to check what the tenant is looking at — the manager never pays
  * their own invoice.
  */
-export function ChuyenKhoanCard({
+export function BankTransferCard({
   chuyenKhoan,
   xemTruoc = false,
 }: {
-  chuyenKhoan: ChuyenKhoan;
+  chuyenKhoan: BankTransfer;
   xemTruoc?: boolean;
 }) {
   return (
@@ -61,14 +61,14 @@ export function ChuyenKhoanCard({
           <VietQR payload={chuyenKhoan.vietqr} />
 
           <Stack gap="xs" flex={1} miw={220}>
-            <Dong label="Số tài khoản" value={chuyenKhoan.bank_so_tk} />
-            {chuyenKhoan.bank_chu_tk && <Dong label="Chủ tài khoản" value={chuyenKhoan.bank_chu_tk} />}
-            <Dong label="Số tiền" value={tien(chuyenKhoan.so_tien)} />
-            <Dong label="Nội dung" value={chuyenKhoan.noi_dung} />
+            <Dong label="Số tài khoản" value={chuyenKhoan.bank_account_no} />
+            {chuyenKhoan.bank_account_name && <Dong label="Chủ tài khoản" value={chuyenKhoan.bank_account_name} />}
+            <Dong label="Số tiền" value={tien(chuyenKhoan.amount)} />
+            <Dong label="Nội dung" value={chuyenKhoan.transfer_note} />
 
             {!xemTruoc && (
               <Text size="xs" c="dimmed" mt="xs">
-                Giữ nguyên nội dung <b>{chuyenKhoan.noi_dung}</b> khi chuyển khoản để đối chiếu
+                Giữ nguyên nội dung <b>{chuyenKhoan.transfer_note}</b> khi chuyển khoản để đối chiếu
                 đúng hóa đơn. Mã QR đã điền sẵn số tiền và nội dung.
               </Text>
             )}

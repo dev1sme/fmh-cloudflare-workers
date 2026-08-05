@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 
 import { createTenant, deleteTenant, getTenant, listTenants, updateTenant } from "../db/tenants";
-import { homNay } from "../domain/ky";
+import { homNay } from "../domain/period";
 import { notFound, ok } from "../envelope";
 import type { AppEnv } from "../types";
 import {
@@ -19,7 +19,7 @@ import {
 /** Occupants living under one tenancy. The named tenant counts as one. */
 function soNguoi(value: unknown, fallback?: number): number | undefined {
   if (value === undefined || value === null) return fallback;
-  if (typeof value !== "number" || !Number.isInteger(value) || value < 1) fail("invalid_so_nguoi");
+  if (typeof value !== "number" || !Number.isInteger(value) || value < 1) fail("INVALID_OCCUPANTS");
   return value;
 }
 
@@ -40,17 +40,17 @@ tenantRoutes.post("/", async (c) => {
 
   const tenant = await createTenant(c.env.DB, {
     room_id: requireId(body.room_id, "room_id"),
-    ho_ten: requireString(body.ho_ten, "ho_ten", 100),
-    sdt: optionalString(body.sdt, "sdt", 20),
-    so_nguoi: soNguoi(body.so_nguoi, 1)!,
-    ngay_vao: body.ngay_vao === undefined ? homNay() : requireDate(body.ngay_vao, "ngay_vao"),
+    full_name: requireString(body.full_name, "full_name", 100),
+    phone: optionalString(body.phone, "phone", 20),
+    occupants: soNguoi(body.occupants, 1)!,
+    moved_in: body.moved_in === undefined ? homNay() : requireDate(body.moved_in, "moved_in"),
   });
 
   return ok(c, { tenant }, "Tenant moved in.", 201);
 });
 
 /**
- * Setting `ngay_ra` moves the tenant out and frees the room; sending null puts
+ * Setting `moved_out` moves the tenant out and frees the room; sending null puts
  * them back as the current tenant, which is how a mistaken move-out is undone.
  */
 tenantRoutes.patch("/:id", async (c) => {
@@ -60,11 +60,11 @@ tenantRoutes.patch("/:id", async (c) => {
   if (!(await getTenant(c.env.DB, id))) return notFound(c, "Tenant not found.");
 
   const tenant = await updateTenant(c.env.DB, id, {
-    ho_ten: body.ho_ten === undefined ? undefined : requireString(body.ho_ten, "ho_ten", 100),
-    sdt: body.sdt === undefined ? undefined : optionalString(body.sdt, "sdt", 20),
-    so_nguoi: soNguoi(body.so_nguoi),
-    ngay_vao: body.ngay_vao === undefined ? undefined : requireDate(body.ngay_vao, "ngay_vao"),
-    ngay_ra: body.ngay_ra === undefined ? undefined : optionalDate(body.ngay_ra, "ngay_ra"),
+    full_name: body.full_name === undefined ? undefined : requireString(body.full_name, "full_name", 100),
+    phone: body.phone === undefined ? undefined : optionalString(body.phone, "phone", 20),
+    occupants: soNguoi(body.occupants),
+    moved_in: body.moved_in === undefined ? undefined : requireDate(body.moved_in, "moved_in"),
+    moved_out: body.moved_out === undefined ? undefined : optionalDate(body.moved_out, "moved_out"),
   });
 
   return ok(c, { tenant }, "Tenant updated.");

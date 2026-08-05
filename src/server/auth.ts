@@ -6,7 +6,7 @@ import { SignJWT, jwtVerify } from "jose";
 import { failure } from "./envelope";
 import type { AppEnv, Role, SessionUser } from "./types";
 
-const ROLES: readonly Role[] = ["quan_ly", "nguoi_thue"];
+const ROLES: readonly Role[] = ["MANAGER", "TENANT"];
 
 export const SESSION_COOKIE = "session";
 export const SESSION_TTL_SECONDS = 7 * 24 * 60 * 60;
@@ -116,7 +116,7 @@ function secretKey(env: Env): Uint8Array {
 export async function createSessionToken(env: Env, user: SessionUser): Promise<string> {
   return new SignJWT({
     username: user.username,
-    vai_tro: user.vai_tro,
+    role: user.role,
     room_id: user.room_id,
   })
     .setProtectedHeader({ alg: "HS256" })
@@ -131,7 +131,7 @@ export async function readSessionToken(env: Env, token: string): Promise<Session
     const { payload } = await jwtVerify(token, secretKey(env), { algorithms: ["HS256"] });
 
     const id = Number(payload.sub);
-    const { username, vai_tro: role, room_id: roomId } = payload;
+    const { username, role: role, room_id: roomId } = payload;
 
     if (!Number.isInteger(id)) return null;
     if (typeof username !== "string") return null;
@@ -139,14 +139,14 @@ export async function readSessionToken(env: Env, token: string): Promise<Session
 
     // A tenant token without a room would authorise nothing; a manager token
     // with one would silently scope queries. Reject both rather than guess.
-    const isManager = role === "quan_ly";
+    const isManager = role === "MANAGER";
     if (isManager && roomId !== null) return null;
     if (!isManager && (typeof roomId !== "number" || !Number.isInteger(roomId))) return null;
 
     return {
       id,
       username,
-      vai_tro: role as Role,
+      role: role as Role,
       room_id: isManager ? null : (roomId as number),
     };
   } catch {
@@ -178,7 +178,7 @@ export async function currentUser(c: Context<AppEnv>): Promise<SessionUser | nul
 /** Rejects the request with 401 unless a valid session cookie is present. */
 export const requireAuth = createMiddleware<AppEnv>(async (c, next) => {
   const user = await currentUser(c);
-  if (!user) return failure(c, "unauthorized", "Authentication required.", 401);
+  if (!user) return failure(c, "UNAUTHORIZED", "Authentication required.", 401);
 
   c.set("user", user);
   await next();
@@ -187,9 +187,9 @@ export const requireAuth = createMiddleware<AppEnv>(async (c, next) => {
 /** Management endpoints: everything that writes to rooms, readings or money. */
 export const requireQuanLy = createMiddleware<AppEnv>(async (c, next) => {
   const user = await currentUser(c);
-  if (!user) return failure(c, "unauthorized", "Authentication required.", 401);
-  if (user.vai_tro !== "quan_ly") {
-    return failure(c, "forbidden", "Manager role required.", 403);
+  if (!user) return failure(c, "UNAUTHORIZED", "Authentication required.", 401);
+  if (user.role !== "MANAGER") {
+    return failure(c, "FORBIDDEN", "Manager role required.", 403);
   }
 
   c.set("user", user);
@@ -202,9 +202,9 @@ export const requireQuanLy = createMiddleware<AppEnv>(async (c, next) => {
  */
 export const requirePhong = createMiddleware<AppEnv>(async (c, next) => {
   const user = await currentUser(c);
-  if (!user) return failure(c, "unauthorized", "Authentication required.", 401);
+  if (!user) return failure(c, "UNAUTHORIZED", "Authentication required.", 401);
   if (user.room_id === null) {
-    return failure(c, "khong_gan_phong", "This account is not bound to a room.", 403);
+    return failure(c, "NO_ROOM_BOUND", "This account is not bound to a room.", 403);
   }
 
   c.set("user", user);

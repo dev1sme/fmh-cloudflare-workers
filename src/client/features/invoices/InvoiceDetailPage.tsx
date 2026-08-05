@@ -2,7 +2,7 @@ import { Button, Group, Stack, Title } from "@mantine/core";
 import { Link, useNavigate, useParams } from "react-router-dom";
 
 import type { Payment } from "../../../shared/types";
-import { ChuyenKhoanCard } from "../../components/ChuyenKhoanCard";
+import { BankTransferCard } from "../../components/BankTransferCard";
 import { InvoiceLines } from "../../components/InvoiceLines";
 import { MomoCard } from "../../components/MomoCard";
 import { PageState } from "../../components/PageState";
@@ -46,7 +46,7 @@ export function InvoiceDetailPage() {
   function hoiXoaThanhToan(payment: Payment) {
     xacNhan({
       title: "Xoá khoản thu",
-      message: `Xoá khoản thu ${tien(payment.so_tien)}? Trạng thái hóa đơn sẽ được tính lại.`,
+      message: `Xoá khoản thu ${tien(payment.amount)}? Trạng thái hóa đơn sẽ được tính lại.`,
       confirmLabel: "Xoá",
       onConfirm: () => xoaThanhToan(payment.id),
     });
@@ -56,7 +56,7 @@ export function InvoiceDetailPage() {
     <Stack>
       <Group justify="space-between">
         <Title order={3}>
-          {hoaDon ? `${hoaDon.ma_hoa_don} — ${hoaDon.ten_phong}` : "Hóa đơn"}
+          {hoaDon ? `${hoaDon.invoice_code} — ${hoaDon.room_name}` : "Hóa đơn"}
         </Title>
         <Button variant="subtle" component={Link} to="/invoices">
           ← Danh sách
@@ -68,18 +68,18 @@ export function InvoiceDetailPage() {
           <Stack>
             <InvoiceHeader hoaDon={hoaDon} />
             <InvoiceLines invoice={hoaDon} />
-            {hoaDon.chuyen_khoan && (
-              <ChuyenKhoanCard chuyenKhoan={hoaDon.chuyen_khoan} xemTruoc />
+            {hoaDon.bank_transfer && (
+              <BankTransferCard chuyenKhoan={hoaDon.bank_transfer} xemTruoc />
             )}
             {hoaDon.momo && <MomoCard momo={hoaDon.momo} xemTruoc />}
-            <OtherFeesCard phiKhac={hoaDon.phi_khac} onSave={luuPhiKhac} />
+            <OtherFeesCard phiKhac={hoaDon.other_fees} onSave={luuPhiKhac} />
             <PaymentsCard
               hoaDon={hoaDon}
               onPay={ghiNhanThanhToan}
               onDeletePayment={hoiXoaThanhToan}
             />
             <InvoiceActions
-              daHuy={hoaDon.trang_thai === "huy"}
+              daHuy={hoaDon.status === "CANCELLED"}
               onCancel={hoiHuy}
               onDelete={hoiXoa}
             />

@@ -47,10 +47,10 @@ export function useThaoTacNguoiThue(reload: () => void) {
     }
   }
 
-  const chuyenDi = (id: number) => capNhat(id, { ngay_ra: homNay() });
+  const chuyenDi = (id: number) => capNhat(id, { moved_out: homNay() });
 
   /** Undo a move-out recorded by mistake. Fails if the room is taken again. */
-  const huyChuyenDi = (id: number) => capNhat(id, { ngay_ra: null });
+  const huyChuyenDi = (id: number) => capNhat(id, { moved_out: null });
 
   async function xoa(id: number): Promise<boolean> {
     try {

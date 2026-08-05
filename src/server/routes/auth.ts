@@ -30,21 +30,21 @@ authRoutes.post("/login", async (c) => {
   const password = typeof body?.password === "string" ? body.password : "";
 
   if (!username || !password) {
-    return failure(c, "missing_credentials", "Username and password are required.", 400);
+    return failure(c, "MISSING_CREDENTIALS", "Username and password are required.", 400);
   }
 
   const user = await getUserByUsername(c.env.DB, username);
   const dung = await verifyPassword(password, user?.password_hash ?? DUMMY_RECORD);
 
   if (!user || !dung) {
-    return failure(c, "invalid_credentials", "Wrong username or password.", 401);
+    return failure(c, "INVALID_CREDENTIALS", "Wrong username or password.", 401);
   }
 
   const session: SessionUser = {
     id: user.id,
     username: user.username,
-    vai_tro: user.vai_tro,
-    room_id: user.vai_tro === "quan_ly" ? null : user.room_id,
+    role: user.role,
+    room_id: user.role === "MANAGER" ? null : user.room_id,
   };
 
   setSessionCookie(c, await createSessionToken(c.env, session));
@@ -59,7 +59,7 @@ authRoutes.post("/logout", (c) => {
 
 authRoutes.get("/me", async (c) => {
   const user = await currentUser(c);
-  if (!user) return failure(c, "unauthorized", "Authentication required.", 401);
+  if (!user) return failure(c, "UNAUTHORIZED", "Authentication required.", 401);
 
   return ok(c, { user }, "Session retrieved.");
 });
@@ -73,19 +73,19 @@ authRoutes.get("/me", async (c) => {
  */
 authRoutes.post("/change-password", async (c) => {
   const session = await currentUser(c);
-  if (!session) return failure(c, "unauthorized", "Authentication required.", 401);
+  if (!session) return failure(c, "UNAUTHORIZED", "Authentication required.", 401);
 
   const body = await jsonBody(c.req);
   const matKhauCu = requireString(body.mat_khau_cu, "mat_khau_cu", 200);
   const matKhauMoi = requireString(body.mat_khau_moi, "mat_khau_moi", 200);
 
-  if (matKhauMoi.length < DO_DAI_TOI_THIEU) fail("password_qua_ngan");
+  if (matKhauMoi.length < DO_DAI_TOI_THIEU) fail("PASSWORD_TOO_SHORT");
 
   const user = await getUserByUsername(c.env.DB, session.username);
   if (!user) return notFound(c, "Account not found.");
 
   if (!(await verifyPassword(matKhauCu, user.password_hash))) {
-    return failure(c, "sai_mat_khau_cu", "The current password is wrong.", 400);
+    return failure(c, "WRONG_CURRENT_PASSWORD", "The current password is wrong.", 400);
   }
 
   await setPasswordHash(c.env.DB, user.id, await hashPassword(matKhauMoi));

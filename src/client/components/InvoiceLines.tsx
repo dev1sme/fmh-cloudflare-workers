@@ -21,52 +21,52 @@ function Line({ label, note, value }: { label: string; note?: string; value: num
 
 /** The invoice breakdown, shared by the manager and tenant views. */
 export function InvoiceLines({ invoice }: { invoice: InvoiceDetail }) {
-  const soDien = invoice.reading ? invoice.reading.dien_moi - invoice.reading.dien_cu : null;
-  const soNuoc = invoice.reading ? invoice.reading.nuoc_moi - invoice.reading.nuoc_cu : null;
+  const soDien = invoice.reading ? invoice.reading.electricity_end - invoice.reading.electricity_start : null;
+  const soNuoc = invoice.reading ? invoice.reading.water_end - invoice.reading.water_start : null;
 
   return (
     <Card withBorder padding="md">
       <Stack gap="sm">
-        <Line label="Tiền phòng" value={invoice.tien_phong} />
+        <Line label="Tiền phòng" value={invoice.rent_amount} />
         <Line
           label="Tiền điện"
           note={
             soDien === null
-              ? `đơn giá ${tien(invoice.don_gia_dien)}/kWh`
-              : `${invoice.reading!.dien_cu} → ${invoice.reading!.dien_moi} = ${soDien} kWh × ${tien(invoice.don_gia_dien)}`
+              ? `đơn giá ${tien(invoice.electricity_rate)}/kWh`
+              : `${invoice.reading!.electricity_start} → ${invoice.reading!.electricity_end} = ${soDien} kWh × ${tien(invoice.electricity_rate)}`
           }
-          value={invoice.tien_dien}
+          value={invoice.electricity_amount}
         />
         <Line
           label="Tiền nước"
           note={
             soNuoc === null
-              ? `đơn giá ${tien(invoice.don_gia_nuoc)}/m³`
-              : `${invoice.reading!.nuoc_cu} → ${invoice.reading!.nuoc_moi} = ${soNuoc} m³ × ${tien(invoice.don_gia_nuoc)}`
+              ? `đơn giá ${tien(invoice.water_rate)}/m³`
+              : `${invoice.reading!.water_start} → ${invoice.reading!.water_end} = ${soNuoc} m³ × ${tien(invoice.water_rate)}`
           }
-          value={invoice.tien_nuoc}
+          value={invoice.water_amount}
         />
-        {invoice.phi_khac > 0 && <Line label="Phí khác" value={invoice.phi_khac} />}
+        {invoice.other_fees > 0 && <Line label="Phí khác" value={invoice.other_fees} />}
 
         <Divider />
 
         <Group justify="space-between">
           <Text fw={600}>Tổng cộng</Text>
           <Text fw={700} size="lg">
-            {tien(invoice.tong_tien)}
+            {tien(invoice.total)}
           </Text>
         </Group>
         <Group justify="space-between">
           <Text c="dimmed">Đã thu</Text>
-          <Text c="dimmed">{tien(invoice.da_thu)}</Text>
+          <Text c="dimmed">{tien(invoice.paid)}</Text>
         </Group>
-        {invoice.con_lai > 0 && (
+        {invoice.outstanding > 0 && (
           <Group justify="space-between">
             <Text c="orange" fw={500}>
               Còn lại
             </Text>
             <Text c="orange" fw={600}>
-              {tien(invoice.con_lai)}
+              {tien(invoice.outstanding)}
             </Text>
           </Group>
         )}

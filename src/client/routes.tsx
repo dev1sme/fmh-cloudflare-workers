@@ -21,7 +21,7 @@ import { AccountsPage } from "./features/accounts/AccountsPage";
  * not access control — the API enforces the roles on every request.
  */
 export function AppRoutes({ user, onLogout }: { user: SessionUser; onLogout: () => void }) {
-  const quanLy = user.vai_tro === "quan_ly";
+  const quanLy = user.role === "MANAGER";
   const home = quanLy ? "/dashboard" : "/my-invoices";
 
   return (

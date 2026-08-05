@@ -24,7 +24,7 @@ const NGUOI_THUE_LINKS = [
 export function AppLayout({ user, onLogout }: { user: SessionUser; onLogout: () => void }) {
   const [opened, { toggle, close }] = useDisclosure();
   const { pathname } = useLocation();
-  const links = user.vai_tro === "quan_ly" ? QUAN_LY_LINKS : NGUOI_THUE_LINKS;
+  const links = user.role === "MANAGER" ? QUAN_LY_LINKS : NGUOI_THUE_LINKS;
 
   return (
     <AppShell
@@ -40,7 +40,7 @@ export function AppLayout({ user, onLogout }: { user: SessionUser; onLogout: () 
           </Group>
           <Group gap="sm" wrap="nowrap">
             <Text size="sm" c="dimmed" visibleFrom="xs">
-              {user.username} · {user.vai_tro === "quan_ly" ? "quản lý" : "người thuê"}
+              {user.username} · {user.role === "MANAGER" ? "quản lý" : "người thuê"}
             </Text>
             <Button size="xs" variant="light" onClick={onLogout}>
               Đăng xuất

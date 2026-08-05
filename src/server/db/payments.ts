@@ -1,10 +1,10 @@
 import type { Payment, PaymentMethod } from "../../shared/types";
 
-const SELECT = "SELECT id, invoice_id, so_tien, ngay_tt, phuong_thuc, ghi_chu FROM payments";
+const SELECT = "SELECT id, invoice_id, amount, paid_on, method, note FROM payments";
 
 export async function listPayments(db: D1Database, invoiceId: number): Promise<Payment[]> {
   const { results } = await db
-    .prepare(`${SELECT} WHERE invoice_id = ? ORDER BY ngay_tt, id`)
+    .prepare(`${SELECT} WHERE invoice_id = ? ORDER BY paid_on, id`)
     .bind(invoiceId)
     .all<Payment>();
   return results;
@@ -16,7 +16,7 @@ export function getPayment(db: D1Database, id: number): Promise<Payment | null> 
 
 export async function sumPayments(db: D1Database, invoiceId: number): Promise<number> {
   const row = await db
-    .prepare("SELECT COALESCE(SUM(so_tien), 0) AS total FROM payments WHERE invoice_id = ?")
+    .prepare("SELECT COALESCE(SUM(amount), 0) AS total FROM payments WHERE invoice_id = ?")
     .bind(invoiceId)
     .first<{ total: number }>();
   return row?.total ?? 0;
@@ -24,10 +24,10 @@ export async function sumPayments(db: D1Database, invoiceId: number): Promise<nu
 
 export type PaymentInput = {
   invoice_id: number;
-  so_tien: number;
-  ngay_tt: string;
-  phuong_thuc: PaymentMethod;
-  ghi_chu: string | null;
+  amount: number;
+  paid_on: string;
+  method: PaymentMethod;
+  note: string | null;
 };
 
 export async function createPayment(
@@ -36,10 +36,10 @@ export async function createPayment(
 ): Promise<Payment | null> {
   const row = await db
     .prepare(
-      `INSERT INTO payments (invoice_id, so_tien, ngay_tt, phuong_thuc, ghi_chu)
+      `INSERT INTO payments (invoice_id, amount, paid_on, method, note)
        VALUES (?, ?, ?, ?, ?) RETURNING id`,
     )
-    .bind(input.invoice_id, input.so_tien, input.ngay_tt, input.phuong_thuc, input.ghi_chu)
+    .bind(input.invoice_id, input.amount, input.paid_on, input.method, input.note)
     .first<{ id: number }>();
 
   return row ? getPayment(db, row.id) : null;

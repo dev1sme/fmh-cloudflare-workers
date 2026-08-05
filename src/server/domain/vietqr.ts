@@ -18,8 +18,8 @@ const QUOC_GIA = "VN";
 export type ThongTinNganHang = {
   /** 6-digit NAPAS acquirer id, e.g. 970436 for Vietcombank. */
   bank_bin: string;
-  bank_so_tk: string;
-  bank_chu_tk: string | null;
+  bank_account_no: string;
+  bank_account_name: string | null;
 };
 
 function truong(id: string, value: string): string {
@@ -68,7 +68,7 @@ export function taoVietQR(input: {
 }): string {
   const { nganHang } = input;
 
-  const thongTinThuHuong = truong("00", nganHang.bank_bin) + truong("01", nganHang.bank_so_tk);
+  const thongTinThuHuong = truong("00", nganHang.bank_bin) + truong("01", nganHang.bank_account_no);
 
   const napas =
     truong("00", GUID_NAPAS) +
@@ -94,14 +94,14 @@ export function taoVietQR(input: {
 /** Null when the building has no bank details configured yet. */
 export function nganHangHopLe(input: {
   bank_bin: string | null;
-  bank_so_tk: string | null;
-  bank_chu_tk: string | null;
+  bank_account_no: string | null;
+  bank_account_name: string | null;
 }): ThongTinNganHang | null {
-  if (!input.bank_bin || !input.bank_so_tk) return null;
+  if (!input.bank_bin || !input.bank_account_no) return null;
 
   return {
     bank_bin: input.bank_bin,
-    bank_so_tk: input.bank_so_tk,
-    bank_chu_tk: input.bank_chu_tk,
+    bank_account_no: input.bank_account_no,
+    bank_account_name: input.bank_account_name,
   };
 }

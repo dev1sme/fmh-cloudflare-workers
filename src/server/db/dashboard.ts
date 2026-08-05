@@ -6,7 +6,7 @@ import type {
   DashboardRooms,
   DashboardUsage,
 } from "../../shared/types";
-import { kyTruoc } from "../domain/ky";
+import { previousPeriod } from "../domain/period";
 
 /**
  * Everything the manager dashboard shows, in one `db.batch()`.
@@ -20,41 +20,41 @@ import { kyTruoc } from "../domain/ky";
 
 /** Paid-so-far per invoice. Joined rather than correlated so it scans once. */
 const PAID_PER_INVOICE = `
-  SELECT invoice_id, SUM(so_tien) AS da_thu FROM payments GROUP BY invoice_id
+  SELECT invoice_id, SUM(amount) AS paid_total FROM payments GROUP BY invoice_id
 `;
 
 const HISTORY_PERIODS = 12;
 
-export async function getDashboard(db: D1Database, ky: string): Promise<Dashboard> {
-  const truoc = kyTruoc(ky);
+export async function getDashboard(db: D1Database, period: string): Promise<Dashboard> {
+  const truoc = previousPeriod(period);
 
   const [revenue, debts, rooms, usage, usagePrev, history] = await db.batch([
     db
       .prepare(
         `SELECT
-           COALESCE(SUM(CASE WHEN i.trang_thai != 'huy' THEN i.tong_tien END), 0) AS billed,
-           COALESCE(SUM(CASE WHEN i.trang_thai != 'huy' THEN pd.da_thu END), 0) AS collected,
-           COALESCE(SUM(i.trang_thai = 'chua_thanh_toan'), 0) AS unpaid,
-           COALESCE(SUM(i.trang_thai = 'da_thanh_toan'), 0) AS paid,
-           COALESCE(SUM(i.trang_thai = 'huy'), 0) AS cancelled
+           COALESCE(SUM(CASE WHEN i.status != 'CANCELLED' THEN i.total END), 0) AS billed,
+           COALESCE(SUM(CASE WHEN i.status != 'CANCELLED' THEN pd.paid_total END), 0) AS collected,
+           COALESCE(SUM(i.status = 'UNPAID'), 0) AS unpaid,
+           COALESCE(SUM(i.status = 'PAID'), 0) AS paid,
+           COALESCE(SUM(i.status = 'CANCELLED'), 0) AS cancelled
          FROM invoices i
          LEFT JOIN (${PAID_PER_INVOICE}) pd ON pd.invoice_id = i.id
-         WHERE i.ky = ?`,
+         WHERE i.period = ?`,
       )
-      .bind(ky),
+      .bind(period),
 
     // Every period, not just this one — an old unpaid invoice is the whole
     // point of the list.
     db.prepare(
-      `SELECT i.room_id, r.ten_phong AS room_name,
-              SUM(i.tong_tien - COALESCE(pd.da_thu, 0)) AS amount,
+      `SELECT i.room_id, r.room_name,
+              SUM(i.total - COALESCE(pd.paid_total, 0)) AS amount,
               COUNT(*) AS invoice_count,
-              MIN(i.ky) AS oldest_period
+              MIN(i.period) AS oldest_period
        FROM invoices i
        JOIN rooms r ON r.id = i.room_id
        LEFT JOIN (${PAID_PER_INVOICE}) pd ON pd.invoice_id = i.id
-       WHERE i.trang_thai != 'huy' AND i.tong_tien - COALESCE(pd.da_thu, 0) > 0
-       GROUP BY i.room_id, r.ten_phong
+       WHERE i.status != 'CANCELLED' AND i.total - COALESCE(pd.paid_total, 0) > 0
+       GROUP BY i.room_id, r.room_name
        ORDER BY amount DESC`,
     ),
 
@@ -62,27 +62,27 @@ export async function getDashboard(db: D1Database, ky: string): Promise<Dashboar
       .prepare(
         `SELECT
            (SELECT COUNT(*) FROM rooms) AS total,
-           (SELECT COUNT(*) FROM tenants WHERE ngay_ra IS NULL) AS occupied,
-           (SELECT COALESCE(SUM(so_nguoi), 0) FROM tenants WHERE ngay_ra IS NULL) AS occupants,
+           (SELECT COUNT(*) FROM tenants WHERE moved_out IS NULL) AS occupied,
+           (SELECT COALESCE(SUM(occupants), 0) FROM tenants WHERE moved_out IS NULL) AS occupants,
            (SELECT COUNT(*) FROM rooms r
              WHERE NOT EXISTS (
-               SELECT 1 FROM readings rd WHERE rd.room_id = r.id AND rd.ky = ?
+               SELECT 1 FROM readings rd WHERE rd.room_id = r.id AND rd.period = ?
              )) AS missing_readings`,
       )
-      .bind(ky),
+      .bind(period),
 
-    db.prepare(USAGE).bind(ky),
+    db.prepare(USAGE).bind(period),
     db.prepare(USAGE).bind(truoc),
 
     db
       .prepare(
-        `SELECT i.ky AS period,
-                COALESCE(SUM(CASE WHEN i.trang_thai != 'huy' THEN i.tong_tien END), 0) AS billed,
-                COALESCE(SUM(CASE WHEN i.trang_thai != 'huy' THEN pd.da_thu END), 0) AS collected
+        `SELECT i.period AS period,
+                COALESCE(SUM(CASE WHEN i.status != 'CANCELLED' THEN i.total END), 0) AS billed,
+                COALESCE(SUM(CASE WHEN i.status != 'CANCELLED' THEN pd.paid_total END), 0) AS collected
          FROM invoices i
          LEFT JOIN (${PAID_PER_INVOICE}) pd ON pd.invoice_id = i.id
-         GROUP BY i.ky
-         ORDER BY i.ky DESC
+         GROUP BY i.period
+         ORDER BY i.period DESC
          LIMIT ?`,
       )
       .bind(HISTORY_PERIODS),
@@ -92,7 +92,7 @@ export async function getDashboard(db: D1Database, ky: string): Promise<Dashboar
   const roomRow = first<RoomsRow>(rooms);
 
   return {
-    period: ky,
+    period: period,
     revenue: revenueOf(money),
     debts: (debts.results ?? []) as DashboardDebt[],
     rooms: {
@@ -115,9 +115,9 @@ export async function getDashboard(db: D1Database, ky: string): Promise<Dashboar
 }
 
 const USAGE = `
-  SELECT COALESCE(SUM(dien_moi - dien_cu), 0) AS electricity,
-         COALESCE(SUM(nuoc_moi - nuoc_cu), 0) AS water
-  FROM readings WHERE ky = ?
+  SELECT COALESCE(SUM(electricity_end - electricity_start), 0) AS electricity,
+         COALESCE(SUM(water_end - water_start), 0) AS water
+  FROM readings WHERE period = ?
 `;
 
 type RevenueRow = {

@@ -5,7 +5,7 @@ import { listReadings } from "../db/readings";
 import { getRoom } from "../db/rooms";
 import { notFound, ok } from "../envelope";
 import type { AppEnv } from "../types";
-import { optionalKy, parseId } from "../validate";
+import { optionalPeriod, parseId } from "../validate";
 
 /**
  * Read-only view for a tenant account.
@@ -27,7 +27,7 @@ meRoutes.get("/room", async (c) => {
 meRoutes.get("/invoices", async (c) => {
   const invoices = await listInvoices(c.env.DB, {
     room_id: c.get("user").room_id!,
-    ky: optionalKy(c.req.query("ky")),
+    period: optionalPeriod(c.req.query("period")),
   });
 
   return ok(c, { invoices }, "Invoices retrieved.");
@@ -46,7 +46,7 @@ meRoutes.get("/invoices/:id", async (c) => {
 meRoutes.get("/readings", async (c) => {
   const readings = await listReadings(c.env.DB, {
     room_id: c.get("user").room_id!,
-    ky: optionalKy(c.req.query("ky")),
+    period: optionalPeriod(c.req.query("period")),
   });
 
   return ok(c, { readings }, "Readings retrieved.");

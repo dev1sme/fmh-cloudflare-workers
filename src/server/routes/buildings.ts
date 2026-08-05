@@ -35,20 +35,20 @@ buildingRoutes.get("/:id", async (c) => {
 /** 6-digit NAPAS acquirer id; anything else would produce an unscannable QR. */
 function bankBin(value: unknown): string | null {
   const bin = optionalString(value, "bank_bin", 6);
-  if (bin !== null && !/^\d{6}$/.test(bin)) fail("invalid_bank_bin");
+  if (bin !== null && !/^\d{6}$/.test(bin)) fail("INVALID_BANK_BIN");
   return bin;
 }
 
 function bankSoTk(value: unknown): string | null {
-  const so = optionalString(value, "bank_so_tk", 30);
-  if (so !== null && !/^\d+$/.test(so)) fail("invalid_bank_so_tk");
+  const so = optionalString(value, "bank_account_no", 30);
+  if (so !== null && !/^\d+$/.test(so)) fail("INVALID_BANK_ACCOUNT_NO");
   return so;
 }
 
 function momoSdt(value: unknown): string | null {
-  const sdt = optionalString(value, "momo_sdt", 15);
-  if (sdt !== null && !/^0\d{8,11}$/.test(sdt)) fail("invalid_momo_sdt");
-  return sdt;
+  const phone = optionalString(value, "momo_phone", 15);
+  if (phone !== null && !/^0\d{8,11}$/.test(phone)) fail("INVALID_MOMO_PHONE");
+  return phone;
 }
 
 buildingRoutes.post("/", async (c) => {
@@ -57,13 +57,13 @@ buildingRoutes.post("/", async (c) => {
   const building = await createBuilding(c.env.DB, {
     name: requireString(body.name, "name", 100),
     address: optionalString(body.address, "address"),
-    don_gia_dien: requireInt(body.don_gia_dien, "don_gia_dien"),
-    don_gia_nuoc: requireInt(body.don_gia_nuoc, "don_gia_nuoc"),
+    electricity_rate: requireInt(body.electricity_rate, "electricity_rate"),
+    water_rate: requireInt(body.water_rate, "water_rate"),
     bank_bin: bankBin(body.bank_bin),
-    bank_so_tk: bankSoTk(body.bank_so_tk),
-    bank_chu_tk: optionalString(body.bank_chu_tk, "bank_chu_tk", 100),
-    momo_sdt: momoSdt(body.momo_sdt),
-    momo_ten: optionalString(body.momo_ten, "momo_ten", 100),
+    bank_account_no: bankSoTk(body.bank_account_no),
+    bank_account_name: optionalString(body.bank_account_name, "bank_account_name", 100),
+    momo_phone: momoSdt(body.momo_phone),
+    momo_name: optionalString(body.momo_name, "momo_name", 100),
   });
 
   return ok(c, { building }, "Building created.", 201);
@@ -80,17 +80,17 @@ buildingRoutes.patch("/:id", async (c) => {
   const building = await updateBuilding(c.env.DB, id, {
     name: body.name === undefined ? undefined : requireString(body.name, "name", 100),
     address: body.address === undefined ? undefined : optionalString(body.address, "address"),
-    don_gia_dien: optionalInt(body.don_gia_dien, "don_gia_dien"),
-    don_gia_nuoc: optionalInt(body.don_gia_nuoc, "don_gia_nuoc"),
+    electricity_rate: optionalInt(body.electricity_rate, "electricity_rate"),
+    water_rate: optionalInt(body.water_rate, "water_rate"),
     bank_bin: body.bank_bin === undefined ? undefined : bankBin(body.bank_bin),
-    bank_so_tk: body.bank_so_tk === undefined ? undefined : bankSoTk(body.bank_so_tk),
-    bank_chu_tk:
-      body.bank_chu_tk === undefined
+    bank_account_no: body.bank_account_no === undefined ? undefined : bankSoTk(body.bank_account_no),
+    bank_account_name:
+      body.bank_account_name === undefined
         ? undefined
-        : optionalString(body.bank_chu_tk, "bank_chu_tk", 100),
-    momo_sdt: body.momo_sdt === undefined ? undefined : momoSdt(body.momo_sdt),
-    momo_ten:
-      body.momo_ten === undefined ? undefined : optionalString(body.momo_ten, "momo_ten", 100),
+        : optionalString(body.bank_account_name, "bank_account_name", 100),
+    momo_phone: body.momo_phone === undefined ? undefined : momoSdt(body.momo_phone),
+    momo_name:
+      body.momo_name === undefined ? undefined : optionalString(body.momo_name, "momo_name", 100),
   });
   if (!building) return notFound(c, "Building not found.");
 

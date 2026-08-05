@@ -29,9 +29,9 @@ roomRoutes.post("/", async (c) => {
 
   const room = await createRoom(c.env.DB, {
     building_id: requireId(body.building_id, "building_id"),
-    ten_phong: requireString(body.ten_phong, "ten_phong", 50),
-    gia_phong: requireInt(body.gia_phong, "gia_phong"),
-    dien_tich: optionalArea(body.dien_tich, "dien_tich"),
+    room_name: requireString(body.room_name, "room_name", 50),
+    rent: requireInt(body.rent, "rent"),
+    area: optionalArea(body.area, "area"),
   });
 
   return ok(c, { room }, "Room created.", 201);
@@ -43,10 +43,10 @@ roomRoutes.patch("/:id", async (c) => {
 
   const room = await updateRoom(c.env.DB, id, {
     building_id: body.building_id === undefined ? undefined : requireId(body.building_id, "building_id"),
-    ten_phong:
-      body.ten_phong === undefined ? undefined : requireString(body.ten_phong, "ten_phong", 50),
-    gia_phong: optionalInt(body.gia_phong, "gia_phong"),
-    dien_tich: body.dien_tich === undefined ? undefined : optionalArea(body.dien_tich, "dien_tich"),
+    room_name:
+      body.room_name === undefined ? undefined : requireString(body.room_name, "room_name", 50),
+    rent: optionalInt(body.rent, "rent"),
+    area: body.area === undefined ? undefined : optionalArea(body.area, "area"),
   });
   if (!room) return notFound(c, "Room not found.");
 

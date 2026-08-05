@@ -1,8 +1,8 @@
 import type { Building } from "../../shared/types";
 import { buildSet } from "./sql";
 
-const COLUMNS = `id, name, address, don_gia_dien, don_gia_nuoc,
-                 bank_bin, bank_so_tk, bank_chu_tk, momo_sdt, momo_ten`;
+const COLUMNS = `id, name, address, electricity_rate, water_rate,
+                 bank_bin, bank_account_no, bank_account_name, momo_phone, momo_name`;
 
 export async function listBuildings(db: D1Database): Promise<Building[]> {
   const { results } = await db
@@ -18,13 +18,13 @@ export function getBuilding(db: D1Database, id: number): Promise<Building | null
 export type BuildingInput = {
   name: string;
   address: string | null;
-  don_gia_dien: number;
-  don_gia_nuoc: number;
+  electricity_rate: number;
+  water_rate: number;
   bank_bin?: string | null;
-  bank_so_tk?: string | null;
-  bank_chu_tk?: string | null;
-  momo_sdt?: string | null;
-  momo_ten?: string | null;
+  bank_account_no?: string | null;
+  bank_account_name?: string | null;
+  momo_phone?: string | null;
+  momo_name?: string | null;
 };
 
 export async function createBuilding(
@@ -33,20 +33,20 @@ export async function createBuilding(
 ): Promise<Building | null> {
   const row = await db
     .prepare(
-      `INSERT INTO buildings (name, address, don_gia_dien, don_gia_nuoc,
-                              bank_bin, bank_so_tk, bank_chu_tk, momo_sdt, momo_ten)
+      `INSERT INTO buildings (name, address, electricity_rate, water_rate,
+                              bank_bin, bank_account_no, bank_account_name, momo_phone, momo_name)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`,
     )
     .bind(
       input.name,
       input.address,
-      input.don_gia_dien,
-      input.don_gia_nuoc,
+      input.electricity_rate,
+      input.water_rate,
       input.bank_bin ?? null,
-      input.bank_so_tk ?? null,
-      input.bank_chu_tk ?? null,
-      input.momo_sdt ?? null,
-      input.momo_ten ?? null,
+      input.bank_account_no ?? null,
+      input.bank_account_name ?? null,
+      input.momo_phone ?? null,
+      input.momo_name ?? null,
     )
     .first<{ id: number }>();
 
@@ -61,13 +61,13 @@ export async function deleteBuilding(db: D1Database, id: number): Promise<void> 
 export type BuildingPatch = {
   name?: string;
   address?: string | null;
-  don_gia_dien?: number;
-  don_gia_nuoc?: number;
+  electricity_rate?: number;
+  water_rate?: number;
   bank_bin?: string | null;
-  bank_so_tk?: string | null;
-  bank_chu_tk?: string | null;
-  momo_sdt?: string | null;
-  momo_ten?: string | null;
+  bank_account_no?: string | null;
+  bank_account_name?: string | null;
+  momo_phone?: string | null;
+  momo_name?: string | null;
 };
 
 export async function updateBuilding(

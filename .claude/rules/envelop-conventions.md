@@ -68,13 +68,33 @@ Chuẩn hóa JSON response để frontend, mobile, QA và integration partner t�
 - Không đổi tên tùy tiện giữa `data`, `result`, `payload`
 - Không trả raw model hoặc raw exception cho client
 
+### 1.2.1 Định dạng `error.code`
+
+- `error.code` **bắt buộc UPPER_SNAKE**, tiếng Anh: `DUPLICATE_DATA`, `ROOM_NOT_FOUND`, `INVALID_PERIOD`
+- Khớp regex `^[A-Z][A-Z0-9]*(_[A-Z0-9]+)*$` — không chữ thường, không gạch nối, không khoảng trắng
+- Code do validation sinh ra ghép từ tên field: `MISSING_<FIELD>`, `INVALID_<FIELD>`, `TOO_LONG_<FIELD>` (ví dụ `MISSING_ROOM_NAME`)
+- Code là **API contract**. Đổi chữ của code là breaking change, không phải sửa câu chữ
+
+Điều này được **enforce trong code**, không chỉ nằm ở tài liệu:
+
+- `failure()` trong `src/server/envelope.ts` throw nếu code không khớp regex — không có đường nào trả về một code sai định dạng
+- `fail()` trong `src/server/validate.ts` throw tương tự, chặn tại chỗ ném lỗi
+- `chiTietValidation()` tách field từ code UPPER_SNAKE rồi hạ về chữ thường làm khóa trong `error.details`
+
+Kiểm nhanh toàn bộ code đang dùng:
+
+```bash
+grep -rhoE '(failure\(c, "|fail\(")[a-zA-Z_]+"' src/server/ \
+  | sed -E 's/.*"([a-zA-Z_]+)"/\1/' | sort -u | grep -vE '^[A-Z][A-Z0-9_]*$'
+```
+
 ### 1.3 Format của thuộc tính
 
 - Integer phải trả kiểu số thật, không được bọc trong dấu `""` hoặc `''`
 - `timestamp` trong `meta` phải trả kiểu số, không được trả chuỗi
 - Boolean trả kiểu boolean thật, không dùng chuỗi `"true"` hoặc `"false"`
 - Numeric field phải ổn định kiểu dữ liệu giữa các endpoint
-- Enum field trả giá trị ổn định, machine-readable, ví dụ `pending`, `paid`, `cancelled`
+- Enum field trả giá trị ổn định, machine-readable, **UPPER_SNAKE tiếng Anh** — trong dự án này: `UNPAID` / `PAID` / `CANCELLED`, `BANK_TRANSFER` / `CASH`, `MANAGER` / `TENANT`, `READY` / `MISSING_READING` / `ALREADY_INVOICED`. Giá trị enum được CHECK-constraint trong D1, nên đổi chúng cần migration
 - Nullable field phải rõ ràng là `null` hoặc không có mặt theo một quy ước thống nhất
 
 ### 1.4 Exposure rules

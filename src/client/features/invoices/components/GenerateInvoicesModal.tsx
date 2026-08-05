@@ -1,15 +1,15 @@
 import { Alert, Badge, Button, Checkbox, Group, Modal, Stack, Table, Text } from "@mantine/core";
 import { useEffect, useMemo, useState } from "react";
 
-import type { GenerationPreviewRoom, SinhTrangThai } from "../../../../shared/types";
+import type { PreviewRoom, GenerationStatus } from "../../../../shared/types";
 import { PageState } from "../../../components/PageState";
-import { nhanKy, tien } from "../../../format";
+import { periodLabel, tien } from "../../../format";
 
 /** Null is the billable case — anything else is the reason the row is locked. */
-const KHONG_SINH_DUOC: Record<SinhTrangThai, string | null> = {
-  san_sang: null,
-  thieu_chi_so: "Chưa nhập chỉ số",
-  da_co_hoa_don: "Đã có hóa đơn",
+const KHONG_SINH_DUOC: Record<GenerationStatus, string | null> = {
+  READY: null,
+  MISSING_READING: "Chưa nhập chỉ số",
+  ALREADY_INVOICED: "Đã có hóa đơn",
 };
 
 /**
@@ -18,18 +18,18 @@ const KHONG_SINH_DUOC: Record<SinhTrangThai, string | null> = {
  * silently turning up in the skipped list afterwards.
  */
 export function GenerateInvoicesModal({
-  ky,
+  period,
   opened,
-  phong,
+  rooms,
   loading,
   error,
   dangChay,
   onClose,
   onSubmit,
 }: {
-  ky: string;
+  period: string;
   opened: boolean;
-  phong: GenerationPreviewRoom[];
+  rooms: PreviewRoom[];
   loading: boolean;
   error: unknown;
   dangChay: boolean;
@@ -39,8 +39,8 @@ export function GenerateInvoicesModal({
   const [chon, setChon] = useState<number[]>([]);
 
   const sanSang = useMemo(
-    () => phong.filter((item) => item.trang_thai === "san_sang"),
-    [phong],
+    () => rooms.filter((item) => item.status === "READY"),
+    [rooms],
   );
 
   // Everything billable starts ticked — the common run is "all of them", and
@@ -50,20 +50,20 @@ export function GenerateInvoicesModal({
   }, [sanSang]);
 
   const nhomTheoToa = useMemo(() => {
-    const map = new Map<number, { ten: string; phong: GenerationPreviewRoom[] }>();
+    const map = new Map<number, { ten: string; rooms: PreviewRoom[] }>();
 
-    for (const item of phong) {
-      const nhom = map.get(item.building_id) ?? { ten: item.building_name, phong: [] };
-      nhom.phong.push(item);
+    for (const item of rooms) {
+      const nhom = map.get(item.building_id) ?? { ten: item.building_name, rooms: [] };
+      nhom.rooms.push(item);
       map.set(item.building_id, nhom);
     }
 
     return [...map.values()];
-  }, [phong]);
+  }, [rooms]);
 
-  const tongChon = phong
+  const tongChon = rooms
     .filter((item) => chon.includes(item.room_id))
-    .reduce((sum, item) => sum + (item.tam_tinh?.tong_tien ?? 0), 0);
+    .reduce((sum, item) => sum + (item.estimate?.total ?? 0), 0);
 
   function doi(roomId: number, tick: boolean) {
     setChon((truoc) => (tick ? [...truoc, roomId] : truoc.filter((id) => id !== roomId)));
@@ -73,11 +73,11 @@ export function GenerateInvoicesModal({
     <Modal
       opened={opened}
       onClose={onClose}
-      title={`Sinh hóa đơn — ${nhanKy(ky).toLowerCase()}`}
+      title={`Sinh hóa đơn — ${periodLabel(period).toLowerCase()}`}
       size="lg"
     >
       <PageState loading={loading} error={error}>
-        {phong.length === 0 ? (
+        {rooms.length === 0 ? (
           <Text c="dimmed">Chưa có phòng nào.</Text>
         ) : (
           <Stack>
@@ -116,7 +116,7 @@ export function GenerateInvoicesModal({
                       </Table.Td>
                     </Table.Tr>
 
-                    {nhom.phong.map((item) => (
+                    {nhom.rooms.map((item) => (
                       <DongPhong
                         key={item.room_id}
                         item={item}
@@ -153,11 +153,11 @@ function DongPhong({
   checked,
   onChange,
 }: {
-  item: GenerationPreviewRoom;
+  item: PreviewRoom;
   checked: boolean;
   onChange: (checked: boolean) => void;
 }) {
-  const lyDo = KHONG_SINH_DUOC[item.trang_thai];
+  const lyDo = KHONG_SINH_DUOC[item.status];
 
   return (
     <Table.Tr opacity={lyDo ? 0.6 : 1}>
@@ -165,13 +165,13 @@ function DongPhong({
         <Checkbox
           checked={checked}
           disabled={lyDo !== null}
-          aria-label={`Chọn ${item.ten_phong}`}
+          aria-label={`Chọn ${item.room_name}`}
           onChange={(event) => onChange(event.currentTarget.checked)}
         />
       </Table.Td>
       <Table.Td fw={500}>
         <Group gap="xs" wrap="nowrap">
-          {item.ten_phong}
+          {item.room_name}
           {lyDo && (
             <Badge size="sm" variant="light" color="gray">
               {lyDo}
@@ -180,12 +180,12 @@ function DongPhong({
         </Group>
       </Table.Td>
       <Table.Td c="dimmed">
-        {item.tam_tinh
-          ? `${item.tam_tinh.so_dien} kWh · ${item.tam_tinh.so_nuoc} m³`
+        {item.estimate
+          ? `${item.estimate.electricity_used} kWh · ${item.estimate.water_used} m³`
           : "—"}
       </Table.Td>
       <Table.Td ta="right" fw={600}>
-        {item.tam_tinh ? tien(item.tam_tinh.tong_tien) : "—"}
+        {item.estimate ? tien(item.estimate.total) : "—"}
       </Table.Td>
     </Table.Tr>
   );

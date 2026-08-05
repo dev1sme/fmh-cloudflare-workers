@@ -11,15 +11,15 @@ import {
   updateInvoice,
 } from "../db/invoices";
 import { createPayment, listPayments } from "../db/payments";
-import { bayGio, homNay } from "../domain/ky";
-import { tamTinhHoaDon, tongTien } from "../domain/invoice";
+import { bayGio, homNay } from "../domain/period";
+import { estimateInvoice, tongTien } from "../domain/invoice";
 import { failure, notFound, ok } from "../envelope";
 import { capNhatTrangThai } from "./payments";
 import type { AppEnv } from "../types";
 import type {
   GeneratePreview,
   GenerateResult,
-  GenerationPreviewRoom,
+  PreviewRoom,
   InvoiceStatus,
   PaymentMethod,
 } from "../../shared/types";
@@ -28,7 +28,7 @@ import {
   jsonBody,
   optionalEnum,
   optionalInt,
-  optionalKy,
+  optionalPeriod,
   optionalString,
   parseId,
   queryId,
@@ -36,19 +36,19 @@ import {
   requireEnum,
   requireId,
   requireInt,
-  requireKy,
+  requirePeriod,
 } from "../validate";
 
-const STATUSES: readonly InvoiceStatus[] = ["chua_thanh_toan", "da_thanh_toan", "huy"];
-const METHODS: readonly PaymentMethod[] = ["chuyen_khoan", "tien_mat"];
+const STATUSES: readonly InvoiceStatus[] = ["UNPAID", "PAID", "CANCELLED"];
+const METHODS: readonly PaymentMethod[] = ["BANK_TRANSFER", "CASH"];
 
 export const invoiceRoutes = new Hono<AppEnv>();
 
 invoiceRoutes.get("/", async (c) => {
   const invoices = await listInvoices(c.env.DB, {
-    ky: optionalKy(c.req.query("ky")),
+    period: optionalPeriod(c.req.query("period")),
     room_id: queryId(c.req.query("room_id"), "room_id"),
-    trang_thai: optionalEnum(c.req.query("trang_thai"), "trang_thai", STATUSES),
+    status: optionalEnum(c.req.query("status"), "status", STATUSES),
   });
 
   return ok(c, { invoices }, "Invoices retrieved.");
@@ -64,35 +64,35 @@ invoiceRoutes.get("/", async (c) => {
  */
 invoiceRoutes.post("/generate", async (c) => {
   const body = await jsonBody(c.req);
-  const ky = requireKy(body.ky);
+  const period = requirePeriod(body.period);
   const roomIds = parseRoomIds(body.room_ids);
 
-  const candidates = await listGenerationCandidates(c.env.DB, ky, roomIds);
+  const candidates = await listGenerationCandidates(c.env.DB, period, roomIds);
   const skipped: GenerateResult["skipped"] = [];
   const inputs = [];
 
   for (const candidate of candidates) {
-    const { room_id, ten_phong } = candidate;
+    const { room_id, room_name } = candidate;
 
     if (candidate.invoice_id !== null) {
-      skipped.push({ room_id, ten_phong, reason: "da_co_hoa_don" });
+      skipped.push({ room_id, room_name, reason: "ALREADY_INVOICED" });
       continue;
     }
 
-    const amounts = tamTinhHoaDon(candidate);
+    const amounts = estimateInvoice(candidate);
     if (!amounts) {
-      skipped.push({ room_id, ten_phong, reason: "thieu_chi_so" });
+      skipped.push({ room_id, room_name, reason: "MISSING_READING" });
       continue;
     }
 
-    const { so_dien, so_nuoc, ...tien } = amounts;
+    const { electricity_used, water_used, ...tien } = amounts;
 
     inputs.push({
       room_id,
-      ky,
+      period,
       ...tien,
-      trang_thai: "chua_thanh_toan" as const,
-      ngay_tao: bayGio(),
+      status: "UNPAID" as const,
+      created_at: bayGio(),
     });
   }
 
@@ -113,27 +113,27 @@ invoiceRoutes.post("/generate", async (c) => {
  * Registered before `/:id` on purpose — Hono matches in registration order.
  */
 invoiceRoutes.get("/generate-preview", async (c) => {
-  const ky = requireKy(c.req.query("ky"));
-  const candidates = await listGenerationCandidates(c.env.DB, ky);
+  const period = requirePeriod(c.req.query("period"));
+  const candidates = await listGenerationCandidates(c.env.DB, period);
 
   return ok(
     c,
-    { ky, phong: candidates.map(xemTruocPhong) } satisfies GeneratePreview,
+    { period, rooms: candidates.map(xemTruocPhong) } satisfies GeneratePreview,
     "Generation preview retrieved.",
   );
 });
 
-function xemTruocPhong(candidate: GenerationCandidate): GenerationPreviewRoom {
-  const tam_tinh = tamTinhHoaDon(candidate);
+function xemTruocPhong(candidate: GenerationCandidate): PreviewRoom {
+  const estimate = estimateInvoice(candidate);
 
   return {
     room_id: candidate.room_id,
-    ten_phong: candidate.ten_phong,
+    room_name: candidate.room_name,
     building_id: candidate.building_id,
     building_name: candidate.building_name,
-    trang_thai:
-      candidate.invoice_id !== null ? "da_co_hoa_don" : tam_tinh ? "san_sang" : "thieu_chi_so",
-    tam_tinh,
+    status:
+      candidate.invoice_id !== null ? "ALREADY_INVOICED" : estimate ? "READY" : "MISSING_READING",
+    estimate,
     invoice_id: candidate.invoice_id,
   };
 }
@@ -141,8 +141,8 @@ function xemTruocPhong(candidate: GenerationCandidate): GenerationPreviewRoom {
 /** Absent means every room; an empty list is a mistake, not "every room". */
 function parseRoomIds(value: unknown): number[] | undefined {
   if (value === undefined || value === null) return undefined;
-  if (!Array.isArray(value)) fail("invalid_room_ids");
-  if (value.length === 0) fail("thieu_room_ids");
+  if (!Array.isArray(value)) fail("INVALID_ROOM_IDS");
+  if (value.length === 0) fail("EMPTY_ROOM_IDS");
 
   return value.map((item) => requireId(item, "room_ids"));
 }
@@ -166,14 +166,14 @@ invoiceRoutes.patch("/:id", async (c) => {
   const current = await getInvoice(c.env.DB, id);
   if (!current) return notFound(c, "Invoice not found.");
 
-  const tien_phong = optionalInt(body.tien_phong, "tien_phong") ?? current.tien_phong;
-  const phi_khac = optionalInt(body.phi_khac, "phi_khac") ?? current.phi_khac;
+  const rent_amount = optionalInt(body.rent_amount, "rent_amount") ?? current.rent_amount;
+  const other_fees = optionalInt(body.other_fees, "other_fees") ?? current.other_fees;
 
   const invoice = await updateInvoice(c.env.DB, id, {
-    tien_phong,
-    phi_khac,
-    trang_thai: optionalEnum(body.trang_thai, "trang_thai", STATUSES),
-    tong_tien: tongTien({ ...current, tien_phong, phi_khac }),
+    rent_amount,
+    other_fees,
+    status: optionalEnum(body.status, "status", STATUSES),
+    total: tongTien({ ...current, rent_amount, other_fees }),
   });
 
   return ok(c, { invoice }, "Invoice updated.");
@@ -196,19 +196,19 @@ invoiceRoutes.post("/:id/payments", async (c) => {
 
   const invoice = await getInvoice(c.env.DB, invoiceId);
   if (!invoice) return notFound(c, "Invoice not found.");
-  if (invoice.trang_thai === "huy") {
-    return failure(c, "hoa_don_da_huy", "This invoice is cancelled.", 409);
+  if (invoice.status === "CANCELLED") {
+    return failure(c, "INVOICE_CANCELLED", "This invoice is cancelled.", 409);
   }
 
   const payment = await createPayment(c.env.DB, {
     invoice_id: invoiceId,
-    so_tien: requireInt(body.so_tien, "so_tien"),
-    ngay_tt: body.ngay_tt === undefined ? homNay() : requireDate(body.ngay_tt, "ngay_tt"),
-    phuong_thuc:
-      body.phuong_thuc === undefined
-        ? "chuyen_khoan"
-        : requireEnum(body.phuong_thuc, "phuong_thuc", METHODS),
-    ghi_chu: optionalString(body.ghi_chu, "ghi_chu", 200),
+    amount: requireInt(body.amount, "amount"),
+    paid_on: body.paid_on === undefined ? homNay() : requireDate(body.paid_on, "paid_on"),
+    method:
+      body.method === undefined
+        ? "BANK_TRANSFER"
+        : requireEnum(body.method, "method", METHODS),
+    note: optionalString(body.note, "note", 200),
   });
 
   const updated = await capNhatTrangThai(c.env.DB, invoiceId);

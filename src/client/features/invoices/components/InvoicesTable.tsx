@@ -31,15 +31,15 @@ export function InvoicesTable({
         <Table.Tbody>
           {hoaDon.map((invoice) => (
             <Table.Tr key={invoice.id}>
-              <Table.Td>{invoice.ma_hoa_don}</Table.Td>
-              <Table.Td fw={500}>{invoice.ten_phong}</Table.Td>
-              <Table.Td>{tien(invoice.tien_phong)}</Table.Td>
-              <Table.Td>{tien(invoice.tien_dien)}</Table.Td>
-              <Table.Td>{tien(invoice.tien_nuoc)}</Table.Td>
-              <Table.Td>{tien(invoice.phi_khac)}</Table.Td>
-              <Table.Td fw={600}>{tien(invoice.tong_tien)}</Table.Td>
+              <Table.Td>{invoice.invoice_code}</Table.Td>
+              <Table.Td fw={500}>{invoice.room_name}</Table.Td>
+              <Table.Td>{tien(invoice.rent_amount)}</Table.Td>
+              <Table.Td>{tien(invoice.electricity_amount)}</Table.Td>
+              <Table.Td>{tien(invoice.water_amount)}</Table.Td>
+              <Table.Td>{tien(invoice.other_fees)}</Table.Td>
+              <Table.Td fw={600}>{tien(invoice.total)}</Table.Td>
               <Table.Td>
-                <StatusBadge value={invoice.trang_thai} />
+                <StatusBadge value={invoice.status} />
               </Table.Td>
               <Table.Td>
                 <Button size="xs" variant="light" component={Link} to={`/invoices/${invoice.id}`}>

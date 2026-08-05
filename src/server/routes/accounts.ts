@@ -15,7 +15,7 @@ import { failure, notFound, ok } from "../envelope";
 import type { AppEnv, Role } from "../types";
 import { fail, jsonBody, parseId, requireEnum, requireId, requireString } from "../validate";
 
-const ROLES: readonly Role[] = ["quan_ly", "nguoi_thue"];
+const ROLES: readonly Role[] = ["MANAGER", "TENANT"];
 
 /**
  * Account management for the manager.
@@ -30,8 +30,8 @@ export const accountRoutes = new Hono<AppEnv>();
 /** Uses the supplied password, or generates a strong one when none is given. */
 function chonMatKhau(value: unknown): string {
   if (value === undefined || value === null || value === "") return sinhMatKhau();
-  if (typeof value !== "string") fail("invalid_password");
-  if (value.length < DO_DAI_TOI_THIEU) fail("password_qua_ngan");
+  if (typeof value !== "string") fail("INVALID_PASSWORD");
+  if (value.length < DO_DAI_TOI_THIEU) fail("PASSWORD_TOO_SHORT");
   return value;
 }
 
@@ -42,14 +42,14 @@ accountRoutes.get("/", async (c) =>
 accountRoutes.post("/", async (c) => {
   const body = await jsonBody(c.req);
 
-  const vaiTro = requireEnum(body.vai_tro, "vai_tro", ROLES);
-  const roomId = vaiTro === "quan_ly" ? null : requireId(body.room_id, "room_id");
+  const vaiTro = requireEnum(body.role, "role", ROLES);
+  const roomId = vaiTro === "MANAGER" ? null : requireId(body.room_id, "room_id");
   const password = chonMatKhau(body.password);
 
   const account = await createAccount(c.env.DB, {
     username: requireString(body.username, "username", 50),
     password_hash: await hashPassword(password),
-    vai_tro: vaiTro,
+    role: vaiTro,
     room_id: roomId,
   });
 
@@ -93,10 +93,10 @@ accountRoutes.delete("/:id", async (c) => {
 
   // Two ways to lock everyone out of the app; both refused.
   if (id === c.get("user").id) {
-    return failure(c, "khong_tu_xoa", "You cannot delete the account you are signed in as.", 409);
+    return failure(c, "CANNOT_DELETE_SELF", "You cannot delete the account you are signed in as.", 409);
   }
-  if (account.vai_tro === "quan_ly" && (await countManagers(c.env.DB)) <= 1) {
-    return failure(c, "phai_con_mot_quan_ly", "At least one manager account must remain.", 409);
+  if (account.role === "MANAGER" && (await countManagers(c.env.DB)) <= 1) {
+    return failure(c, "LAST_MANAGER_REQUIRED", "At least one manager account must remain.", 409);
   }
 
   await deleteAccount(c.env.DB, id);

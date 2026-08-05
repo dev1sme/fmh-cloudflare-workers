@@ -10,7 +10,7 @@ import {
   listReadings,
   updateReading,
 } from "../db/readings";
-import { homNay } from "../domain/ky";
+import { homNay } from "../domain/period";
 import { failure, notFound, ok } from "../envelope";
 import type { AppEnv } from "../types";
 import {
@@ -22,15 +22,15 @@ import {
   queryId,
   requireId,
   requireInt,
-  requireKy,
-  optionalKy,
+  requirePeriod,
+  optionalPeriod,
 } from "../validate";
 
 export const readingRoutes = new Hono<AppEnv>();
 
 readingRoutes.get("/", async (c) => {
   const readings = await listReadings(c.env.DB, {
-    ky: optionalKy(c.req.query("ky")),
+    period: optionalPeriod(c.req.query("period")),
     room_id: queryId(c.req.query("room_id"), "room_id"),
   });
 
@@ -43,19 +43,19 @@ readingRoutes.get("/", async (c) => {
  */
 readingRoutes.get("/suggest", async (c) => {
   const roomId = queryId(c.req.query("room_id"), "room_id");
-  const ky = optionalKy(c.req.query("ky"));
-  if (roomId === undefined || ky === undefined) fail("missing_room_id_hoac_ky");
+  const period = optionalPeriod(c.req.query("period"));
+  if (roomId === undefined || period === undefined) fail("MISSING_ROOM_ID_OR_PERIOD");
 
-  const previous = await getPreviousReading(c.env.DB, roomId, ky);
+  const previous = await getPreviousReading(c.env.DB, roomId, period);
 
   return ok(
     c,
     {
-      ky,
+      period,
       room_id: roomId,
-      dien_cu: previous?.dien_moi ?? 0,
-      nuoc_cu: previous?.nuoc_moi ?? 0,
-      ky_truoc: previous?.ky ?? null,
+      electricity_start: previous?.electricity_end ?? 0,
+      water_start: previous?.water_end ?? 0,
+      previous_period: previous?.period ?? null,
     },
     "Opening numbers suggested.",
   );
@@ -69,39 +69,39 @@ readingRoutes.get("/:id", async (c) => {
 });
 
 /**
- * `dien_cu` / `nuoc_cu` may be omitted — they are carried over from the previous
+ * `electricity_start` / `water_start` may be omitted — they are carried over from the previous
  * period's closing numbers, which is the normal case when recording a month.
  */
 readingRoutes.post("/", async (c) => {
   const body = await jsonBody(c.req);
 
   const roomId = requireId(body.room_id, "room_id");
-  const ky = requireKy(body.ky);
+  const period = requirePeriod(body.period);
 
   if (!(await getRoom(c.env.DB, roomId))) {
-    return failure(c, "phong_khong_ton_tai", "Room not found.", 404);
+    return failure(c, "ROOM_NOT_FOUND", "Room not found.", 404);
   }
-  if (await getReadingByRoomKy(c.env.DB, roomId, ky)) {
-    return failure(c, "da_co_chi_so_ky_nay", "This room already has a reading for the period.", 409);
+  if (await getReadingByRoomKy(c.env.DB, roomId, period)) {
+    return failure(c, "READING_ALREADY_EXISTS", "This room already has a reading for the period.", 409);
   }
 
-  const previous = await getPreviousReading(c.env.DB, roomId, ky);
-  const dien_cu = optionalInt(body.dien_cu, "dien_cu") ?? previous?.dien_moi ?? 0;
-  const nuoc_cu = optionalInt(body.nuoc_cu, "nuoc_cu") ?? previous?.nuoc_moi ?? 0;
-  const dien_moi = requireInt(body.dien_moi, "dien_moi");
-  const nuoc_moi = requireInt(body.nuoc_moi, "nuoc_moi");
+  const previous = await getPreviousReading(c.env.DB, roomId, period);
+  const electricity_start = optionalInt(body.electricity_start, "electricity_start") ?? previous?.electricity_end ?? 0;
+  const water_start = optionalInt(body.water_start, "water_start") ?? previous?.water_end ?? 0;
+  const electricity_end = requireInt(body.electricity_end, "electricity_end");
+  const water_end = requireInt(body.water_end, "water_end");
 
-  if (dien_moi < dien_cu) fail("dien_moi_nho_hon_dien_cu");
-  if (nuoc_moi < nuoc_cu) fail("nuoc_moi_nho_hon_nuoc_cu");
+  if (electricity_end < electricity_start) fail("ELECTRICITY_END_BELOW_START");
+  if (water_end < water_start) fail("WATER_END_BELOW_START");
 
   const reading = await createReading(c.env.DB, {
     room_id: roomId,
-    ky,
-    dien_cu,
-    dien_moi,
-    nuoc_cu,
-    nuoc_moi,
-    ngay_ghi: optionalDate(body.ngay_ghi, "ngay_ghi") ?? homNay(),
+    period,
+    electricity_start,
+    electricity_end,
+    water_start,
+    water_end,
+    recorded_on: optionalDate(body.recorded_on, "recorded_on") ?? homNay(),
   });
 
   return ok(c, { reading }, "Reading recorded.", 201);
@@ -115,18 +115,18 @@ readingRoutes.patch("/:id", async (c) => {
   if (!current) return notFound(c, "Reading not found.");
 
   const next = {
-    dien_cu: optionalInt(body.dien_cu, "dien_cu") ?? current.dien_cu,
-    dien_moi: optionalInt(body.dien_moi, "dien_moi") ?? current.dien_moi,
-    nuoc_cu: optionalInt(body.nuoc_cu, "nuoc_cu") ?? current.nuoc_cu,
-    nuoc_moi: optionalInt(body.nuoc_moi, "nuoc_moi") ?? current.nuoc_moi,
+    electricity_start: optionalInt(body.electricity_start, "electricity_start") ?? current.electricity_start,
+    electricity_end: optionalInt(body.electricity_end, "electricity_end") ?? current.electricity_end,
+    water_start: optionalInt(body.water_start, "water_start") ?? current.water_start,
+    water_end: optionalInt(body.water_end, "water_end") ?? current.water_end,
   };
 
-  if (next.dien_moi < next.dien_cu) fail("dien_moi_nho_hon_dien_cu");
-  if (next.nuoc_moi < next.nuoc_cu) fail("nuoc_moi_nho_hon_nuoc_cu");
+  if (next.electricity_end < next.electricity_start) fail("ELECTRICITY_END_BELOW_START");
+  if (next.water_end < next.water_start) fail("WATER_END_BELOW_START");
 
   const reading = await updateReading(c.env.DB, id, {
     ...next,
-    ngay_ghi: body.ngay_ghi === undefined ? undefined : (optionalDate(body.ngay_ghi, "ngay_ghi") ?? undefined),
+    recorded_on: body.recorded_on === undefined ? undefined : (optionalDate(body.recorded_on, "recorded_on") ?? undefined),
   });
 
   return ok(c, { reading }, "Reading updated.");

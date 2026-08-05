@@ -6,17 +6,17 @@ import { baoLoi, baoThanhCong } from "../../errors";
 import { useResource } from "../../hooks/useResource";
 
 export type ChiSoNhap = {
-  dien_cu: number;
-  dien_moi: number;
-  nuoc_cu: number;
-  nuoc_moi: number;
-  ngay_ghi: string;
+  electricity_start: number;
+  electricity_end: number;
+  water_start: number;
+  water_end: number;
+  recorded_on: string;
 };
 
 /** Rooms for the period, each with its reading when one has been recorded. */
-export function useReadingsTheoKy(ky: string) {
+export function useReadingsTheoKy(period: string) {
   const phong = useResource(() => roomsApi.list(), []);
-  const chiSo = useResource(() => readingsApi.list({ ky }), [ky]);
+  const chiSo = useResource(() => readingsApi.list({ period }), [period]);
 
   const theoPhong = new Map<number, ReadingDetail>(
     chiSo.data?.readings.map((reading) => [reading.room_id, reading]),
@@ -31,14 +31,14 @@ export function useReadingsTheoKy(ky: string) {
   };
 }
 
-export function useThaoTacChiSo(ky: string, reload: () => void) {
+export function useThaoTacChiSo(period: string, reload: () => void) {
   /**
    * Opening numbers carried over from the previous period.
    *
    * Memoised because ReadingModal calls it from an effect — an unstable
    * reference would re-run that effect on every render.
    */
-  const goiY = useCallback((roomId: number) => readingsApi.suggest(roomId, ky), [ky]);
+  const goiY = useCallback((roomId: number) => readingsApi.suggest(roomId, period), [period]);
 
   async function luu(
     target: { roomId: number; readingId: number | null },
@@ -46,7 +46,7 @@ export function useThaoTacChiSo(ky: string, reload: () => void) {
   ): Promise<boolean> {
     try {
       if (target.readingId === null) {
-        await readingsApi.create({ room_id: target.roomId, ky, ...input });
+        await readingsApi.create({ room_id: target.roomId, period, ...input });
       } else {
         await readingsApi.update(target.readingId, input);
       }

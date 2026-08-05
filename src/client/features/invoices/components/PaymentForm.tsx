@@ -13,7 +13,7 @@ export function PaymentForm({
 }) {
   const [soTien, setSoTien] = useState<number | string>(conLai);
   const [ngayTt, setNgayTt] = useState(homNay());
-  const [phuongThuc, setPhuongThuc] = useState<string | null>("chuyen_khoan");
+  const [phuongThuc, setPhuongThuc] = useState<string | null>("BANK_TRANSFER");
   const [ghiChu, setGhiChu] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -24,10 +24,10 @@ export function PaymentForm({
     setBusy(true);
 
     const ok = await onSubmit({
-      so_tien: Number(soTien),
-      ngay_tt: ngayTt,
-      phuong_thuc: phuongThuc ?? "chuyen_khoan",
-      ghi_chu: ghiChu || null,
+      amount: Number(soTien),
+      paid_on: ngayTt,
+      method: phuongThuc ?? "BANK_TRANSFER",
+      note: ghiChu || null,
     });
 
     setBusy(false);
@@ -58,8 +58,8 @@ export function PaymentForm({
         value={phuongThuc}
         onChange={setPhuongThuc}
         data={[
-          { value: "chuyen_khoan", label: "Chuyển khoản" },
-          { value: "tien_mat", label: "Tiền mặt" },
+          { value: "BANK_TRANSFER", label: "Chuyển khoản" },
+          { value: "CASH", label: "Tiền mặt" },
         ]}
         w={160}
       />

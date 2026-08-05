@@ -45,15 +45,15 @@ export function MomoCard({ momo, xemTruoc = false }: { momo: MomoInfo; xemTruoc?
           )}
         </div>
 
-        <Dong label="Số điện thoại" value={momo.sdt} />
-        {momo.ten && <Dong label="Người nhận" value={momo.ten} />}
-        <Dong label="Số tiền" value={tien(momo.so_tien)} />
-        <Dong label="Nội dung" value={momo.noi_dung} />
+        <Dong label="Số điện thoại" value={momo.phone} />
+        {momo.name && <Dong label="Người nhận" value={momo.name} />}
+        <Dong label="Số tiền" value={tien(momo.amount)} />
+        <Dong label="Nội dung" value={momo.transfer_note} />
 
         {!xemTruoc && (
           <Text size="xs" c="dimmed" mt="xs">
             Mở app MoMo, chọn Chuyển tiền tới số điện thoại trên, ghi nội dung{" "}
-            <b>{momo.noi_dung}</b>.
+            <b>{momo.transfer_note}</b>.
           </Text>
         )}
       </Stack>

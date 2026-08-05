@@ -1,5 +1,5 @@
 import type {
-  ChuyenKhoan,
+  BankTransfer,
   Invoice,
   InvoiceDetail,
   InvoiceStatus,
@@ -11,22 +11,22 @@ import { getReadingByRoomKy } from "./readings";
 import { listPayments, sumPayments } from "./payments";
 import { buildSet, Where } from "./sql";
 
-const COLUMNS = `id, room_id, ky, tien_phong, tien_dien, tien_nuoc, phi_khac,
-                 don_gia_dien, don_gia_nuoc, tong_tien, trang_thai, ngay_tao`;
+const COLUMNS = `id, room_id, period, rent_amount, electricity_amount, water_amount, other_fees,
+                 electricity_rate, water_rate, total, status, created_at`;
 
 const WITH_ROOM_SELECT = `
-  SELECT i.id, i.room_id, i.ky, i.tien_phong, i.tien_dien, i.tien_nuoc, i.phi_khac,
-         i.don_gia_dien, i.don_gia_nuoc, i.tong_tien, i.trang_thai, i.ngay_tao,
-         r.ten_phong
+  SELECT i.id, i.room_id, i.period, i.rent_amount, i.electricity_amount, i.water_amount, i.other_fees,
+         i.electricity_rate, i.water_rate, i.total, i.status, i.created_at,
+         r.room_name
   FROM invoices i
   JOIN rooms r ON r.id = i.room_id
 `;
 
 /** Same row, plus the bank details the VietQR code is built from. */
 const DETAIL_SELECT = `
-  SELECT i.id, i.room_id, i.ky, i.tien_phong, i.tien_dien, i.tien_nuoc, i.phi_khac,
-         i.don_gia_dien, i.don_gia_nuoc, i.tong_tien, i.trang_thai, i.ngay_tao,
-         r.ten_phong, b.bank_bin, b.bank_so_tk, b.bank_chu_tk, b.momo_sdt, b.momo_ten
+  SELECT i.id, i.room_id, i.period, i.rent_amount, i.electricity_amount, i.water_amount, i.other_fees,
+         i.electricity_rate, i.water_rate, i.total, i.status, i.created_at,
+         r.room_name, b.bank_bin, b.bank_account_no, b.bank_account_name, b.momo_phone, b.momo_name
   FROM invoices i
   JOIN rooms r ON r.id = i.room_id
   JOIN buildings b ON b.id = r.building_id
@@ -34,19 +34,19 @@ const DETAIL_SELECT = `
 
 export async function listInvoices(
   db: D1Database,
-  filters: { ky?: string; room_id?: number; trang_thai?: InvoiceStatus } = {},
+  filters: { period?: string; room_id?: number; status?: InvoiceStatus } = {},
 ): Promise<InvoiceWithRoom[]> {
   const where = new Where()
-    .add("i.ky = ?", filters.ky)
+    .add("i.period = ?", filters.period)
     .add("i.room_id = ?", filters.room_id)
-    .add("i.trang_thai = ?", filters.trang_thai);
+    .add("i.status = ?", filters.status);
 
   const { results } = await db
-    .prepare(`${WITH_ROOM_SELECT}${where.clause()} ORDER BY i.ky DESC, r.ten_phong`)
+    .prepare(`${WITH_ROOM_SELECT}${where.clause()} ORDER BY i.period DESC, r.room_name`)
     .bind(...where.bindings())
-    .all<Omit<InvoiceWithRoom, "ma_hoa_don">>();
+    .all<Omit<InvoiceWithRoom, "invoice_code">>();
 
-  return results.map((row) => ({ ...row, ma_hoa_don: maHoaDon(row.id) }));
+  return results.map((row) => ({ ...row, invoice_code: maHoaDon(row.id) }));
 }
 
 export function getInvoice(db: D1Database, id: number): Promise<Invoice | null> {
@@ -56,11 +56,11 @@ export function getInvoice(db: D1Database, id: number): Promise<Invoice | null> 
 export function getInvoiceByRoomKy(
   db: D1Database,
   roomId: number,
-  ky: string,
+  period: string,
 ): Promise<Invoice | null> {
   return db
-    .prepare(`SELECT ${COLUMNS} FROM invoices WHERE room_id = ? AND ky = ?`)
-    .bind(roomId, ky)
+    .prepare(`SELECT ${COLUMNS} FROM invoices WHERE room_id = ? AND period = ?`)
+    .bind(roomId, period)
     .first<Invoice>();
 }
 
@@ -69,48 +69,48 @@ export async function getInvoiceDetail(
   db: D1Database,
   id: number,
 ): Promise<InvoiceDetail | null> {
-  type DetailRow = Omit<InvoiceWithRoom, "ma_hoa_don"> & {
+  type DetailRow = Omit<InvoiceWithRoom, "invoice_code"> & {
     bank_bin: string | null;
-    bank_so_tk: string | null;
-    bank_chu_tk: string | null;
-    momo_sdt: string | null;
-    momo_ten: string | null;
+    bank_account_no: string | null;
+    bank_account_name: string | null;
+    momo_phone: string | null;
+    momo_name: string | null;
   };
 
   const row = await db.prepare(`${DETAIL_SELECT} WHERE i.id = ?`).bind(id).first<DetailRow>();
   if (!row) return null;
 
   const [reading, payments, daThu] = await Promise.all([
-    getReadingByRoomKy(db, row.room_id, row.ky),
+    getReadingByRoomKy(db, row.room_id, row.period),
     listPayments(db, id),
     sumPayments(db, id),
   ]);
 
-  const { bank_bin, bank_so_tk, bank_chu_tk, momo_sdt, momo_ten, ...invoice } = row;
-  const conLai = row.tong_tien - daThu;
+  const { bank_bin, bank_account_no, bank_account_name, momo_phone, momo_name, ...invoice } = row;
+  const conLai = row.total - daThu;
   const maHd = maHoaDon(row.id);
-  const conNo = conLai > 0 && row.trang_thai !== "huy";
+  const conNo = conLai > 0 && row.status !== "CANCELLED";
 
   return {
     ...invoice,
-    ma_hoa_don: maHd,
+    invoice_code: maHd,
     reading,
     payments,
-    da_thu: daThu,
-    con_lai: conLai,
-    chuyen_khoan: taoChuyenKhoan(
-      { bank_bin, bank_so_tk, bank_chu_tk },
+    paid: daThu,
+    outstanding: conLai,
+    bank_transfer: taoChuyenKhoan(
+      { bank_bin, bank_account_no, bank_account_name },
       conLai,
       maHd,
-      row.trang_thai,
+      row.status,
     ),
     momo:
-      conNo && momo_sdt
+      conNo && momo_phone
         ? {
-            sdt: momo_sdt,
-            ten: momo_ten,
-            so_tien: conLai,
-            noi_dung: chuanHoaNoiDung(maHd),
+            phone: momo_phone,
+            name: momo_name,
+            amount: conLai,
+            transfer_note: chuanHoaNoiDung(maHd),
           }
         : null,
   };
@@ -118,12 +118,12 @@ export async function getInvoiceDetail(
 
 /** No QR for a cancelled or fully paid invoice, or an unconfigured building. */
 function taoChuyenKhoan(
-  bank: { bank_bin: string | null; bank_so_tk: string | null; bank_chu_tk: string | null },
+  bank: { bank_bin: string | null; bank_account_no: string | null; bank_account_name: string | null },
   conLai: number,
   maHoaDonStr: string,
   trangThai: InvoiceStatus,
-): ChuyenKhoan | null {
-  if (conLai <= 0 || trangThai === "huy") return null;
+): BankTransfer | null {
+  if (conLai <= 0 || trangThai === "CANCELLED") return null;
 
   const nganHang = nganHangHopLe(bank);
   if (!nganHang) return null;
@@ -133,10 +133,10 @@ function taoChuyenKhoan(
   return {
     vietqr: taoVietQR({ nganHang, soTien: conLai, noiDung }),
     bank_bin: nganHang.bank_bin,
-    bank_so_tk: nganHang.bank_so_tk,
-    bank_chu_tk: nganHang.bank_chu_tk,
-    noi_dung: noiDung,
-    so_tien: conLai,
+    bank_account_no: nganHang.bank_account_no,
+    bank_account_name: nganHang.bank_account_name,
+    transfer_note: noiDung,
+    amount: conLai,
   };
 }
 
@@ -146,22 +146,22 @@ function taoChuyenKhoan(
  */
 export type GenerationCandidate = {
   room_id: number;
-  ten_phong: string;
+  room_name: string;
   building_id: number;
   building_name: string;
-  gia_phong: number;
-  don_gia_dien: number;
-  don_gia_nuoc: number;
-  dien_cu: number | null;
-  dien_moi: number | null;
-  nuoc_cu: number | null;
-  nuoc_moi: number | null;
+  rent: number;
+  electricity_rate: number;
+  water_rate: number;
+  electricity_start: number | null;
+  electricity_end: number | null;
+  water_start: number | null;
+  water_end: number | null;
   invoice_id: number | null;
 };
 
 export async function listGenerationCandidates(
   db: D1Database,
-  ky: string,
+  period: string,
   roomIds?: number[],
 ): Promise<GenerationCandidate[]> {
   // Undefined means every room; an explicit empty selection means none. Falling
@@ -172,18 +172,18 @@ export async function listGenerationCandidates(
 
   const { results } = await db
     .prepare(
-      `SELECT r.id AS room_id, r.ten_phong, r.building_id, b.name AS building_name,
-              r.gia_phong, b.don_gia_dien, b.don_gia_nuoc,
-              rd.dien_cu, rd.dien_moi, rd.nuoc_cu, rd.nuoc_moi,
+      `SELECT r.id AS room_id, r.room_name, r.building_id, b.name AS building_name,
+              r.rent, b.electricity_rate, b.water_rate,
+              rd.electricity_start, rd.electricity_end, rd.water_start, rd.water_end,
               inv.id AS invoice_id
        FROM rooms r
        JOIN buildings b ON b.id = r.building_id
-       LEFT JOIN readings rd ON rd.room_id = r.id AND rd.ky = ?
-       LEFT JOIN invoices inv ON inv.room_id = r.id AND inv.ky = ?
+       LEFT JOIN readings rd ON rd.room_id = r.id AND rd.period = ?
+       LEFT JOIN invoices inv ON inv.room_id = r.id AND inv.period = ?
        ${filter}
-       ORDER BY b.name, r.ten_phong`,
+       ORDER BY b.name, r.room_name`,
     )
-    .bind(ky, ky, ...(roomIds ?? []))
+    .bind(period, period, ...(roomIds ?? []))
     .all<GenerationCandidate>();
 
   return results;
@@ -200,23 +200,23 @@ export async function createInvoices(
   const statements = inputs.map((input) =>
     db
       .prepare(
-        `INSERT INTO invoices (room_id, ky, tien_phong, tien_dien, tien_nuoc, phi_khac,
-                               don_gia_dien, don_gia_nuoc, tong_tien, trang_thai, ngay_tao)
+        `INSERT INTO invoices (room_id, period, rent_amount, electricity_amount, water_amount, other_fees,
+                               electricity_rate, water_rate, total, status, created_at)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
          RETURNING ${COLUMNS}`,
       )
       .bind(
         input.room_id,
-        input.ky,
-        input.tien_phong,
-        input.tien_dien,
-        input.tien_nuoc,
-        input.phi_khac,
-        input.don_gia_dien,
-        input.don_gia_nuoc,
-        input.tong_tien,
-        input.trang_thai,
-        input.ngay_tao,
+        input.period,
+        input.rent_amount,
+        input.electricity_amount,
+        input.water_amount,
+        input.other_fees,
+        input.electricity_rate,
+        input.water_rate,
+        input.total,
+        input.status,
+        input.created_at,
       ),
   );
 
@@ -227,10 +227,10 @@ export async function createInvoices(
 }
 
 export type InvoicePatch = {
-  tien_phong?: number;
-  phi_khac?: number;
-  trang_thai?: InvoiceStatus;
-  tong_tien?: number;
+  rent_amount?: number;
+  other_fees?: number;
+  status?: InvoiceStatus;
+  total?: number;
 };
 
 export async function updateInvoice(

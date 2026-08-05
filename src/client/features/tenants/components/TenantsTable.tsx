@@ -33,16 +33,16 @@ export function TenantsTable({
         </Table.Thead>
         <Table.Tbody>
           {nguoiThue.map((tenant) => {
-            const dangThue = tenant.ngay_ra === null;
+            const dangThue = tenant.moved_out === null;
 
             return (
               <Table.Tr key={tenant.id}>
-                <Table.Td fw={500}>{tenant.ten_phong}</Table.Td>
-                <Table.Td>{tenant.ho_ten}</Table.Td>
-                <Table.Td>{tenant.sdt ?? "—"}</Table.Td>
-                <Table.Td>{tenant.so_nguoi} người</Table.Td>
-                <Table.Td>{ngay(tenant.ngay_vao)}</Table.Td>
-                <Table.Td>{ngay(tenant.ngay_ra)}</Table.Td>
+                <Table.Td fw={500}>{tenant.room_name}</Table.Td>
+                <Table.Td>{tenant.full_name}</Table.Td>
+                <Table.Td>{tenant.phone ?? "—"}</Table.Td>
+                <Table.Td>{tenant.occupants} người</Table.Td>
+                <Table.Td>{ngay(tenant.moved_in)}</Table.Td>
+                <Table.Td>{ngay(tenant.moved_out)}</Table.Td>
                 <Table.Td>
                   <Badge color={dangThue ? "teal" : "gray"} variant="light">
                     {dangThue ? "Đang thuê" : "Đã chuyển đi"}

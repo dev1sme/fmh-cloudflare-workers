@@ -39,6 +39,6 @@ These are the ones that cost money, break production, or leak data when broken. 
 - **The VietQR payload is built in-house.** Never route it through `img.vietqr.io` or any QR image service — that hands a third party who owes how much. → `payments.md`
 - **Handlers never call `c.json` directly.** Go through `ok` / `failure` / `notFound` in `src/server/envelope.ts`. → `api.md`
 - **Never pass a request body into `buildSet`.** Column names come from a fixed allowlist at each call site; `...body` would be an injection hole. → `api.md`
-- **Error codes are the API contract.** `errors.ts` maps them to Vietnamese. Do not reword or re-case them. → `api.md`
+- **Error codes are UPPER_SNAKE and are the API contract.** `failure()` and `fail()` throw on anything else. `errors.ts` maps them to Vietnamese. Do not reword or re-case them. → `api.md`
 - **`d1_database_query` hits the REMOTE database.** Reads are fine; any write needs explicit approval first. → `mcp-servers.md`
 - **`npx` does not work here** — a shell hook rewrites it to `npm`. Use an npm script or `./node_modules/.bin/<bin>`. → `commands.md`

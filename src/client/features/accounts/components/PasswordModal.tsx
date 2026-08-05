@@ -26,7 +26,7 @@ export function PasswordModal({
       <Stack>
         <Text size="sm">
           Tài khoản <b>{ketQua?.account.username}</b>
-          {ketQua?.account.ten_phong ? ` — phòng ${ketQua.account.ten_phong}` : " — quản lý"}
+          {ketQua?.account.room_name ? ` — phòng ${ketQua.account.room_name}` : " — quản lý"}
         </Text>
 
         <Code block fz="lg" ta="center" py="md">

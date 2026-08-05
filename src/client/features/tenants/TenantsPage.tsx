@@ -19,7 +19,7 @@ export function TenantsPage() {
   function hoiChuyenDi(tenant: TenantDetail) {
     xacNhan({
       title: "Ghi nhận chuyển đi",
-      message: `${tenant.ho_ten} đã chuyển khỏi ${tenant.ten_phong}? Phòng sẽ trống từ hôm nay và có thể nhận người mới.`,
+      message: `${tenant.full_name} đã chuyển khỏi ${tenant.room_name}? Phòng sẽ trống từ hôm nay và có thể nhận người mới.`,
       confirmLabel: "Đã chuyển đi",
       color: "orange",
       onConfirm: () => chuyenDi(tenant.id),
@@ -29,7 +29,7 @@ export function TenantsPage() {
   function hoiHuyChuyenDi(tenant: TenantDetail) {
     xacNhan({
       title: "Huỷ chuyển đi",
-      message: `Đưa ${tenant.ho_ten} trở lại thành người đang thuê ${tenant.ten_phong} (đã ghi chuyển đi ngày ${ngay(tenant.ngay_ra)}). Không được nếu phòng đã có người khác.`,
+      message: `Đưa ${tenant.full_name} trở lại thành người đang thuê ${tenant.room_name} (đã ghi chuyển đi ngày ${ngay(tenant.moved_out)}). Không được nếu phòng đã có người khác.`,
       confirmLabel: "Đưa trở lại",
       color: "teal",
       onConfirm: () => huyChuyenDi(tenant.id),
@@ -39,7 +39,7 @@ export function TenantsPage() {
   function hoiXoa(tenant: TenantDetail) {
     xacNhan({
       title: "Xoá bản ghi người thuê",
-      message: `Xoá hẳn ${tenant.ho_ten} khỏi lịch sử ${tenant.ten_phong}. Chỉ dùng khi nhập nhầm — người đã chuyển đi nên giữ lại để tra cứu.`,
+      message: `Xoá hẳn ${tenant.full_name} khỏi lịch sử ${tenant.room_name}. Chỉ dùng khi nhập nhầm — người đã chuyển đi nên giữ lại để tra cứu.`,
       confirmLabel: "Xoá",
       onConfirm: () => xoa(tenant.id),
     });

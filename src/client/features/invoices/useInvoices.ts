@@ -5,13 +5,13 @@ import { invoices as invoicesApi } from "../../api";
 import { baoLoi, baoThanhCong } from "../../errors";
 import { useResource } from "../../hooks/useResource";
 
-export function useInvoicesTheoKy(ky: string) {
-  const { data, loading, error, reload } = useResource(() => invoicesApi.list({ ky }), [ky]);
+export function useInvoicesTheoKy(period: string) {
+  const { data, loading, error, reload } = useResource(() => invoicesApi.list({ period }), [period]);
   const hoaDon = data?.invoices ?? [];
 
   return {
     hoaDon,
-    tongTien: hoaDon.reduce((sum, invoice) => sum + invoice.tong_tien, 0),
+    tongTien: hoaDon.reduce((sum, invoice) => sum + invoice.total, 0),
     loading,
     error,
     reload,
@@ -22,24 +22,24 @@ export function useInvoicesTheoKy(ky: string) {
  * The rooms a generation run would touch, loaded only while the picker is open
  * so closing the modal and changing the period both refetch cleanly.
  */
-export function useXemTruocSinh(ky: string, mo: boolean) {
+export function useXemTruocSinh(period: string, mo: boolean) {
   const { data, loading, error } = useResource(
-    () => (mo ? invoicesApi.preview(ky) : Promise.resolve(null)),
-    [ky, mo],
+    () => (mo ? invoicesApi.preview(period) : Promise.resolve(null)),
+    [period, mo],
   );
 
   // Memoised: the picker seeds its selection from this list in an effect, and a
   // fresh array on every render would loop.
-  const phong = useMemo(() => data?.phong ?? [], [data]);
+  const rooms = useMemo(() => data?.rooms ?? [], [data]);
 
-  return { phong, loading: mo && loading, error };
+  return { rooms, loading: mo && loading, error };
 }
 
 /**
  * Generation for a period, for the rooms the manager picked. `ketQua` holds the
  * last run so the screen can list the rooms that were skipped and why.
  */
-export function useSinhHoaDon(ky: string, reload: () => void) {
+export function useSinhHoaDon(period: string, reload: () => void) {
   const [ketQua, setKetQua] = useState<GenerateResult | null>(null);
   const [dangChay, setDangChay] = useState(false);
 
@@ -47,7 +47,7 @@ export function useSinhHoaDon(ky: string, reload: () => void) {
     setDangChay(true);
 
     try {
-      const result = await invoicesApi.generate(ky, roomIds);
+      const result = await invoicesApi.generate(period, roomIds);
       setKetQua(result);
       baoThanhCong(`Đã sinh ${result.created.length} hóa đơn.`);
       reload();

@@ -30,7 +30,7 @@ export class Where {
     return this;
   }
 
-  /** Condition with no bound value, e.g. `ngay_ra IS NULL`. */
+  /** Condition with no bound value, e.g. `moved_out IS NULL`. */
   addRaw(condition: string, enabled: boolean): this {
     if (enabled) this.conditions.push(condition);
     return this;

@@ -33,8 +33,8 @@ export function BuildingModal({
     const ok = await onSubmit({
       name,
       address: address || null,
-      don_gia_dien: Number(dien),
-      don_gia_nuoc: Number(nuoc),
+      electricity_rate: Number(dien),
+      water_rate: Number(nuoc),
     });
 
     setBusy(false);

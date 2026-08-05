@@ -25,7 +25,7 @@ export function TenantModal({
 
   const [roomId, setRoomId] = useState<string | null>(null);
   const [hoTen, setHoTen] = useState("");
-  const [sdt, setSdt] = useState("");
+  const [phone, setSdt] = useState("");
   const [soNguoi, setSoNguoi] = useState<number | string>(1);
   const [ngayVao, setNgayVao] = useState(homNay());
   const [busy, setBusy] = useState(false);
@@ -35,10 +35,10 @@ export function TenantModal({
 
     if (dangSua) {
       setRoomId(String(dangSua.room_id));
-      setHoTen(dangSua.ho_ten);
-      setSdt(dangSua.sdt ?? "");
-      setSoNguoi(dangSua.so_nguoi);
-      setNgayVao(dangSua.ngay_vao);
+      setHoTen(dangSua.full_name);
+      setSdt(dangSua.phone ?? "");
+      setSoNguoi(dangSua.occupants);
+      setNgayVao(dangSua.moved_in);
       return;
     }
 
@@ -55,17 +55,17 @@ export function TenantModal({
 
     const ok = dangSua
       ? await onUpdate(dangSua.id, {
-          ho_ten: hoTen,
-          sdt: sdt || null,
-          so_nguoi: Number(soNguoi),
-          ngay_vao: ngayVao,
+          full_name: hoTen,
+          phone: phone || null,
+          occupants: Number(soNguoi),
+          moved_in: ngayVao,
         })
       : await onCreate({
           room_id: Number(roomId),
-          ho_ten: hoTen,
-          sdt: sdt || null,
-          so_nguoi: Number(soNguoi),
-          ngay_vao: ngayVao,
+          full_name: hoTen,
+          phone: phone || null,
+          occupants: Number(soNguoi),
+          moved_in: ngayVao,
         });
 
     setBusy(false);
@@ -76,14 +76,14 @@ export function TenantModal({
     <Modal
       opened={target !== null}
       onClose={onClose}
-      title={dangSua ? `Sửa người thuê — ${dangSua.ten_phong}` : "Thêm người thuê"}
+      title={dangSua ? `Sửa người thuê — ${dangSua.room_name}` : "Thêm người thuê"}
     >
       <Stack>
         <Select
           label="Phòng"
           value={roomId}
           onChange={setRoomId}
-          data={phong.map((room) => ({ value: String(room.id), label: room.ten_phong }))}
+          data={phong.map((room) => ({ value: String(room.id), label: room.room_name }))}
           // Moving a tenancy between rooms would rewrite history; add a new one.
           disabled={dangSua !== null}
           allowDeselect={false}
@@ -96,7 +96,7 @@ export function TenantModal({
         />
         <TextInput
           label="Số điện thoại"
-          value={sdt}
+          value={phone}
           onChange={(e) => setSdt(e.currentTarget.value)}
         />
         <NumberInput

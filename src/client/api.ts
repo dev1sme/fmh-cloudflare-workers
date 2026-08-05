@@ -58,7 +58,7 @@ const send = <T>(method: string, path: string, body?: unknown) =>
 export type SessionUser = {
   id: number;
   username: string;
-  vai_tro: "quan_ly" | "nguoi_thue";
+  role: "MANAGER" | "TENANT";
   room_id: number | null;
 };
 
@@ -77,13 +77,13 @@ export const auth = {
 export type BuildingInput = {
   name: string;
   address: string | null;
-  don_gia_dien: number;
-  don_gia_nuoc: number;
+  electricity_rate: number;
+  water_rate: number;
 };
 
 export type AccountInput = {
   username: string;
-  vai_tro: "quan_ly" | "nguoi_thue";
+  role: "MANAGER" | "TENANT";
   room_id: number | null;
   /** Omit to have the server generate a strong one. */
   password?: string;
@@ -106,8 +106,8 @@ export const accounts = {
 };
 
 export const dashboard = {
-  /** Omit `ky` for the current month. */
-  get: (ky?: string) => request<Dashboard>(`/api/dashboard${query({ ky })}`),
+  /** Omit `period` for the current month. */
+  get: (period?: string) => request<Dashboard>(`/api/dashboard${query({ period })}`),
 };
 
 export const buildings = {
@@ -120,9 +120,9 @@ export const buildings = {
 
 export type RoomInput = {
   building_id: number;
-  ten_phong: string;
-  gia_phong: number;
-  dien_tich: number | null;
+  room_name: string;
+  rent: number;
+  area: number | null;
 };
 
 export const rooms = {
@@ -135,15 +135,15 @@ export const rooms = {
 
 export type TenantInput = {
   room_id: number;
-  ho_ten: string;
-  sdt: string | null;
-  so_nguoi: number;
-  ngay_vao: string;
+  full_name: string;
+  phone: string | null;
+  occupants: number;
+  moved_in: string;
 };
 
 export type TenantPatch = Partial<Omit<TenantInput, "room_id">> & {
   /** A date moves them out; null brings them back as the current tenant. */
-  ngay_ra?: string | null;
+  moved_out?: string | null;
 };
 
 export const tenants = {
@@ -157,42 +157,42 @@ export const tenants = {
 
 export type ReadingInput = {
   room_id: number;
-  ky: string;
-  dien_cu?: number;
-  dien_moi: number;
-  nuoc_cu?: number;
-  nuoc_moi: number;
-  ngay_ghi?: string;
+  period: string;
+  electricity_start?: number;
+  electricity_end: number;
+  water_start?: number;
+  water_end: number;
+  recorded_on?: string;
 };
 
 export const readings = {
-  list: (params: { ky?: string; room_id?: number } = {}) =>
+  list: (params: { period?: string; room_id?: number } = {}) =>
     request<{ readings: ReadingDetail[] }>(`/api/readings${query(params)}`),
-  suggest: (roomId: number, ky: string) =>
-    request<{ dien_cu: number; nuoc_cu: number; ky_truoc: string | null }>(
-      `/api/readings/suggest?room_id=${roomId}&ky=${ky}`,
+  suggest: (roomId: number, period: string) =>
+    request<{ electricity_start: number; water_start: number; previous_period: string | null }>(
+      `/api/readings/suggest?room_id=${roomId}&period=${period}`,
     ),
   create: (input: ReadingInput) => send<{ reading: Reading }>("POST", "/api/readings", input),
-  update: (id: number, patch: Partial<Omit<ReadingInput, "room_id" | "ky">>) =>
+  update: (id: number, patch: Partial<Omit<ReadingInput, "room_id" | "period">>) =>
     send<{ reading: Reading }>("PATCH", `/api/readings/${id}`, patch),
   remove: (id: number) => send<{ ok: true }>("DELETE", `/api/readings/${id}`),
 };
 
 export const invoices = {
-  list: (params: { ky?: string; room_id?: number; trang_thai?: string } = {}) =>
+  list: (params: { period?: string; room_id?: number; status?: string } = {}) =>
     request<{ invoices: InvoiceWithRoom[] }>(`/api/invoices${query(params)}`),
   get: (id: number) => request<{ invoice: InvoiceDetail }>(`/api/invoices/${id}`),
   /** What generation would produce for a period. Writes nothing. */
-  preview: (ky: string) => request<GeneratePreview>(`/api/invoices/generate-preview?ky=${ky}`),
+  preview: (period: string) => request<GeneratePreview>(`/api/invoices/generate-preview?period=${period}`),
   /** Omit `roomIds` to bill every room. */
-  generate: (ky: string, roomIds?: number[]) =>
-    send<GenerateResult>("POST", "/api/invoices/generate", { ky, room_ids: roomIds }),
-  update: (id: number, patch: { phi_khac?: number; tien_phong?: number; trang_thai?: string }) =>
+  generate: (period: string, roomIds?: number[]) =>
+    send<GenerateResult>("POST", "/api/invoices/generate", { period, room_ids: roomIds }),
+  update: (id: number, patch: { other_fees?: number; rent_amount?: number; status?: string }) =>
     send<{ invoice: Invoice }>("PATCH", `/api/invoices/${id}`, patch),
   remove: (id: number) => send<{ ok: true }>("DELETE", `/api/invoices/${id}`),
   pay: (
     id: number,
-    input: { so_tien: number; ngay_tt?: string; phuong_thuc?: string; ghi_chu?: string | null },
+    input: { amount: number; paid_on?: string; method?: string; note?: string | null },
   ) => send<{ payment: Payment; invoice: Invoice }>("POST", `/api/invoices/${id}/payments`, input),
   removePayment: (paymentId: number) => send<{ ok: true }>("DELETE", `/api/payments/${paymentId}`),
 };

@@ -10,15 +10,15 @@ import { Consumption } from "./Consumption";
 export type MucTieu = { room: RoomDetail; reading: ReadingDetail | null };
 
 export function ReadingModal({
-  ky,
+  period,
   target,
   goiY,
   onClose,
   onSubmit,
 }: {
-  ky: string;
+  period: string;
   target: MucTieu | null;
-  goiY: (roomId: number) => Promise<{ dien_cu: number; nuoc_cu: number; ky_truoc: string | null }>;
+  goiY: (roomId: number) => Promise<{ electricity_start: number; water_start: number; previous_period: string | null }>;
   onClose: () => void;
   onSubmit: (
     target: { roomId: number; readingId: number | null },
@@ -41,11 +41,11 @@ export function ReadingModal({
     if (!target) return;
 
     if (target.reading) {
-      setDienCu(target.reading.dien_cu);
-      setDienMoi(target.reading.dien_moi);
-      setNuocCu(target.reading.nuoc_cu);
-      setNuocMoi(target.reading.nuoc_moi);
-      setNgayGhi(target.reading.ngay_ghi);
+      setDienCu(target.reading.electricity_start);
+      setDienMoi(target.reading.electricity_end);
+      setNuocCu(target.reading.water_start);
+      setNuocMoi(target.reading.water_end);
+      setNgayGhi(target.reading.recorded_on);
       setGhiChuGoiY(null);
       return;
     }
@@ -56,11 +56,11 @@ export function ReadingModal({
 
     goiY(target.room.id)
       .then((suggestion) => {
-        setDienCu(suggestion.dien_cu);
-        setNuocCu(suggestion.nuoc_cu);
+        setDienCu(suggestion.electricity_start);
+        setNuocCu(suggestion.water_start);
         setGhiChuGoiY(
-          suggestion.ky_truoc
-            ? `Chỉ số đầu kỳ lấy từ kỳ ${suggestion.ky_truoc}.`
+          suggestion.previous_period
+            ? `Chỉ số đầu kỳ lấy từ kỳ ${suggestion.previous_period}.`
             : "Chưa có kỳ trước, chỉ số đầu kỳ mặc định 0.",
         );
       })
@@ -74,11 +74,11 @@ export function ReadingModal({
     const ok = await onSubmit(
       { roomId: target.room.id, readingId: target.reading?.id ?? null },
       {
-        dien_cu: Number(dienCu),
-        dien_moi: Number(dienMoi),
-        nuoc_cu: Number(nuocCu),
-        nuoc_moi: Number(nuocMoi),
-        ngay_ghi: ngayGhi,
+        electricity_start: Number(dienCu),
+        electricity_end: Number(dienMoi),
+        water_start: Number(nuocCu),
+        water_end: Number(nuocMoi),
+        recorded_on: ngayGhi,
       },
     );
 
@@ -90,7 +90,7 @@ export function ReadingModal({
     <Modal
       opened={target !== null}
       onClose={onClose}
-      title={`Chỉ số ${target?.room.ten_phong ?? ""} — kỳ ${ky}`}
+      title={`Chỉ số ${target?.room.room_name ?? ""} — kỳ ${period}`}
     >
       <Stack>
         {ghiChuGoiY && (

@@ -15,7 +15,7 @@ export function MoveInModal({
   onSubmit: (roomId: number, input: NguoiThueMoi) => Promise<boolean>;
 }) {
   const [hoTen, setHoTen] = useState("");
-  const [sdt, setSdt] = useState("");
+  const [phone, setSdt] = useState("");
   const [soNguoi, setSoNguoi] = useState<number | string>(1);
   const [ngayVao, setNgayVao] = useState(homNay());
   const [busy, setBusy] = useState(false);
@@ -33,10 +33,10 @@ export function MoveInModal({
     setBusy(true);
 
     const ok = await onSubmit(room.id, {
-      ho_ten: hoTen,
-      sdt,
-      so_nguoi: Number(soNguoi),
-      ngay_vao: ngayVao,
+      full_name: hoTen,
+      phone,
+      occupants: Number(soNguoi),
+      moved_in: ngayVao,
     });
 
     setBusy(false);
@@ -44,7 +44,7 @@ export function MoveInModal({
   }
 
   return (
-    <Modal opened={room !== null} onClose={onClose} title={`Thêm người thuê — ${room?.ten_phong}`}>
+    <Modal opened={room !== null} onClose={onClose} title={`Thêm người thuê — ${room?.room_name}`}>
       <Stack>
         <TextInput
           label="Họ tên"
@@ -54,7 +54,7 @@ export function MoveInModal({
         />
         <TextInput
           label="Số điện thoại"
-          value={sdt}
+          value={phone}
           onChange={(e) => setSdt(e.currentTarget.value)}
         />
         <NumberInput

@@ -3,32 +3,32 @@ import { buildSet } from "./sql";
 
 type RoomDetailRow = Room & {
   building_name: string;
-  don_gia_dien: number;
-  don_gia_nuoc: number;
+  electricity_rate: number;
+  water_rate: number;
   tenant_id: number | null;
-  tenant_ho_ten: string | null;
-  tenant_sdt: string | null;
-  tenant_so_nguoi: number | null;
-  tenant_ngay_vao: string | null;
+  tenant_full_name: string | null;
+  tenant_phone: string | null;
+  tenant_occupants: number | null;
+  tenant_moved_in: string | null;
 };
 
 const DETAIL_SELECT = `
-  SELECT r.id, r.building_id, r.ten_phong, r.gia_phong, r.dien_tich,
-         b.name AS building_name, b.don_gia_dien, b.don_gia_nuoc,
-         t.id AS tenant_id, t.ho_ten AS tenant_ho_ten, t.sdt AS tenant_sdt,
-         t.so_nguoi AS tenant_so_nguoi, t.ngay_vao AS tenant_ngay_vao
+  SELECT r.id, r.building_id, r.room_name, r.rent, r.area,
+         b.name AS building_name, b.electricity_rate, b.water_rate,
+         t.id AS tenant_id, t.full_name AS tenant_full_name, t.phone AS tenant_phone,
+         t.occupants AS tenant_occupants, t.moved_in AS tenant_moved_in
   FROM rooms r
   JOIN buildings b ON b.id = r.building_id
-  LEFT JOIN tenants t ON t.room_id = r.id AND t.ngay_ra IS NULL
+  LEFT JOIN tenants t ON t.room_id = r.id AND t.moved_out IS NULL
 `;
 
 function toDetail(row: RoomDetailRow): RoomDetail {
   const {
     tenant_id,
-    tenant_ho_ten,
-    tenant_sdt,
-    tenant_so_nguoi,
-    tenant_ngay_vao,
+    tenant_full_name,
+    tenant_phone,
+    tenant_occupants,
+    tenant_moved_in,
     ...room
   } = row;
 
@@ -40,18 +40,18 @@ function toDetail(row: RoomDetailRow): RoomDetail {
         : {
             id: tenant_id,
             room_id: row.id,
-            ho_ten: tenant_ho_ten ?? "",
-            sdt: tenant_sdt,
-            so_nguoi: tenant_so_nguoi ?? 1,
-            ngay_vao: tenant_ngay_vao ?? "",
-            ngay_ra: null,
+            full_name: tenant_full_name ?? "",
+            phone: tenant_phone,
+            occupants: tenant_occupants ?? 1,
+            moved_in: tenant_moved_in ?? "",
+            moved_out: null,
           },
   };
 }
 
 export async function listRooms(db: D1Database): Promise<RoomDetail[]> {
   const { results } = await db
-    .prepare(`${DETAIL_SELECT} ORDER BY b.name, r.ten_phong`)
+    .prepare(`${DETAIL_SELECT} ORDER BY b.name, r.room_name`)
     .all<RoomDetailRow>();
   return results.map(toDetail);
 }
@@ -63,18 +63,18 @@ export async function getRoom(db: D1Database, id: number): Promise<RoomDetail | 
 
 export type RoomInput = {
   building_id: number;
-  ten_phong: string;
-  gia_phong: number;
-  dien_tich: number | null;
+  room_name: string;
+  rent: number;
+  area: number | null;
 };
 
 export async function createRoom(db: D1Database, input: RoomInput): Promise<RoomDetail | null> {
   const row = await db
     .prepare(
-      `INSERT INTO rooms (building_id, ten_phong, gia_phong, dien_tich)
+      `INSERT INTO rooms (building_id, room_name, rent, area)
        VALUES (?, ?, ?, ?) RETURNING id`,
     )
-    .bind(input.building_id, input.ten_phong, input.gia_phong, input.dien_tich)
+    .bind(input.building_id, input.room_name, input.rent, input.area)
     .first<{ id: number }>();
 
   return row ? getRoom(db, row.id) : null;
@@ -82,9 +82,9 @@ export async function createRoom(db: D1Database, input: RoomInput): Promise<Room
 
 export type RoomPatch = {
   building_id?: number;
-  ten_phong?: string;
-  gia_phong?: number;
-  dien_tich?: number | null;
+  room_name?: string;
+  rent?: number;
+  area?: number | null;
 };
 
 export async function updateRoom(

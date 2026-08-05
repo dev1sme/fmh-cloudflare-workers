@@ -1,19 +1,31 @@
 /**
  * Hand-rolled request validation. Every failure throws a ValidationError whose
- * message is a stable code (`missing_ten_phong`, `invalid_ky`, …) that the
- * client maps to Vietnamese text. No schema library, deliberately — the number
- * of shapes here does not justify the dependency.
+ * message is a stable UPPER_SNAKE code (`MISSING_ROOM_NAME`, `INVALID_PERIOD`,
+ * …) that the client maps to Vietnamese text. No schema library, deliberately —
+ * the number of shapes here does not justify the dependency.
  */
 export class ValidationError extends Error {}
 
+const UPPER_SNAKE = /^[A-Z][A-Z0-9]*(_[A-Z0-9]+)*$/;
+
 export function fail(code: string): never {
+  // Codes are the API contract, so a lowercase one is a bug at the call site,
+  // not something to paper over at runtime.
+  if (!UPPER_SNAKE.test(code)) {
+    throw new Error(`Error code must be UPPER_SNAKE, got "${code}"`);
+  }
   throw new ValidationError(code);
 }
 
+/** `room_name` -> `ROOM_NAME`, so generated codes match the convention. */
+function upper(field: string): string {
+  return field.toUpperCase();
+}
+
 export function requireString(value: unknown, field: string, maxLength = 200): string {
-  if (typeof value !== "string" || value.trim() === "") fail(`missing_${field}`);
+  if (typeof value !== "string" || value.trim() === "") fail(`MISSING_${upper(field)}`);
   const trimmed = (value as string).trim();
-  if (trimmed.length > maxLength) fail(`too_long_${field}`);
+  if (trimmed.length > maxLength) fail(`TOO_LONG_${upper(field)}`);
   return trimmed;
 }
 
@@ -24,7 +36,7 @@ export function optionalString(value: unknown, field: string, maxLength = 200): 
 
 /** Non-negative integer — money in VND, or a meter reading. */
 export function requireInt(value: unknown, field: string): number {
-  if (typeof value !== "number" || !Number.isInteger(value) || value < 0) fail(`invalid_${field}`);
+  if (typeof value !== "number" || !Number.isInteger(value) || value < 0) fail(`INVALID_${upper(field)}`);
   return value as number;
 }
 
@@ -35,20 +47,20 @@ export function optionalInt(value: unknown, field: string): number | undefined {
 
 /** Positive integer used as a foreign key. */
 export function requireId(value: unknown, field: string): number {
-  if (typeof value !== "number" || !Number.isInteger(value) || value <= 0) fail(`invalid_${field}`);
+  if (typeof value !== "number" || !Number.isInteger(value) || value <= 0) fail(`INVALID_${upper(field)}`);
   return value as number;
 }
 
 /** Path parameters arrive as strings. */
 export function parseId(value: string | undefined, field = "id"): number {
   const parsed = Number(value);
-  if (!Number.isInteger(parsed) || parsed <= 0) fail(`invalid_${field}`);
+  if (!Number.isInteger(parsed) || parsed <= 0) fail(`INVALID_${upper(field)}`);
   return parsed;
 }
 
 export function optionalArea(value: unknown, field: string): number | null {
   if (value === undefined || value === null || value === "") return null;
-  if (typeof value !== "number" || !Number.isFinite(value) || value <= 0) fail(`invalid_${field}`);
+  if (typeof value !== "number" || !Number.isFinite(value) || value <= 0) fail(`INVALID_${upper(field)}`);
   return value as number;
 }
 
@@ -56,18 +68,18 @@ const KY_PATTERN = /^\d{4}-(0[1-9]|1[0-2])$/;
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 /** Billing period, `YYYY-MM`. */
-export function requireKy(value: unknown): string {
-  if (typeof value !== "string" || !KY_PATTERN.test(value)) fail("invalid_ky");
+export function requirePeriod(value: unknown): string {
+  if (typeof value !== "string" || !KY_PATTERN.test(value)) fail("INVALID_PERIOD");
   return value as string;
 }
 
-export function optionalKy(value: unknown): string | undefined {
+export function optionalPeriod(value: unknown): string | undefined {
   if (value === undefined || value === null || value === "") return undefined;
-  return requireKy(value);
+  return requirePeriod(value);
 }
 
 export function requireDate(value: unknown, field: string): string {
-  if (typeof value !== "string" || !DATE_PATTERN.test(value)) fail(`invalid_${field}`);
+  if (typeof value !== "string" || !DATE_PATTERN.test(value)) fail(`INVALID_${upper(field)}`);
   return value as string;
 }
 
@@ -81,7 +93,7 @@ export function requireEnum<T extends string>(
   field: string,
   allowed: readonly T[],
 ): T {
-  if (typeof value !== "string" || !allowed.includes(value as T)) fail(`invalid_${field}`);
+  if (typeof value !== "string" || !allowed.includes(value as T)) fail(`INVALID_${upper(field)}`);
   return value as T;
 }
 
@@ -98,7 +110,7 @@ export function optionalEnum<T extends string>(
 export function queryId(value: string | undefined, field: string): number | undefined {
   if (value === undefined || value === "") return undefined;
   const parsed = Number(value);
-  if (!Number.isInteger(parsed) || parsed <= 0) fail(`invalid_${field}`);
+  if (!Number.isInteger(parsed) || parsed <= 0) fail(`INVALID_${upper(field)}`);
   return parsed;
 }
 
@@ -106,6 +118,6 @@ export async function jsonBody(req: {
   json: () => Promise<unknown>;
 }): Promise<Record<string, unknown>> {
   const body = await req.json().catch(() => null);
-  if (body === null || typeof body !== "object" || Array.isArray(body)) fail("invalid_body");
+  if (body === null || typeof body !== "object" || Array.isArray(body)) fail("INVALID_BODY");
   return body as Record<string, unknown>;
 }

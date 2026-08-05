@@ -33,9 +33,9 @@ export function RoomModal({
 
     if (dangSua) {
       setBuildingId(String(dangSua.building_id));
-      setTenPhong(dangSua.ten_phong);
-      setGiaPhong(dangSua.gia_phong);
-      setDienTich(dangSua.dien_tich ?? "");
+      setTenPhong(dangSua.room_name);
+      setGiaPhong(dangSua.rent);
+      setDienTich(dangSua.area ?? "");
       return;
     }
 
@@ -50,9 +50,9 @@ export function RoomModal({
     setBusy(true);
 
     const chung = {
-      ten_phong: tenPhong,
-      gia_phong: Number(giaPhong),
-      dien_tich: dienTich === "" ? null : Number(dienTich),
+      room_name: tenPhong,
+      rent: Number(giaPhong),
+      area: dienTich === "" ? null : Number(dienTich),
     };
 
     const ok = dangSua
@@ -67,7 +67,7 @@ export function RoomModal({
     <Modal
       opened={target !== null}
       onClose={onClose}
-      title={dangSua ? `Sửa phòng — ${dangSua.ten_phong}` : "Thêm phòng"}
+      title={dangSua ? `Sửa phòng — ${dangSua.room_name}` : "Thêm phòng"}
     >
       <Stack>
         <Select

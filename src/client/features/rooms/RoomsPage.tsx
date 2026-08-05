@@ -22,7 +22,7 @@ export function RoomsPage() {
 
     xacNhan({
       title: "Xác nhận chuyển đi",
-      message: `${room.tenant.ho_ten} đã chuyển khỏi ${room.ten_phong}? Phòng sẽ được đánh dấu trống từ hôm nay.`,
+      message: `${room.tenant.full_name} đã chuyển khỏi ${room.room_name}? Phòng sẽ được đánh dấu trống từ hôm nay.`,
       confirmLabel: "Đã chuyển đi",
       color: "orange",
       onConfirm: () => chuyenDi(room.tenant!.id),
@@ -32,7 +32,7 @@ export function RoomsPage() {
   function hoiXoaPhong(room: RoomDetail) {
     xacNhan({
       title: "Xoá phòng",
-      message: `Xoá ${room.ten_phong}? Chỉ xoá được khi phòng chưa có chỉ số, hóa đơn hay người thuê nào.`,
+      message: `Xoá ${room.room_name}? Chỉ xoá được khi phòng chưa có chỉ số, hóa đơn hay người thuê nào.`,
       confirmLabel: "Xoá",
       onConfirm: () => xoaPhong(room.id),
     });

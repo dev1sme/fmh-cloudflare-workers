@@ -1,4 +1,4 @@
-import type { Invoice, Reading, TamTinhHoaDon } from "../../shared/types";
+import type { Invoice, Reading, InvoiceEstimate } from "../../shared/types";
 
 /** Code printed on the invoice and used as the bank transfer memo, e.g. HD00123. */
 export function maHoaDon(invoiceId: number): string {
@@ -16,7 +16,7 @@ export function parseMaHoaDon(text: string): number | null {
 
 export type InvoiceAmounts = Pick<
   Invoice,
-  "tien_phong" | "tien_dien" | "tien_nuoc" | "phi_khac" | "don_gia_dien" | "don_gia_nuoc" | "tong_tien"
+  "rent_amount" | "electricity_amount" | "water_amount" | "other_fees" | "electricity_rate" | "water_rate" | "total"
 >;
 
 /**
@@ -27,28 +27,28 @@ export type InvoiceAmounts = Pick<
  * invoice that has already been issued.
  */
 export function tinhHoaDon(input: {
-  reading: Pick<Reading, "dien_cu" | "dien_moi" | "nuoc_cu" | "nuoc_moi">;
-  gia_phong: number;
-  don_gia_dien: number;
-  don_gia_nuoc: number;
-  phi_khac?: number;
+  reading: Pick<Reading, "electricity_start" | "electricity_end" | "water_start" | "water_end">;
+  rent: number;
+  electricity_rate: number;
+  water_rate: number;
+  other_fees?: number;
 }): InvoiceAmounts {
-  const soDien = input.reading.dien_moi - input.reading.dien_cu;
-  const soNuoc = input.reading.nuoc_moi - input.reading.nuoc_cu;
+  const soDien = input.reading.electricity_end - input.reading.electricity_start;
+  const soNuoc = input.reading.water_end - input.reading.water_start;
 
-  const tien_phong = input.gia_phong;
-  const tien_dien = soDien * input.don_gia_dien;
-  const tien_nuoc = soNuoc * input.don_gia_nuoc;
-  const phi_khac = input.phi_khac ?? 0;
+  const rent_amount = input.rent;
+  const electricity_amount = soDien * input.electricity_rate;
+  const water_amount = soNuoc * input.water_rate;
+  const other_fees = input.other_fees ?? 0;
 
   return {
-    tien_phong,
-    tien_dien,
-    tien_nuoc,
-    phi_khac,
-    don_gia_dien: input.don_gia_dien,
-    don_gia_nuoc: input.don_gia_nuoc,
-    tong_tien: tien_phong + tien_dien + tien_nuoc + phi_khac,
+    rent_amount,
+    electricity_amount,
+    water_amount,
+    other_fees,
+    electricity_rate: input.electricity_rate,
+    water_rate: input.water_rate,
+    total: rent_amount + electricity_amount + water_amount + other_fees,
   };
 }
 
@@ -61,36 +61,36 @@ export function tinhHoaDon(input: {
  * The opening numbers default to 0 — a room's first ever period bills from
  * zero rather than refusing to invoice.
  */
-export function tamTinhHoaDon(candidate: {
-  gia_phong: number;
-  don_gia_dien: number;
-  don_gia_nuoc: number;
-  dien_cu: number | null;
-  dien_moi: number | null;
-  nuoc_cu: number | null;
-  nuoc_moi: number | null;
-}): TamTinhHoaDon | null {
-  const { dien_moi, nuoc_moi } = candidate;
-  if (dien_moi === null || nuoc_moi === null) return null;
+export function estimateInvoice(candidate: {
+  rent: number;
+  electricity_rate: number;
+  water_rate: number;
+  electricity_start: number | null;
+  electricity_end: number | null;
+  water_start: number | null;
+  water_end: number | null;
+}): InvoiceEstimate | null {
+  const { electricity_end, water_end } = candidate;
+  if (electricity_end === null || water_end === null) return null;
 
-  const dien_cu = candidate.dien_cu ?? 0;
-  const nuoc_cu = candidate.nuoc_cu ?? 0;
+  const electricity_start = candidate.electricity_start ?? 0;
+  const water_start = candidate.water_start ?? 0;
 
   return {
     ...tinhHoaDon({
-      reading: { dien_cu, dien_moi, nuoc_cu, nuoc_moi },
-      gia_phong: candidate.gia_phong,
-      don_gia_dien: candidate.don_gia_dien,
-      don_gia_nuoc: candidate.don_gia_nuoc,
+      reading: { electricity_start, electricity_end, water_start, water_end },
+      rent: candidate.rent,
+      electricity_rate: candidate.electricity_rate,
+      water_rate: candidate.water_rate,
     }),
-    so_dien: dien_moi - dien_cu,
-    so_nuoc: nuoc_moi - nuoc_cu,
+    electricity_used: electricity_end - electricity_start,
+    water_used: water_end - water_start,
   };
 }
 
 /** Recomputes the total after an admin edits one of the parts. */
 export function tongTien(
-  parts: Pick<Invoice, "tien_phong" | "tien_dien" | "tien_nuoc" | "phi_khac">,
+  parts: Pick<Invoice, "rent_amount" | "electricity_amount" | "water_amount" | "other_fees">,
 ): number {
-  return parts.tien_phong + parts.tien_dien + parts.tien_nuoc + parts.phi_khac;
+  return parts.rent_amount + parts.electricity_amount + parts.water_amount + parts.other_fees;
 }

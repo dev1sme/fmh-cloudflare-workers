@@ -3,9 +3,9 @@ import { Button, Table } from "@mantine/core";
 import type { Payment } from "../../shared/types";
 import { ngay, tien } from "../format";
 
-export const TEN_PHUONG_THUC: Record<Payment["phuong_thuc"], string> = {
-  chuyen_khoan: "Chuyển khoản",
-  tien_mat: "Tiền mặt",
+export const TEN_PHUONG_THUC: Record<Payment["method"], string> = {
+  BANK_TRANSFER: "Chuyển khoản",
+  CASH: "Tiền mặt",
 };
 
 export function PaymentsTable({
@@ -29,10 +29,10 @@ export function PaymentsTable({
       <Table.Tbody>
         {payments.map((payment) => (
           <Table.Tr key={payment.id}>
-            <Table.Td>{ngay(payment.ngay_tt)}</Table.Td>
-            <Table.Td>{tien(payment.so_tien)}</Table.Td>
-            <Table.Td>{TEN_PHUONG_THUC[payment.phuong_thuc]}</Table.Td>
-            <Table.Td>{payment.ghi_chu ?? "—"}</Table.Td>
+            <Table.Td>{ngay(payment.paid_on)}</Table.Td>
+            <Table.Td>{tien(payment.amount)}</Table.Td>
+            <Table.Td>{TEN_PHUONG_THUC[payment.method]}</Table.Td>
+            <Table.Td>{payment.note ?? "—"}</Table.Td>
             {onDelete && (
               <Table.Td>
                 <Button size="xs" variant="subtle" color="red" onClick={() => onDelete(payment)}>

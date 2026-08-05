@@ -23,10 +23,10 @@ export function useDanhSachPhong() {
 }
 
 export type NguoiThueMoi = {
-  ho_ten: string;
-  sdt: string;
-  so_nguoi: number;
-  ngay_vao: string;
+  full_name: string;
+  phone: string;
+  occupants: number;
+  moved_in: string;
 };
 
 /**
@@ -75,10 +75,10 @@ export function useThaoTacPhong(reload: () => void) {
     try {
       await tenantsApi.create({
         room_id: roomId,
-        ho_ten: input.ho_ten,
-        sdt: input.sdt || null,
-        so_nguoi: input.so_nguoi,
-        ngay_vao: input.ngay_vao,
+        full_name: input.full_name,
+        phone: input.phone || null,
+        occupants: input.occupants,
+        moved_in: input.moved_in,
       });
       baoThanhCong("Đã thêm người thuê.");
       reload();
@@ -91,7 +91,7 @@ export function useThaoTacPhong(reload: () => void) {
 
   async function chuyenDi(tenantId: number): Promise<boolean> {
     try {
-      await tenantsApi.update(tenantId, { ngay_ra: homNay() });
+      await tenantsApi.update(tenantId, { moved_out: homNay() });
       baoThanhCong("Đã ghi nhận chuyển đi.");
       reload();
       return true;

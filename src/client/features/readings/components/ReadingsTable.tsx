@@ -34,20 +34,20 @@ export function ReadingsTable({
 
             return (
               <Table.Tr key={room.id}>
-                <Table.Td fw={500}>{room.ten_phong}</Table.Td>
+                <Table.Td fw={500}>{room.room_name}</Table.Td>
                 <Table.Td>
                   {reading ? (
-                    `${reading.dien_cu} → ${reading.dien_moi}`
+                    `${reading.electricity_start} → ${reading.electricity_end}`
                   ) : (
                     <Badge color="gray" variant="light">
                       Chưa nhập
                     </Badge>
                   )}
                 </Table.Td>
-                <Table.Td>{reading ? `${reading.so_dien} kWh` : "—"}</Table.Td>
-                <Table.Td>{reading ? `${reading.nuoc_cu} → ${reading.nuoc_moi}` : "—"}</Table.Td>
-                <Table.Td>{reading ? `${reading.so_nuoc} m³` : "—"}</Table.Td>
-                <Table.Td>{reading ? ngay(reading.ngay_ghi) : "—"}</Table.Td>
+                <Table.Td>{reading ? `${reading.electricity_used} kWh` : "—"}</Table.Td>
+                <Table.Td>{reading ? `${reading.water_start} → ${reading.water_end}` : "—"}</Table.Td>
+                <Table.Td>{reading ? `${reading.water_used} m³` : "—"}</Table.Td>
+                <Table.Td>{reading ? ngay(reading.recorded_on) : "—"}</Table.Td>
                 <Table.Td>
                   <Group justify="flex-end" gap="xs" wrap="nowrap">
                     <Button size="xs" variant="light" onClick={() => onEdit(room, reading)}>

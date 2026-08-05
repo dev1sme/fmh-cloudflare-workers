@@ -23,10 +23,10 @@ export function PaymentsCard({
           <PaymentsTable payments={hoaDon.payments} onDelete={onDeletePayment} />
         )}
 
-        {hoaDon.trang_thai === "huy" ? (
+        {hoaDon.status === "CANCELLED" ? (
           <Text c="dimmed">Hóa đơn đã huỷ, không ghi nhận thêm thanh toán.</Text>
         ) : (
-          <PaymentForm conLai={hoaDon.con_lai} onSubmit={onPay} />
+          <PaymentForm conLai={hoaDon.outstanding} onSubmit={onPay} />
         )}
       </Stack>
     </Card>

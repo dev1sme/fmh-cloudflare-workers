@@ -40,13 +40,13 @@ export function AccountsTable({
               </Table.Td>
               <Table.Td>
                 <Badge
-                  color={account.vai_tro === "quan_ly" ? "teal" : "blue"}
+                  color={account.role === "MANAGER" ? "teal" : "blue"}
                   variant="light"
                 >
-                  {account.vai_tro === "quan_ly" ? "Quản lý" : "Người thuê"}
+                  {account.role === "MANAGER" ? "Quản lý" : "Người thuê"}
                 </Badge>
               </Table.Td>
-              <Table.Td>{account.ten_phong ?? "—"}</Table.Td>
+              <Table.Td>{account.room_name ?? "—"}</Table.Td>
               <Table.Td>
                 <Group gap="xs" justify="flex-end" wrap="nowrap">
                   <Button size="xs" variant="light" onClick={() => onResetPassword(account)}>

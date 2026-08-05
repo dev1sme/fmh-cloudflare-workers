@@ -13,7 +13,7 @@ export function MyInvoicesPage() {
       <Title order={3}>Hóa đơn của tôi</Title>
       {phong && (
         <Text c="dimmed">
-          Phòng {phong.ten_phong} — {phong.building_name}
+          Phòng {phong.room_name} — {phong.building_name}
         </Text>
       )}
 

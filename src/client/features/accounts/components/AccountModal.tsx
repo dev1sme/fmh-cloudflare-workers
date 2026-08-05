@@ -16,7 +16,7 @@ export function AccountModal({
   onSubmit: (input: AccountInput) => Promise<boolean>;
 }) {
   const [username, setUsername] = useState("");
-  const [vaiTro, setVaiTro] = useState<string | null>("nguoi_thue");
+  const [vaiTro, setVaiTro] = useState<string | null>("TENANT");
   const [roomId, setRoomId] = useState<string | null>(null);
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
@@ -24,7 +24,7 @@ export function AccountModal({
   useEffect(() => {
     if (!opened) return;
     setUsername("");
-    setVaiTro("nguoi_thue");
+    setVaiTro("TENANT");
     setRoomId(phong[0] ? String(phong[0].id) : null);
     setPassword("");
   }, [opened, phong]);
@@ -34,8 +34,8 @@ export function AccountModal({
 
     const ok = await onSubmit({
       username,
-      vai_tro: vaiTro === "quan_ly" ? "quan_ly" : "nguoi_thue",
-      room_id: vaiTro === "quan_ly" ? null : Number(roomId),
+      role: vaiTro === "MANAGER" ? "MANAGER" : "TENANT",
+      room_id: vaiTro === "MANAGER" ? null : Number(roomId),
       // Empty means "generate one" — the server decides and returns it once.
       password: password || undefined,
     });
@@ -59,18 +59,18 @@ export function AccountModal({
           value={vaiTro}
           onChange={setVaiTro}
           data={[
-            { value: "nguoi_thue", label: "Người thuê — chỉ xem hóa đơn phòng mình" },
-            { value: "quan_ly", label: "Quản lý — toàn quyền" },
+            { value: "TENANT", label: "Người thuê — chỉ xem hóa đơn phòng mình" },
+            { value: "MANAGER", label: "Quản lý — toàn quyền" },
           ]}
           allowDeselect={false}
         />
-        {vaiTro === "nguoi_thue" && (
+        {vaiTro === "TENANT" && (
           <Select
             label="Phòng"
             description="Mỗi phòng chỉ có một tài khoản"
             value={roomId}
             onChange={setRoomId}
-            data={phong.map((room) => ({ value: String(room.id), label: room.ten_phong }))}
+            data={phong.map((room) => ({ value: String(room.id), label: room.room_name }))}
             allowDeselect={false}
           />
         )}

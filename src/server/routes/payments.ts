@@ -17,13 +17,13 @@ export async function capNhatTrangThai(
   invoiceId: number,
 ): Promise<Invoice | null> {
   const invoice = await getInvoice(db, invoiceId);
-  if (!invoice || invoice.trang_thai === "huy") return invoice;
+  if (!invoice || invoice.status === "CANCELLED") return invoice;
 
   const daThu = await sumPayments(db, invoiceId);
-  const trangThai = daThu >= invoice.tong_tien ? "da_thanh_toan" : "chua_thanh_toan";
+  const trangThai = daThu >= invoice.total ? "PAID" : "UNPAID";
 
-  if (trangThai === invoice.trang_thai) return invoice;
-  return updateInvoice(db, invoiceId, { trang_thai: trangThai });
+  if (trangThai === invoice.status) return invoice;
+  return updateInvoice(db, invoiceId, { status: trangThai });
 }
 
 export const paymentRoutes = new Hono<AppEnv>();

@@ -12,7 +12,7 @@ function nhan(period: string): string {
 
 export function RevenueChart({ history }: { history: DashboardHistoryPoint[] }) {
   const data = history.map((point) => ({
-    ky: nhan(point.period),
+    period: nhan(point.period),
     "Phải thu": point.billed,
     "Đã thu": point.collected,
   }));
@@ -31,7 +31,7 @@ export function RevenueChart({ history }: { history: DashboardHistoryPoint[] }) 
         <BarChart
           h={260}
           data={data}
-          dataKey="ky"
+          dataKey="period"
           series={[
             { name: "Phải thu", color: "blue.6" },
             { name: "Đã thu", color: "teal.6" },

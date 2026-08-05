@@ -2,7 +2,7 @@
 
 No auth framework. Stateless — there is no session table, and there should not be one.
 
-**Three accounts, two roles.** `users.vai_tro` is `quan_ly` (one account — the owner, full management) or `nguoi_thue` (one account per room, read-only). A tenant account is bound to a **room**, not to a person, via `users.room_id`: when a tenant moves out, the password changes and the account stays. The schema enforces both halves — `quan_ly` must have a NULL `room_id`, `nguoi_thue` must have one, and a partial unique index allows at most one account per room.
+**Three accounts, two roles.** `users.role` is `MANAGER` (one account — the owner, full management) or `TENANT` (one account per room, read-only). A tenant account is bound to a **room**, not to a person, via `users.room_id`: when a tenant moves out, the password changes and the account stays. The schema enforces both halves — `MANAGER` must have a NULL `room_id`, `TENANT` must have one, and a partial unique index allows at most one account per room.
 
 Three middlewares in `auth.ts`:
 
@@ -32,6 +32,6 @@ Long random passwords carry the security here, not the work factor. That holds o
 
 - `POST /api/auth/login` verifies against a dummy record when the username does not exist, so a bad username and a bad password take the same time and cannot be distinguished.
 - Verification uses a constant-time byte compare, and Web Crypto (`crypto.subtle`), not Node `crypto`.
-- The session cookie is `session`: `httpOnly`, `secure`, `sameSite=Lax`, 7-day TTL, carrying an HS256 JWT signed with `jose` (`sub` = user id).
+- The session cookie is `session`: `httpOnly`, `secure`, `sameSite=Lax`, 7-day TTL, carrying an HS256 JWT signed with `jose` (`sub` = user id, plus `username` / `role` / `room_id`). The `role` claim was renamed from `vai_tro` in the English rename, so any token issued before that is rejected — everyone had to sign in again once.
 - Route layout in `src/server/index.ts`: `/api/health` and `/api/auth/*` are public and registered **first**; everything else is mounted through a sub-app with `requireAuth`. Registration order is what makes this work in Hono — a new public route must go above the sub-app mount.
 - There is **no login rate limiting**. Adding one would need KV or Durable Objects, which the project deliberately avoids; three fixed accounts with long random passwords is the mitigation.

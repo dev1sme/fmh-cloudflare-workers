@@ -5,8 +5,8 @@ import { chiTietValidation, failure, notFound, ok } from "./envelope";
 import { securityHeaders } from "./headers";
 import { getDashboard } from "./db/dashboard";
 import { countRooms } from "./db/rooms";
-import { kyHienTai } from "./domain/ky";
-import { optionalKy } from "./validate";
+import { currentPeriod } from "./domain/period";
+import { optionalPeriod } from "./validate";
 import { accountRoutes } from "./routes/accounts";
 import { authRoutes } from "./routes/auth";
 import { buildingRoutes } from "./routes/buildings";
@@ -44,8 +44,8 @@ admin.get("/summary", async (c) =>
 
 /** Revenue, debt, occupancy and usage for one period. Defaults to this month. */
 admin.get("/dashboard", async (c) => {
-  const ky = optionalKy(c.req.query("ky")) ?? kyHienTai();
-  return ok(c, await getDashboard(c.env.DB, ky), "Dashboard retrieved.");
+  const period = optionalPeriod(c.req.query("period")) ?? currentPeriod();
+  return ok(c, await getDashboard(c.env.DB, period), "Dashboard retrieved.");
 });
 admin.route("/accounts", accountRoutes);
 admin.route("/buildings", buildingRoutes);
@@ -74,18 +74,18 @@ app.onError((err, c) => {
   // caller's fault to 409 instead of a blanket 500.
   const message = err.message ?? "";
   if (message.includes("UNIQUE constraint failed")) {
-    return failure(c, "trung_du_lieu", "Duplicate data.", 409);
+    return failure(c, "DUPLICATE_DATA", "Duplicate data.", 409);
   }
   if (message.includes("FOREIGN KEY constraint failed")) {
-    return failure(c, "rang_buoc_du_lieu", "Related data still references this record.", 409);
+    return failure(c, "RELATED_DATA_EXISTS", "Related data still references this record.", 409);
   }
   if (message.includes("CHECK constraint failed")) {
-    return failure(c, "du_lieu_khong_hop_le", "The given data was invalid.", 400);
+    return failure(c, "INVALID_DATA", "The given data was invalid.", 400);
   }
 
   // Logged, never returned: the convention forbids leaking internal messages.
   console.error(err);
-  return failure(c, "loi_he_thong", "Internal server error.", 500);
+  return failure(c, "INTERNAL_ERROR", "Internal server error.", 500);
 });
 
 export default app;

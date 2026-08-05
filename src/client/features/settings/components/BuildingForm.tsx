@@ -15,28 +15,28 @@ export function BuildingForm({
 }) {
   const [name, setName] = useState(nha.name);
   const [address, setAddress] = useState(nha.address ?? "");
-  const [dien, setDien] = useState<number | string>(nha.don_gia_dien);
-  const [nuoc, setNuoc] = useState<number | string>(nha.don_gia_nuoc);
+  const [dien, setDien] = useState<number | string>(nha.electricity_rate);
+  const [nuoc, setNuoc] = useState<number | string>(nha.water_rate);
   const [bank, setBank] = useState<BankValue>({
     bin: nha.bank_bin,
-    soTk: nha.bank_so_tk ?? "",
-    chuTk: nha.bank_chu_tk ?? "",
-    momoSdt: nha.momo_sdt ?? "",
-    momoTen: nha.momo_ten ?? "",
+    soTk: nha.bank_account_no ?? "",
+    chuTk: nha.bank_account_name ?? "",
+    momoSdt: nha.momo_phone ?? "",
+    momoTen: nha.momo_name ?? "",
   });
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     setName(nha.name);
     setAddress(nha.address ?? "");
-    setDien(nha.don_gia_dien);
-    setNuoc(nha.don_gia_nuoc);
+    setDien(nha.electricity_rate);
+    setNuoc(nha.water_rate);
     setBank({
       bin: nha.bank_bin,
-      soTk: nha.bank_so_tk ?? "",
-      chuTk: nha.bank_chu_tk ?? "",
-      momoSdt: nha.momo_sdt ?? "",
-      momoTen: nha.momo_ten ?? "",
+      soTk: nha.bank_account_no ?? "",
+      chuTk: nha.bank_account_name ?? "",
+      momoSdt: nha.momo_phone ?? "",
+      momoTen: nha.momo_name ?? "",
     });
   }, [nha]);
 
@@ -46,13 +46,13 @@ export function BuildingForm({
     await onSave(nha.id, {
       name,
       address: address || null,
-      don_gia_dien: Number(dien),
-      don_gia_nuoc: Number(nuoc),
+      electricity_rate: Number(dien),
+      water_rate: Number(nuoc),
       bank_bin: bank.bin || null,
-      bank_so_tk: bank.soTk || null,
-      bank_chu_tk: bank.chuTk || null,
-      momo_sdt: bank.momoSdt || null,
-      momo_ten: bank.momoTen || null,
+      bank_account_no: bank.soTk || null,
+      bank_account_name: bank.chuTk || null,
+      momo_phone: bank.momoSdt || null,
+      momo_name: bank.momoTen || null,
     });
 
     setBusy(false);

@@ -3,10 +3,10 @@ import { baoLoi, baoThanhCong } from "../../errors";
 import { useResource } from "../../hooks/useResource";
 
 export type ThanhToanMoi = {
-  so_tien: number;
-  ngay_tt: string;
-  phuong_thuc: string;
-  ghi_chu: string | null;
+  amount: number;
+  paid_on: string;
+  method: string;
+  note: string | null;
 };
 
 export function useInvoiceDetail(id: number) {
@@ -24,7 +24,7 @@ export function useInvoiceDetail(id: number) {
 export function useThaoTacHoaDon(id: number, reload: () => void, onDeleted: () => void) {
   async function luuPhiKhac(phiKhac: number): Promise<boolean> {
     try {
-      await invoicesApi.update(id, { phi_khac: phiKhac });
+      await invoicesApi.update(id, { other_fees: phiKhac });
       baoThanhCong("Đã cập nhật phí khác.");
       reload();
       return true;
@@ -36,7 +36,7 @@ export function useThaoTacHoaDon(id: number, reload: () => void, onDeleted: () =
 
   async function huy(): Promise<boolean> {
     try {
-      await invoicesApi.update(id, { trang_thai: "huy" });
+      await invoicesApi.update(id, { status: "CANCELLED" });
       baoThanhCong("Đã huỷ hóa đơn.");
       reload();
       return true;

@@ -7,7 +7,7 @@ export function PeriodPicker({
   label = "Kỳ",
 }: {
   value: string;
-  onChange: (ky: string) => void;
+  onChange: (period: string) => void;
   label?: string;
 }) {
   return (
