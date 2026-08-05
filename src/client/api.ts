@@ -1,6 +1,7 @@
 import type {
   Account,
   Building,
+  GeneratePreview,
   GenerateResult,
   Invoice,
   InvoiceDetail,
@@ -159,6 +160,9 @@ export const invoices = {
   list: (params: { ky?: string; room_id?: number; trang_thai?: string } = {}) =>
     request<{ invoices: InvoiceWithRoom[] }>(`/api/invoices${query(params)}`),
   get: (id: number) => request<{ invoice: InvoiceDetail }>(`/api/invoices/${id}`),
+  /** What generation would produce for a period. Writes nothing. */
+  preview: (ky: string) => request<GeneratePreview>(`/api/invoices/generate-preview?ky=${ky}`),
+  /** Omit `roomIds` to bill every room. */
   generate: (ky: string, roomIds?: number[]) =>
     send<GenerateResult>("POST", "/api/invoices/generate", { ky, room_ids: roomIds }),
   update: (id: number, patch: { phi_khac?: number; tien_phong?: number; trang_thai?: string }) =>

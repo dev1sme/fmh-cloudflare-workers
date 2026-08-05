@@ -152,3 +152,43 @@ export type GenerateResult = {
     reason: "thieu_chi_so" | "da_co_hoa_don";
   }>;
 };
+
+/** Whether a room can be invoiced for a period, and why not when it cannot. */
+export type SinhTrangThai = "san_sang" | "thieu_chi_so" | "da_co_hoa_don";
+
+/**
+ * The amounts generation would bill a room, computed without writing anything.
+ * Same shape the invoice would be stored with, plus the consumption behind it.
+ */
+export type TamTinhHoaDon = Pick<
+  Invoice,
+  | "tien_phong"
+  | "tien_dien"
+  | "tien_nuoc"
+  | "phi_khac"
+  | "don_gia_dien"
+  | "don_gia_nuoc"
+  | "tong_tien"
+> & {
+  so_dien: number;
+  so_nuoc: number;
+};
+
+/** One room in the generation preview, before the manager picks anything. */
+export type GenerationPreviewRoom = {
+  room_id: number;
+  ten_phong: string;
+  building_id: number;
+  building_name: string;
+  trang_thai: SinhTrangThai;
+  /** Null while the period has no reading for the room. */
+  tam_tinh: TamTinhHoaDon | null;
+  /** Set when the room already has an invoice for the period. */
+  invoice_id: number | null;
+};
+
+/** Result of GET /api/invoices/generate-preview. */
+export type GeneratePreview = {
+  ky: string;
+  phong: GenerationPreviewRoom[];
+};

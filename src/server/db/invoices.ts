@@ -147,6 +147,8 @@ function taoChuyenKhoan(
 export type GenerationCandidate = {
   room_id: number;
   ten_phong: string;
+  building_id: number;
+  building_name: string;
   gia_phong: number;
   don_gia_dien: number;
   don_gia_nuoc: number;
@@ -162,15 +164,16 @@ export async function listGenerationCandidates(
   ky: string,
   roomIds?: number[],
 ): Promise<GenerationCandidate[]> {
-  const filter =
-    roomIds && roomIds.length > 0
-      ? ` WHERE r.id IN (${roomIds.map(() => "?").join(", ")})`
-      : "";
+  // Undefined means every room; an explicit empty selection means none. Falling
+  // back to "every room" there would turn an empty pick into a full run.
+  if (roomIds && roomIds.length === 0) return [];
+
+  const filter = roomIds ? ` WHERE r.id IN (${roomIds.map(() => "?").join(", ")})` : "";
 
   const { results } = await db
     .prepare(
-      `SELECT r.id AS room_id, r.ten_phong, r.gia_phong,
-              b.don_gia_dien, b.don_gia_nuoc,
+      `SELECT r.id AS room_id, r.ten_phong, r.building_id, b.name AS building_name,
+              r.gia_phong, b.don_gia_dien, b.don_gia_nuoc,
               rd.dien_cu, rd.dien_moi, rd.nuoc_cu, rd.nuoc_moi,
               inv.id AS invoice_id
        FROM rooms r
@@ -178,7 +181,7 @@ export async function listGenerationCandidates(
        LEFT JOIN readings rd ON rd.room_id = r.id AND rd.ky = ?
        LEFT JOIN invoices inv ON inv.room_id = r.id AND inv.ky = ?
        ${filter}
-       ORDER BY r.ten_phong`,
+       ORDER BY b.name, r.ten_phong`,
     )
     .bind(ky, ky, ...(roomIds ?? []))
     .all<GenerationCandidate>();

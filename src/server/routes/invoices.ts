@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 
+import type { GenerationCandidate } from "../db/invoices";
 import {
   createInvoices,
   deleteInvoice,
@@ -11,11 +12,18 @@ import {
 } from "../db/invoices";
 import { createPayment, listPayments } from "../db/payments";
 import { bayGio, homNay } from "../domain/ky";
-import { tinhHoaDon, tongTien } from "../domain/invoice";
+import { tamTinhHoaDon, tongTien } from "../domain/invoice";
 import { capNhatTrangThai } from "./payments";
 import type { AppEnv } from "../types";
-import type { GenerateResult, InvoiceStatus, PaymentMethod } from "../../shared/types";
+import type {
+  GeneratePreview,
+  GenerateResult,
+  GenerationPreviewRoom,
+  InvoiceStatus,
+  PaymentMethod,
+} from "../../shared/types";
 import {
+  fail,
   jsonBody,
   optionalEnum,
   optionalInt,
@@ -48,48 +56,40 @@ invoiceRoutes.get("/", async (c) => {
 /**
  * Generates one invoice per room for a period.
  *
- * Rooms without a reading for that period, and rooms already invoiced, are
- * reported back as skipped rather than failing the whole batch — the caller
- * needs to know which rooms still need a meter entry.
+ * `room_ids` narrows the run to the rooms the manager picked; omitting it bills
+ * every room. Rooms without a reading for that period, and rooms already
+ * invoiced, are reported back as skipped rather than failing the whole batch —
+ * the caller needs to know which rooms still need a meter entry.
  */
 invoiceRoutes.post("/generate", async (c) => {
   const body = await jsonBody(c.req);
   const ky = requireKy(body.ky);
-
-  const roomIds = Array.isArray(body.room_ids)
-    ? body.room_ids.map((value) => requireId(value, "room_ids"))
-    : undefined;
+  const roomIds = parseRoomIds(body.room_ids);
 
   const candidates = await listGenerationCandidates(c.env.DB, ky, roomIds);
   const skipped: GenerateResult["skipped"] = [];
   const inputs = [];
 
   for (const candidate of candidates) {
+    const { room_id, ten_phong } = candidate;
+
     if (candidate.invoice_id !== null) {
-      skipped.push({ room_id: candidate.room_id, ten_phong: candidate.ten_phong, reason: "da_co_hoa_don" });
-      continue;
-    }
-    if (candidate.dien_moi === null || candidate.nuoc_moi === null) {
-      skipped.push({ room_id: candidate.room_id, ten_phong: candidate.ten_phong, reason: "thieu_chi_so" });
+      skipped.push({ room_id, ten_phong, reason: "da_co_hoa_don" });
       continue;
     }
 
-    const amounts = tinhHoaDon({
-      reading: {
-        dien_cu: candidate.dien_cu ?? 0,
-        dien_moi: candidate.dien_moi,
-        nuoc_cu: candidate.nuoc_cu ?? 0,
-        nuoc_moi: candidate.nuoc_moi,
-      },
-      gia_phong: candidate.gia_phong,
-      don_gia_dien: candidate.don_gia_dien,
-      don_gia_nuoc: candidate.don_gia_nuoc,
-    });
+    const amounts = tamTinhHoaDon(candidate);
+    if (!amounts) {
+      skipped.push({ room_id, ten_phong, reason: "thieu_chi_so" });
+      continue;
+    }
+
+    const { so_dien, so_nuoc, ...tien } = amounts;
 
     inputs.push({
-      room_id: candidate.room_id,
+      room_id,
       ky,
-      ...amounts,
+      ...tien,
       trang_thai: "chua_thanh_toan" as const,
       ngay_tao: bayGio(),
     });
@@ -99,6 +99,43 @@ invoiceRoutes.post("/generate", async (c) => {
 
   return c.json({ created, skipped } satisfies GenerateResult, created.length > 0 ? 201 : 200);
 });
+
+/**
+ * What `POST /generate` would do for a period, without writing anything: every
+ * room, whether it can be billed, and the amounts it would be billed.
+ *
+ * Registered before `/:id` on purpose — Hono matches in registration order.
+ */
+invoiceRoutes.get("/generate-preview", async (c) => {
+  const ky = requireKy(c.req.query("ky"));
+  const candidates = await listGenerationCandidates(c.env.DB, ky);
+
+  return c.json({ ky, phong: candidates.map(xemTruocPhong) } satisfies GeneratePreview);
+});
+
+function xemTruocPhong(candidate: GenerationCandidate): GenerationPreviewRoom {
+  const tam_tinh = tamTinhHoaDon(candidate);
+
+  return {
+    room_id: candidate.room_id,
+    ten_phong: candidate.ten_phong,
+    building_id: candidate.building_id,
+    building_name: candidate.building_name,
+    trang_thai:
+      candidate.invoice_id !== null ? "da_co_hoa_don" : tam_tinh ? "san_sang" : "thieu_chi_so",
+    tam_tinh,
+    invoice_id: candidate.invoice_id,
+  };
+}
+
+/** Absent means every room; an empty list is a mistake, not "every room". */
+function parseRoomIds(value: unknown): number[] | undefined {
+  if (value === undefined || value === null) return undefined;
+  if (!Array.isArray(value)) fail("invalid_room_ids");
+  if (value.length === 0) fail("thieu_room_ids");
+
+  return value.map((item) => requireId(item, "room_ids"));
+}
 
 invoiceRoutes.get("/:id", async (c) => {
   const invoice = await getInvoiceDetail(c.env.DB, parseId(c.req.param("id")));

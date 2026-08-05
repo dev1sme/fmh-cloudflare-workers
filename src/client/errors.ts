@@ -17,6 +17,7 @@ const MESSAGES: Record<string, string> = {
   dien_moi_nho_hon_dien_cu: "Chỉ số điện mới không được nhỏ hơn chỉ số cũ.",
   nuoc_moi_nho_hon_nuoc_cu: "Chỉ số nước mới không được nhỏ hơn chỉ số cũ.",
   phong_khong_ton_tai: "Phòng không tồn tại.",
+  thieu_room_ids: "Chọn ít nhất một phòng để sinh hóa đơn.",
   hoa_don_da_huy: "Hóa đơn đã huỷ, không ghi nhận thanh toán được.",
   password_qua_ngan: "Mật khẩu phải từ 8 ký tự trở lên.",
   sai_mat_khau_cu: "Mật khẩu hiện tại không đúng.",
