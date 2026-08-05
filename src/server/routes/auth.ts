@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 
 import {
+  PBKDF2_ITERATIONS,
   clearSessionCookie,
   createSessionToken,
   currentUser,
@@ -18,9 +19,15 @@ import { fail, jsonBody, requireString } from "../validate";
  * Verified when the username does not exist, so a wrong username and a wrong
  * password cost the same time and cannot be told apart from the outside.
  * Password is a random string nobody holds.
+ *
+ * The iteration count is interpolated from PBKDF2_ITERATIONS rather than
+ * written out. Hard-coding it once left this record at 50k against real
+ * records at 10k, which broke the property this whole record exists for: on
+ * the deployed Worker a miss cost 10-26 ms of CPU against 5 ms for a hit, so
+ * the timing told an attacker which usernames exist — and the miss went over
+ * the 10 ms limit on Workers Free at the same time.
  */
-const DUMMY_RECORD =
-  "pbkdf2$sha256$50000$AAAAAAAAAAAAAAAAAAAAAA==$AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
+const DUMMY_RECORD = `pbkdf2$sha256$${PBKDF2_ITERATIONS}$AAAAAAAAAAAAAAAAAAAAAA==$AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=`;
 
 export const authRoutes = new Hono<AppEnv>();
 

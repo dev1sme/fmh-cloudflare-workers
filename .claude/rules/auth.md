@@ -20,11 +20,25 @@ Hashing runs **in the Worker** (`hashPassword` in `auth.ts`) so the manager can 
 
 ## The iteration count
 
-**Iterations are 10,000, not the OWASP-recommended 600,000, and that is deliberate.** Workers Free allows 10 ms CPU per request. Measured **on the deployed Worker** (`wrangler tail --format json`, `cpuTime` field): 50k cost 11-17 ms and blew the limit on every login; at 10k a warm login is 2-3 ms, median 8 ms, with occasional 13 ms spikes on cold isolates. For reference `/api/summary` (JWT verify + D1 count) is ~3 ms and `/api/health` ~0 ms.
+**Iterations are 10,000, not the OWASP-recommended 600,000, and that is deliberate.** Workers Free allows 10 ms CPU per request, and 50k measured 11-17 ms — over the limit on every login.
 
-**Never tune this from a local benchmark.** This dev machine runs 50k in ~6 ms — roughly three times faster than Cloudflare's CPU — which is exactly the mistake that shipped an over-limit login. Re-measure on the deployed Worker after any change, and remember that changing the constant only affects accounts whose passwords are re-hashed afterwards.
+Measured on the deployed Worker (`wrangler tail --format json`, `cpuTime`):
 
-Halving it to 5k buys ~1-1.5 ms and costs one bit of work factor; it does not fix a cold-isolate spike, which is isolate startup rather than hashing. Do not change the constant without a measured problem on the deployed Worker.
+| Request | cpuTime |
+| --- | --- |
+| Login, username exists (10k iterations) | **5 ms** |
+| `GET /api/dashboard` (6 D1 queries in one batch) | **1-2 ms** |
+| `GET /api/rooms`, `/buildings`, `/tenants` | 1-3 ms |
+| `GET /api/health` | 0 ms |
+
+**The dummy record's iteration count must match `PBKDF2_ITERATIONS`.** It was hard-coded at 50k while real records were at 10k, and that single mismatch caused both problems below — it is now interpolated from the constant so the two cannot drift again.
+
+- A login *miss* cost 10-26 ms (median 14) against 5 ms for a *hit*, so misses blew the CPU limit while hits sat comfortably inside it.
+- Worse, it destroyed the property the dummy record exists for: the timing difference told an attacker which usernames exist. A constant meant to hide that was leaking it.
+
+**Never tune the iteration count from a local benchmark.** This dev machine runs 50k in ~6 ms — roughly three times faster than Cloudflare's CPU — which is exactly the mistake that shipped an over-limit login once already. Re-measure on the deployed Worker after any change, and remember that changing the constant only affects accounts whose passwords are re-hashed afterwards.
+
+Do not lower it to 5k: at 5 ms a real login already fits the budget with room to spare, so halving the work factor would buy nothing and cost one bit.
 
 Long random passwords carry the security here, not the work factor. That holds only while the passwords actually are long and random — a manager password chosen by hand is the weak point, not the iteration count.
 
