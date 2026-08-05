@@ -281,3 +281,29 @@ export type Dashboard = {
   usage: DashboardUsage;
   history: DashboardHistoryPoint[];
 };
+
+/**
+ * One month as the tenant sees it, `GET /api/me/dashboard`.
+ *
+ * A month can exist with a reading but no invoice yet (the manager has not
+ * generated it), so the invoice half is nullable while the meter half is not
+ * — a row is only listed when at least one of the two exists.
+ */
+export type TenantMonth = {
+  period: string;
+  electricity_used: number | null;
+  water_used: number | null;
+  /** Null until the manager generates the invoice for this period. */
+  total: number | null;
+  paid: number;
+  outstanding: number;
+  status: InvoiceStatus | null;
+};
+
+export type TenantDashboard = {
+  room_name: string;
+  /** Newest first — the tenant looks at this month, not two years ago. */
+  months: TenantMonth[];
+  /** Across every period, cancelled invoices excluded. */
+  outstanding_total: number;
+};

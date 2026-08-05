@@ -16,6 +16,7 @@ const QUAN_LY_LINKS = [
 ];
 
 const NGUOI_THUE_LINKS = [
+  { to: "/dashboard", label: "Tổng quan" },
   { to: "/my-invoices", label: "Hóa đơn của tôi" },
   { to: "/my-readings", label: "Lịch sử chỉ số" },
   { to: "/change-password", label: "Đổi mật khẩu" },

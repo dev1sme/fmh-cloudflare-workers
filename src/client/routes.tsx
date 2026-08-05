@@ -8,6 +8,7 @@ import { ChangePasswordPage } from "./features/change-password/ChangePasswordPag
 import { ReadingsPage } from "./features/readings/ReadingsPage";
 import { InvoiceDetailPage } from "./features/invoices/InvoiceDetailPage";
 import { InvoicesPage } from "./features/invoices/InvoicesPage";
+import { MyDashboardPage } from "./features/my/MyDashboardPage";
 import { MyInvoiceDetailPage } from "./features/my/MyInvoiceDetailPage";
 import { MyInvoicesPage } from "./features/my/MyInvoicesPage";
 import { MyReadingsPage } from "./features/my/MyReadingsPage";
@@ -22,7 +23,8 @@ import { AccountsPage } from "./features/accounts/AccountsPage";
  */
 export function AppRoutes({ user, onLogout }: { user: SessionUser; onLogout: () => void }) {
   const quanLy = user.role === "MANAGER";
-  const home = quanLy ? "/dashboard" : "/my-invoices";
+  // Both roles land on /dashboard; the route table below decides which one.
+  const home = "/dashboard";
 
   return (
     <Routes>
@@ -47,6 +49,7 @@ export function AppRoutes({ user, onLogout }: { user: SessionUser; onLogout: () 
           </>
         ) : (
           <>
+            <Route path="/dashboard" element={<MyDashboardPage />} />
             <Route path="/my-invoices" element={<MyInvoicesPage />} />
             <Route path="/my-invoices/:id" element={<MyInvoiceDetailPage />} />
             <Route path="/my-readings" element={<MyReadingsPage />} />

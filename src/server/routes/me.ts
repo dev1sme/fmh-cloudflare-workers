@@ -2,6 +2,7 @@ import { Hono } from "hono";
 
 import { getInvoiceDetail, listInvoices } from "../db/invoices";
 import { listReadings } from "../db/readings";
+import { getTenantDashboard } from "../db/dashboard";
 import { getRoom } from "../db/rooms";
 import { notFound, ok } from "../envelope";
 import type { AppEnv } from "../types";
@@ -15,6 +16,11 @@ import { optionalPeriod, parseId } from "../validate";
  * room's invoices by guessing an id.
  */
 export const meRoutes = new Hono<AppEnv>();
+
+/** Meter usage and what was billed, month by month, for this tenant's room. */
+meRoutes.get("/dashboard", async (c) =>
+  ok(c, await getTenantDashboard(c.env.DB, c.get("user").room_id!), "Dashboard retrieved."),
+);
 
 // Singular: a tenant account is bound to exactly one room.
 meRoutes.get("/room", async (c) => {

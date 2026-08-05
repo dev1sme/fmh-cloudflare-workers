@@ -59,7 +59,7 @@ The SPA has no client-side auth guard beyond the route table: `App.tsx` asks `GE
 
 **Everything a caller can see is English**: URLs, directory names, DB columns, API fields, error codes and enum values. Vietnamese survives only in UI copy and in internal identifiers (`xacNhan`, `thongBaoLoi`, `tien`) — see `data-model.md` and `api.md`.
 
-Unknown paths render `NotFoundPage`, not a redirect. Only the bare `/` redirects to the role's home (`/dashboard` or `/my-invoices`); bouncing everything else would hide a mistyped or stale link instead of reporting it. The 404 deliberately does not distinguish "no such page" from "that page belongs to the other role" — saying which would leak the manager's route names to a tenant.
+Both roles land on `/dashboard`, which the role branch in `routes.tsx` resolves to a different component — the manager's rollup or the tenant's own months. Unknown paths render `NotFoundPage`, not a redirect. Only the bare `/` redirects to `/dashboard`; bouncing everything else would hide a mistyped or stale link instead of reporting it. The 404 deliberately does not distinguish "no such page" from "that page belongs to the other role" — saying which would leak the manager's route names to a tenant.
 
 `not_found_handling = "single-page-application"` means Cloudflare answers **200 with `index.html`** for any non-asset path, so the 404 is a client-side screen; the HTTP status is not 404 and cannot be from the assets layer.
 

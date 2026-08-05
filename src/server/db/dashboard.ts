@@ -5,6 +5,8 @@ import type {
   DashboardRevenue,
   DashboardRooms,
   DashboardUsage,
+  TenantDashboard,
+  TenantMonth,
 } from "../../shared/types";
 import { previousPeriod } from "../domain/period";
 
@@ -119,6 +121,71 @@ const USAGE = `
          COALESCE(SUM(water_end - water_start), 0) AS water
   FROM readings WHERE period = ?
 `;
+
+const TENANT_MONTHS = 24;
+
+/**
+ * The tenant's own months: meter usage and what was billed and paid.
+ *
+ * Periods come from a UNION of readings and invoices, not from either alone —
+ * a month can have a reading the manager has not invoiced yet, and that is
+ * exactly the month a tenant wants to see. `total` and `status` stay null
+ * until the invoice exists.
+ */
+export async function getTenantDashboard(
+  db: D1Database,
+  roomId: number,
+): Promise<TenantDashboard> {
+  const [months, room] = await db.batch([
+    db
+      .prepare(
+        `WITH periods AS (
+           SELECT period FROM readings WHERE room_id = ?1
+           UNION
+           SELECT period FROM invoices WHERE room_id = ?1
+         )
+         SELECT p.period,
+                rd.electricity_end - rd.electricity_start AS electricity_used,
+                rd.water_end - rd.water_start             AS water_used,
+                i.total,
+                i.status,
+                COALESCE(pd.paid_total, 0) AS paid
+         FROM periods p
+         LEFT JOIN readings rd ON rd.room_id = ?1 AND rd.period = p.period
+         LEFT JOIN invoices i  ON i.room_id  = ?1 AND i.period  = p.period
+         LEFT JOIN (${PAID_PER_INVOICE}) pd ON pd.invoice_id = i.id
+         ORDER BY p.period DESC
+         LIMIT ?2`,
+      )
+      .bind(roomId, TENANT_MONTHS),
+
+    db.prepare("SELECT room_name FROM rooms WHERE id = ?").bind(roomId),
+  ]);
+
+  type MonthRow = {
+    period: string;
+    electricity_used: number | null;
+    water_used: number | null;
+    total: number | null;
+    status: TenantMonth["status"];
+    paid: number;
+  };
+
+  const rows = ((months.results ?? []) as MonthRow[]).map((row) => ({
+    ...row,
+    // A cancelled invoice was never owed, so it shows no balance due.
+    outstanding:
+      row.total === null || row.status === "CANCELLED"
+        ? 0
+        : Math.max(0, row.total - row.paid),
+  }));
+
+  return {
+    room_name: first<{ room_name: string }>(room)?.room_name ?? "",
+    months: rows,
+    outstanding_total: rows.reduce((sum, row) => sum + row.outstanding, 0),
+  };
+}
 
 type RevenueRow = {
   billed: number;

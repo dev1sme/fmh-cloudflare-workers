@@ -25,7 +25,9 @@ Management (`requireQuanLy`): full CRUD on `/buildings`, `/rooms`, `/tenants`, `
 
 `GET /api/dashboard?period=` (defaults to the current month) is a read-only rollup for the manager's home screen: revenue for the period, outstanding debt per room **across every period**, occupancy, meter usage against the previous period, and the last 12 periods for the chart. Its fields are English (`billed`, `collected`, `outstanding`) because it mirrors no table.
 
-Two things it must keep doing: `CANCELLED` invoices are excluded from every money figure — a cancelled invoice was never owed — and all six statements go out in one `db.batch()`, because a serial chain of awaits spends most of the Worker's ~10 ms CPU budget waiting.
+`GET /api/me/dashboard` is the tenant's equivalent, deliberately much plainer: meter usage and money for their own room, month by month, newest first. Its periods come from a UNION of `readings` and `invoices`, not either alone — a month can have a reading the manager has not invoiced yet, and `total`/`status` stay null until it does.
+
+Two things the manager dashboard must keep doing: `CANCELLED` invoices are excluded from every money figure — a cancelled invoice was never owed — and all six statements go out in one `db.batch()`, because a serial chain of awaits spends most of the Worker's ~10 ms CPU budget waiting.
 
 The app is not hard-wired to two buildings and four rooms: the manager adds a building from **Cài đặt** (each with its own `electricity_rate` / `water_rate`) and rooms from **Phòng**. Deleting is FK-restricted — a building with rooms, or a room with readings/invoices/tenants, returns 409 `RELATED_DATA_EXISTS` rather than cascading. Room names are unique per building, not globally. A room cannot be moved to another building and a tenancy cannot be moved to another room; both would rewrite priced history, so the UI disables those selects when editing.
 
@@ -37,7 +39,7 @@ Sessions are stateless, so a reset does not kick out an existing session — the
 
 On `/tenants`: POST moves someone in, `PATCH { moved_out: "…" }` moves them out, `PATCH { moved_out: null }` undoes a mistaken move-out (409 if the room already has a new tenant), and DELETE erases a record entered by mistake. `GET /tenants` returns everyone ever, newest tenancy per room first, with `room_name` joined in; `?active=1` narrows it to current tenants and `?room_id=` to one room. Moving a tenancy to another room is not supported — that is a new tenancy.
 
-Tenant (`requirePhong`): `GET /api/me/room`, `/api/me/invoices`, `/api/me/invoices/:id`, `/api/me/readings`. Read-only by design — tenants never mark an invoice paid; that is the manager's action, or the SePay webhook's.
+Tenant (`requirePhong`): `GET /api/me/dashboard`, `/api/me/room`, `/api/me/invoices`, `/api/me/invoices/:id`, `/api/me/readings`. Read-only by design — tenants never mark an invoice paid; that is the manager's action, or the SePay webhook's.
 
 ## Behaviour worth preserving
 

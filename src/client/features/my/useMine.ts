@@ -3,6 +3,11 @@ import { useResource } from "../../hooks/useResource";
 
 /** Everything here is scoped to the tenant's own room by the API. */
 
+export function useDashboardCuaToi() {
+  const { data, loading, error } = useResource(() => me.dashboard(), []);
+  return { soLieu: data, loading, error };
+}
+
 export function useRoomsCuaToi() {
   const { data, loading, error } = useResource(() => me.room(), []);
   return { phong: data?.room ?? null, loading, error };

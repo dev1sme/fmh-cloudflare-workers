@@ -14,6 +14,7 @@ import type {
   ReadingDetail,
   RoomDetail,
   Tenant,
+  TenantDashboard,
   TenantDetail,
 } from "../shared/types";
 
@@ -199,6 +200,7 @@ export const invoices = {
 
 /** Tenant-facing endpoints; the room is taken from the session, never sent. */
 export const me = {
+  dashboard: () => request<TenantDashboard>("/api/me/dashboard"),
   room: () => request<{ room: RoomDetail }>("/api/me/room"),
   invoices: () => request<{ invoices: InvoiceWithRoom[] }>("/api/me/invoices"),
   invoice: (id: number) => request<{ invoice: InvoiceDetail }>(`/api/me/invoices/${id}`),
