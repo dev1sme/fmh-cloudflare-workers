@@ -27,9 +27,15 @@ Measured on the deployed Worker (`wrangler tail --format json`, `cpuTime`):
 | Request | cpuTime |
 | --- | --- |
 | Login, username exists (10k iterations) | **5 ms** |
+| Login, username missing — after the dummy-record fix | **median 4 ms, max 10 ms** (n=12, spaced) |
+| Login, username missing — before the fix | median 14 ms, max 26 ms (n=7) |
 | `GET /api/dashboard` (6 D1 queries in one batch) | **1-2 ms** |
 | `GET /api/rooms`, `/buildings`, `/tenants` | 1-3 ms |
 | `GET /api/health` | 0 ms |
+
+Sampling matters when re-measuring. Twelve logins spaced two seconds apart gave median 4 ms and never crossed 10 ms; eight fired back to back gave median 10 ms and peaked at 16 ms, because concurrent requests spin up cold isolates. Space the probes out — with three accounts, bursts are not the real traffic shape.
+
+`/api/dashboard` costing the same as a single-query route is the point: waiting on D1 does not count toward CPU time, so the six-statement batch is free in the only budget that binds.
 
 **The dummy record's iteration count must match `PBKDF2_ITERATIONS`.** It was hard-coded at 50k while real records were at 10k, and that single mismatch caused both problems below — it is now interpolated from the constant so the two cannot drift again.
 
