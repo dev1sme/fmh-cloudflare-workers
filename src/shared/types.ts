@@ -223,3 +223,61 @@ export type GeneratePreview = {
   ky: string;
   phong: GenerationPreviewRoom[];
 };
+
+/**
+ * Manager dashboard, `GET /api/dashboard?ky=`.
+ *
+ * A read-only rollup, not a mirror of any table — so its fields are English
+ * even while the columns underneath are still Vietnamese. Money is VND
+ * integers like everywhere else.
+ */
+export type DashboardRevenue = {
+  /** Everything invoiced for the period, cancelled invoices excluded. */
+  billed: number;
+  collected: number;
+  /** `billed - collected`, never negative. */
+  outstanding: number;
+  counts: { unpaid: number; paid: number; cancelled: number };
+};
+
+/** One room that still owes money, across every period, worst first. */
+export type DashboardDebt = {
+  room_id: number;
+  room_name: string;
+  amount: number;
+  invoice_count: number;
+  oldest_period: string;
+};
+
+export type DashboardRooms = {
+  total: number;
+  occupied: number;
+  vacant: number;
+  /** People living in occupied rooms — the sum of `tenants.so_nguoi`. */
+  occupants: number;
+  /** Rooms with no meter reading for the period yet. */
+  missing_readings: number;
+};
+
+export type DashboardUsage = {
+  electricity: number;
+  water: number;
+  electricity_previous: number;
+  water_previous: number;
+};
+
+/** Newest last, so a bar chart reads left to right. */
+export type DashboardHistoryPoint = {
+  period: string;
+  billed: number;
+  collected: number;
+};
+
+export type Dashboard = {
+  period: string;
+  revenue: DashboardRevenue;
+  debts: DashboardDebt[];
+  rooms: DashboardRooms;
+  usage: DashboardUsage;
+  history: DashboardHistoryPoint[];
+};

@@ -5,6 +5,7 @@ import { Link, Outlet, useLocation } from "react-router-dom";
 import type { SessionUser } from "../api";
 
 const QUAN_LY_LINKS = [
+  { to: "/dashboard", label: "Tổng quan" },
   { to: "/rooms", label: "Phòng" },
   { to: "/tenants", label: "Người thuê" },
   { to: "/readings", label: "Chỉ số điện nước" },

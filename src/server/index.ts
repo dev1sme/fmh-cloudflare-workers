@@ -3,7 +3,10 @@ import { Hono } from "hono";
 import { requirePhong, requireQuanLy } from "./auth";
 import { chiTietValidation, failure, notFound, ok } from "./envelope";
 import { securityHeaders } from "./headers";
+import { getDashboard } from "./db/dashboard";
 import { countRooms } from "./db/rooms";
+import { kyHienTai } from "./domain/ky";
+import { optionalKy } from "./validate";
 import { accountRoutes } from "./routes/accounts";
 import { authRoutes } from "./routes/auth";
 import { buildingRoutes } from "./routes/buildings";
@@ -38,6 +41,12 @@ admin.use("*", requireQuanLy);
 admin.get("/summary", async (c) =>
   ok(c, { user: c.get("user"), rooms: await countRooms(c.env.DB) }, "Summary retrieved."),
 );
+
+/** Revenue, debt, occupancy and usage for one period. Defaults to this month. */
+admin.get("/dashboard", async (c) => {
+  const ky = optionalKy(c.req.query("ky")) ?? kyHienTai();
+  return ok(c, await getDashboard(c.env.DB, ky), "Dashboard retrieved.");
+});
 admin.route("/accounts", accountRoutes);
 admin.route("/buildings", buildingRoutes);
 admin.route("/rooms", roomRoutes);

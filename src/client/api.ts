@@ -3,6 +3,7 @@ import type {
   ApiFailure,
   ApiResponse,
   Building,
+  Dashboard,
   GeneratePreview,
   GenerateResult,
   Invoice,
@@ -102,6 +103,11 @@ export const accounts = {
   resetPassword: (id: number, password?: string) =>
     send<AccountWithPassword>("POST", `/api/accounts/${id}/reset-password`, { password }),
   remove: (id: number) => send<{ ok: true }>("DELETE", `/api/accounts/${id}`),
+};
+
+export const dashboard = {
+  /** Omit `ky` for the current month. */
+  get: (ky?: string) => request<Dashboard>(`/api/dashboard${query({ ky })}`),
 };
 
 export const buildings = {

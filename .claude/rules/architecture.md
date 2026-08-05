@@ -20,8 +20,8 @@ src/client/           React SPA (Mantine + react-router)
   hooks/              useResource (fetch + reload), useConfirm (dialog)
   components/         cross-feature UI: AppLayout, InvoiceLines, PaymentsTable,
                       KyPicker, PageState, TrangThaiBadge, ConfirmModal
-  features/<name>/    login, rooms, tenants, readings, invoices, settings,
-                      accounts, change-password, not-found,
+  features/<name>/    login, dashboard, rooms, tenants, readings, invoices,
+                      settings, accounts, change-password, not-found,
                       my (the tenant's own screens)
     XxxPage.tsx       composition only
     components/       that feature's UI, one component per file
@@ -59,7 +59,7 @@ The SPA has no client-side auth guard beyond the route table: `App.tsx` asks `GE
 
 **URLs and directory names are English** (`/rooms`, `/invoices/:id`, `/my-invoices`, `features/tenants/`), matching the API route names. Only DB column names and error codes stay Vietnamese — see `data-model.md` and `api.md`.
 
-Unknown paths render `NotFoundPage`, not a redirect. Only the bare `/` redirects to the role's home (`/rooms` or `/my-invoices`); bouncing everything else would hide a mistyped or stale link instead of reporting it. The 404 deliberately does not distinguish "no such page" from "that page belongs to the other role" — saying which would leak the manager's route names to a tenant.
+Unknown paths render `NotFoundPage`, not a redirect. Only the bare `/` redirects to the role's home (`/dashboard` or `/my-invoices`); bouncing everything else would hide a mistyped or stale link instead of reporting it. The 404 deliberately does not distinguish "no such page" from "that page belongs to the other role" — saying which would leak the manager's route names to a tenant.
 
 `not_found_handling = "single-page-application"` means Cloudflare answers **200 with `index.html`** for any non-asset path, so the 404 is a client-side screen; the HTTP status is not 404 and cannot be from the assets layer.
 
@@ -69,4 +69,6 @@ Confirmations go through `useConfirm` (`xacNhan({...})` + render `hopThoai`), ne
 
 TypeScript is split into three project references — `tsconfig.app.json` (client, DOM libs), `tsconfig.worker.json` (Worker, workerd types), `tsconfig.node.json` (`vite.config.ts`). Client code must not import from `src/server/`, only from `src/shared/`.
 
-Stack: TypeScript, React + Vite, Mantine (UI), Hono, Cloudflare D1 (SQLite), `jose` for JWT.
+Stack: TypeScript, React + Vite, Mantine (UI), `@mantine/charts` + Recharts (the dashboard bar chart only), Hono, Cloudflare D1 (SQLite), `jose` for JWT.
+
+Recharts costs about 400 kB raw / 120 kB gzipped and is the reason the client bundle is over 1 MB. It earns that only if the dashboard chart is worth it; if a second opinion ever says no, dropping `RevenueChart` removes the dependency entirely.

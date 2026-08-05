@@ -21,7 +21,11 @@ Everything below `/api` except `/api/health` and `/api/auth/*` requires a sessio
 
 ## Surface
 
-Management (`requireQuanLy`): full CRUD on `/buildings`, `/rooms`, `/tenants`, `/readings`, `/invoices`, plus `DELETE /payments/:id` and `GET /summary`.
+Management (`requireQuanLy`): full CRUD on `/buildings`, `/rooms`, `/tenants`, `/readings`, `/invoices`, plus `DELETE /payments/:id`, `GET /summary` and `GET /dashboard`.
+
+`GET /api/dashboard?ky=` (defaults to the current month) is a read-only rollup for the manager's home screen: revenue for the period, outstanding debt per room **across every period**, occupancy, meter usage against the previous period, and the last 12 periods for the chart. Its fields are English (`billed`, `collected`, `outstanding`) because it mirrors no table.
+
+Two things it must keep doing: `huy` invoices are excluded from every money figure — a cancelled invoice was never owed — and all six statements go out in one `db.batch()`, because a serial chain of awaits spends most of the Worker's ~10 ms CPU budget waiting.
 
 The app is not hard-wired to two buildings and four rooms: the manager adds a building from **Cài đặt** (each with its own `don_gia_dien` / `don_gia_nuoc`) and rooms from **Phòng**. Deleting is FK-restricted — a building with rooms, or a room with readings/invoices/tenants, returns 409 `rang_buoc_du_lieu` rather than cascading. Room names are unique per building, not globally. A room cannot be moved to another building and a tenancy cannot be moved to another room; both would rewrite priced history, so the UI disables those selects when editing.
 

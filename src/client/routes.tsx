@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 
 import type { SessionUser } from "./api";
 import { AppLayout } from "./components/AppLayout";
+import { DashboardPage } from "./features/dashboard/DashboardPage";
 import { SettingsPage } from "./features/settings/SettingsPage";
 import { ChangePasswordPage } from "./features/change-password/ChangePasswordPage";
 import { ReadingsPage } from "./features/readings/ReadingsPage";
@@ -21,7 +22,7 @@ import { AccountsPage } from "./features/accounts/AccountsPage";
  */
 export function AppRoutes({ user, onLogout }: { user: SessionUser; onLogout: () => void }) {
   const quanLy = user.vai_tro === "quan_ly";
-  const home = quanLy ? "/rooms" : "/my-invoices";
+  const home = quanLy ? "/dashboard" : "/my-invoices";
 
   return (
     <Routes>
@@ -35,6 +36,7 @@ export function AppRoutes({ user, onLogout }: { user: SessionUser; onLogout: () 
 
         {quanLy ? (
           <>
+            <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/rooms" element={<RoomsPage />} />
             <Route path="/tenants" element={<TenantsPage />} />
             <Route path="/readings" element={<ReadingsPage />} />
