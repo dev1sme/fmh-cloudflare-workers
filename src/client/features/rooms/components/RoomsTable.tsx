@@ -18,7 +18,7 @@ export function RoomsTable({
 }) {
   return (
     <Table.ScrollContainer minWidth={720}>
-      <Table striped highlightOnHover>
+      <Table>
         <Table.Thead>
           <Table.Tr>
             <Table.Th>Phòng</Table.Th>

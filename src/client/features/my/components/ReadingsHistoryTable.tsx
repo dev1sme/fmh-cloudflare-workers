@@ -6,7 +6,7 @@ import { ngay, periodLabel } from "../../../format";
 export function ReadingsHistoryTable({ chiSo }: { chiSo: ReadingDetail[] }) {
   return (
     <Table.ScrollContainer minWidth={620}>
-      <Table striped>
+      <Table>
         <Table.Thead>
           <Table.Tr>
             <Table.Th>Kỳ</Table.Th>

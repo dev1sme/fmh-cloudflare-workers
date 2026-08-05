@@ -4,7 +4,7 @@ import { TextInput } from "@mantine/core";
 export function PeriodPicker({
   value,
   onChange,
-  label = "Kỳ",
+  label = "",
 }: {
   value: string;
   onChange: (period: string) => void;

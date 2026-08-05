@@ -16,9 +16,12 @@ const COLUMNS = `id, code, room_id, period, rent_amount, electricity_amount, wat
 const WITH_ROOM_SELECT = `
   SELECT i.id, i.code, i.room_id, i.period, i.rent_amount, i.electricity_amount, i.water_amount, i.other_fees,
          i.electricity_rate, i.water_rate, i.total, i.status, i.created_at,
-         r.room_name
+         r.room_name,
+         COALESCE(pd.paid_total, 0) AS paid
   FROM invoices i
   JOIN rooms r ON r.id = i.room_id
+  LEFT JOIN (SELECT invoice_id, SUM(amount) AS paid_total FROM payments GROUP BY invoice_id) pd
+    ON pd.invoice_id = i.id
 `;
 
 /** Same row, plus the bank details the VietQR code is built from. */

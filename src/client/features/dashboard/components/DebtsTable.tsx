@@ -43,7 +43,7 @@ export function DebtsTable({ debts }: { debts: DashboardDebt[] }) {
                   </Table.Td>
                   <Table.Td>{debt.invoice_count}</Table.Td>
                   <Table.Td c="dimmed">{periodLabel(debt.oldest_period)}</Table.Td>
-                  <Table.Td ta="right" fw={600} c="orange">
+                  <Table.Td className="fmh-num" fw={600} c="owed.6">
                     {tien(debt.amount)}
                   </Table.Td>
                 </Table.Tr>

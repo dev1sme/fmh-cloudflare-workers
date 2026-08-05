@@ -16,7 +16,7 @@ export function ReadingsTable({
 }) {
   return (
     <Table.ScrollContainer minWidth={760}>
-      <Table striped highlightOnHover>
+      <Table>
         <Table.Thead>
           <Table.Tr>
             <Table.Th>Phòng</Table.Th>

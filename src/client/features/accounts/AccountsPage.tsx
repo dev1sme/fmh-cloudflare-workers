@@ -1,4 +1,5 @@
 import { Button, Group, Stack, Text, Title } from "@mantine/core";
+import { IconUserPlus } from "@tabler/icons-react";
 import { useState } from "react";
 
 import type { Account } from "../../../shared/types";
@@ -34,7 +35,12 @@ export function AccountsPage({ user }: { user: SessionUser }) {
     <Stack>
       <Group justify="space-between">
         <Title order={3}>Tài khoản</Title>
-        <Button onClick={() => setDangThem(true)}>Thêm tài khoản</Button>
+        <Button
+          onClick={() => setDangThem(true)}
+          leftSection={<IconUserPlus size={16} stroke={1.8} />}
+        >
+          Thêm tài khoản
+        </Button>
       </Group>
 
       <Text c="dimmed" size="sm">

@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 
 import type { SessionUser } from "./api";
 import { AppLayout } from "./components/AppLayout";
+import { QuickSearch } from "./components/QuickSearch";
 import { DashboardPage } from "./features/dashboard/DashboardPage";
 import { SettingsPage } from "./features/settings/SettingsPage";
 import { ChangePasswordPage } from "./features/change-password/ChangePasswordPage";
@@ -27,8 +28,12 @@ export function AppRoutes({ user, onLogout }: { user: SessionUser; onLogout: () 
   const home = "/dashboard";
 
   return (
-    <Routes>
-      <Route element={<AppLayout user={user} onLogout={onLogout} />}>
+    <>
+      {/* Ctrl+K, manager only — a tenant has one room and nothing to jump between. */}
+      {quanLy && <QuickSearch />}
+
+      <Routes>
+        <Route element={<AppLayout user={user} onLogout={onLogout} />}>
         {/* Available to both roles. */}
         <Route path="/change-password" element={<ChangePasswordPage />} />
 
@@ -56,8 +61,9 @@ export function AppRoutes({ user, onLogout }: { user: SessionUser; onLogout: () 
           </>
         )}
 
-        <Route path="*" element={<NotFoundPage home={home} />} />
-      </Route>
-    </Routes>
+          <Route path="*" element={<NotFoundPage home={home} />} />
+        </Route>
+      </Routes>
+    </>
   );
 }

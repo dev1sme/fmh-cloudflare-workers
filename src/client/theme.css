@@ -1,0 +1,102 @@
+/*
+ * Ledger typography and surfaces. Everything here exists to make a column of
+ * numbers readable; nothing is decorative.
+ */
+
+:root {
+  /* Warm page surfaces, replacing Mantine's blue-grey defaults. */
+  --fmh-paper: #faf8f4;
+  --fmh-rule: #e5dfd4;
+}
+
+:root[data-mantine-color-scheme="dark"] {
+  --fmh-paper: #1d1a16;
+  --fmh-rule: #2e2a23;
+}
+
+body {
+  background-color: var(--fmh-paper);
+}
+
+/*
+ * Tabular figures across the whole app.
+ *
+ * Rents, meter readings and periods are read down a column and compared to the
+ * row above. Proportional digits make `1` narrower than `8`, so the columns
+ * wobble and the comparison has to be done by reading rather than by looking.
+ * `tnum` fixes every digit to one width; `lnum` keeps them lining rather than
+ * old-style.
+ */
+body,
+input,
+button,
+select,
+textarea {
+  font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings: "tnum" 1, "lnum" 1;
+}
+
+/* Hairline rows instead of zebra stripes. */
+.mantine-Table-tbody tr {
+  border-bottom: 1px solid var(--fmh-rule);
+}
+
+.mantine-Table-tbody tr:last-child {
+  border-bottom: none;
+}
+
+.mantine-Table-th {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--mantine-color-dimmed);
+  border-bottom: 1px solid var(--fmh-rule) !important;
+}
+
+/*
+ * A column of money is right-aligned so the last digit of every row lines up —
+ * that is where the eye compares magnitude.
+ */
+.fmh-num {
+  font-variant-numeric: tabular-nums lining-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/*
+ * Login splits into a statement panel and the form once there is room for
+ * both. Below that the panel is hidden and the form takes the full card, so
+ * the grid must collapse to one column rather than leave an empty track.
+ */
+.fmh-login-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 48em) {
+  .fmh-login-grid {
+    grid-template-columns: 0.85fr 1fr;
+  }
+}
+
+/* The account row is a menu trigger, so it needs to look pressable. */
+.fmh-account {
+  padding: 8px 10px;
+  border-radius: var(--mantine-radius-sm);
+  transition: background-color 120ms ease;
+}
+
+.fmh-account:hover,
+.fmh-account[aria-expanded="true"] {
+  background-color: var(--mantine-color-default-hover);
+}

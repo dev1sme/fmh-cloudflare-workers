@@ -1,4 +1,5 @@
 import { Button, Group, Stack, Title } from "@mantine/core";
+import { IconPlus } from "@tabler/icons-react";
 import { useState } from "react";
 
 import type { RoomDetail } from "../../../shared/types";
@@ -42,7 +43,11 @@ export function RoomsPage() {
     <Stack>
       <Group justify="space-between">
         <Title order={3}>Phòng</Title>
-        <Button onClick={() => setDangMo({ room: null })} disabled={nha.length === 0}>
+        <Button
+          onClick={() => setDangMo({ room: null })}
+          disabled={nha.length === 0}
+          leftSection={<IconPlus size={16} stroke={1.8} />}
+        >
           Thêm phòng
         </Button>
       </Group>

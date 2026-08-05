@@ -18,7 +18,7 @@ export function TenantsTable({
 }) {
   return (
     <Table.ScrollContainer minWidth={820}>
-      <Table striped highlightOnHover>
+      <Table>
         <Table.Thead>
           <Table.Tr>
             <Table.Th>Phòng</Table.Th>

@@ -127,6 +127,9 @@ export type Invoice = {
 /** What list endpoints return: the invoice plus the room it belongs to. */
 export type InvoiceWithRoom = Invoice & {
   room_name: string;
+  /** Collected so far. The list shows how far along each invoice is, not just
+   *  whether it is settled. */
+  paid: number;
 };
 
 /** What the tenant needs to pay: the QR payload plus the same data as text. */

@@ -1,4 +1,5 @@
 import { Button, Group, Stack, Title } from "@mantine/core";
+import { IconUserPlus } from "@tabler/icons-react";
 import { useState } from "react";
 
 import type { TenantDetail } from "../../../shared/types";
@@ -49,7 +50,12 @@ export function TenantsPage() {
     <Stack>
       <Group justify="space-between">
         <Title order={3}>Người thuê</Title>
-        <Button onClick={() => setDangMo({ tenant: null })}>Thêm người thuê</Button>
+        <Button
+          onClick={() => setDangMo({ tenant: null })}
+          leftSection={<IconUserPlus size={16} stroke={1.8} />}
+        >
+          Thêm người thuê
+        </Button>
       </Group>
 
       <PageState loading={loading} error={error}>

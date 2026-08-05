@@ -69,6 +69,24 @@ Confirmations go through `useConfirm` (`xacNhan({...})` + render `hopThoai`), ne
 
 TypeScript is split into three project references — `tsconfig.app.json` (client, DOM libs), `tsconfig.worker.json` (Worker, workerd types), `tsconfig.node.json` (`vite.config.ts`). Client code must not import from `src/server/`, only from `src/shared/`.
 
-Stack: TypeScript, React + Vite, Mantine (UI), `@mantine/charts` + Recharts (the dashboard bar chart only), Hono, Cloudflare D1 (SQLite), `jose` for JWT.
+## Visual system
+
+`src/client/theme.ts` and `theme.css` hold every design decision; components must not hard-code colours or sizes.
+
+- **Two semantic accents, nothing else.** `owed` (amber) is money still owed, `settled` (green) is money received and the primary action colour. Both are defined as full Mantine tuples. A third accent would dilute the one signal the app exists to give: one amber row on a quiet page is unmissable.
+- **Warm neutrals.** Mantine's blue-grey `dark` scale is replaced with a brown-grey one, so amber and green read as ink on paper rather than neon on black. Page surface comes from `--fmh-paper`, hairlines from `--fmh-rule`.
+- **Tabular figures globally** (`font-variant-numeric: tabular-nums lining-nums`). Rents and meter readings are compared down a column; proportional digits make `1` narrower than `8` and the column wobbles. Money cells also carry `.fmh-num` for right alignment.
+- **Hairline rows, not zebra stripes.** Stripes compete with the amber highlight that actually means something. `Table` has no `striped` anywhere — the border comes from `theme.css`.
+- **`CollectionBar` replaces a status badge** on invoice rows. `CHƯA THANH TOÁN` answers yes/no, but the real question is how much is still out — a half-paid invoice and an untouched one are the same badge. Cancelled invoices get a flat label instead of a ratio, because nothing was ever owed.
+
+Font is **Be Vietnam Pro**, four weights, `latin` + `vietnamese` subsets only, from `@fontsource` rather than a CDN — the CSP allows `font-src 'self'`. About 148 kB of woff2 in `dist/`; the browser fetches only the subsets it needs.
+
+Be Vietnam Pro is wider than the system stack it replaced, which broke two things once already: chart axis ticks and stat-card figures overflowed. Long money figures on an axis use `tienRutGon` (`4,5tr`) with the exact value kept in the tooltip; stat cards size in `rem` and allow wrapping. Re-check both after any type change.
+
+Motion is `motion` (Framer Motion), used in exactly one place: `PageTransition`, a 180 ms 6 px rise on route change. This is a tool opened twenty times a day — an animation that charms on the first view obstructs on the twentieth. `useReducedMotion` collapses the distance rather than removing the component, so layout never shifts between modes.
+
+`QuickSearch` (Ctrl+K) is manager-only and loads the room and invoice lists once at mount. At this scale filtering a few dozen rows in memory beats a search endpoint that would need its own index and its own authorisation story.
+
+Stack: TypeScript, React + Vite, Mantine (UI), `@tabler/icons-react`, `motion`, `@mantine/spotlight`, `@mantine/charts` + Recharts (the dashboard bar chart only), Hono, Cloudflare D1 (SQLite), `jose` for JWT.
 
 Recharts costs about 400 kB raw / 120 kB gzipped and is the reason the client bundle is over 1 MB. It earns that only if the dashboard chart is worth it; if a second opinion ever says no, dropping `RevenueChart` removes the dependency entirely.

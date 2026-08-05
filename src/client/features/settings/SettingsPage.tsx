@@ -1,4 +1,5 @@
 import { Button, Group, Stack, Text, Title } from "@mantine/core";
+import { IconPlus } from "@tabler/icons-react";
 import { useState } from "react";
 
 import type { Building } from "../../../shared/types";
@@ -28,7 +29,12 @@ export function SettingsPage() {
     <Stack>
       <Group justify="space-between">
         <Title order={3}>Cài đặt</Title>
-        <Button onClick={() => setDangThem(true)}>Thêm nhà</Button>
+        <Button
+          onClick={() => setDangThem(true)}
+          leftSection={<IconPlus size={16} stroke={1.8} />}
+        >
+          Thêm nhà
+        </Button>
       </Group>
 
       <Text c="dimmed" size="sm">

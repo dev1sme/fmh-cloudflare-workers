@@ -1,73 +1,214 @@
-import { AppShell, Burger, Button, Group, NavLink, Text, Title } from "@mantine/core";
+import {
+  AppShell,
+  Avatar,
+  Burger,
+  Group,
+  Kbd,
+  Menu,
+  NavLink,
+  Text,
+  Title,
+  UnstyledButton,
+} from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
+import { spotlight } from "@mantine/spotlight";
+import {
+  IconBolt,
+  IconChevronUp,
+  IconBuildingCommunity,
+  IconFileInvoice,
+  IconHome,
+  IconKey,
+  IconLayoutDashboard,
+  IconLogout,
+  IconSearch,
+  IconSettings,
+  IconUsers,
+} from "@tabler/icons-react";
 import { Link, Outlet, useLocation } from "react-router-dom";
 
 import type { SessionUser } from "../api";
+import { PageTransition } from "./PageTransition";
+
+const ICON = { size: 18, stroke: 1.6 };
 
 const QUAN_LY_LINKS = [
-  { to: "/dashboard", label: "Tổng quan" },
-  { to: "/rooms", label: "Phòng" },
-  { to: "/tenants", label: "Người thuê" },
-  { to: "/readings", label: "Chỉ số điện nước" },
-  { to: "/invoices", label: "Hóa đơn" },
-  { to: "/accounts", label: "Tài khoản" },
-  { to: "/settings", label: "Cài đặt" },
-  { to: "/change-password", label: "Đổi mật khẩu" },
+  {
+    to: "/dashboard",
+    label: "Tổng quan",
+    icon: <IconLayoutDashboard {...ICON} />,
+  },
+  { to: "/rooms", label: "Phòng", icon: <IconHome {...ICON} /> },
+  { to: "/tenants", label: "Người thuê", icon: <IconUsers {...ICON} /> },
+  { to: "/readings", label: "Chỉ số điện nước", icon: <IconBolt {...ICON} /> },
+  { to: "/invoices", label: "Hóa đơn", icon: <IconFileInvoice {...ICON} /> },
+  { to: "/accounts", label: "Tài khoản", icon: <IconKey {...ICON} /> },
+  { to: "/settings", label: "Cài đặt", icon: <IconSettings {...ICON} /> },
 ];
 
 const NGUOI_THUE_LINKS = [
-  { to: "/dashboard", label: "Tổng quan" },
-  { to: "/my-invoices", label: "Hóa đơn của tôi" },
-  { to: "/my-readings", label: "Lịch sử chỉ số" },
-  { to: "/change-password", label: "Đổi mật khẩu" },
+  {
+    to: "/dashboard",
+    label: "Tổng quan",
+    icon: <IconLayoutDashboard {...ICON} />,
+  },
+  {
+    to: "/my-invoices",
+    label: "Hóa đơn của tôi",
+    icon: <IconFileInvoice {...ICON} />,
+  },
+  { to: "/my-readings", label: "Lịch sử chỉ số", icon: <IconBolt {...ICON} /> },
 ];
 
-export function AppLayout({ user, onLogout }: { user: SessionUser; onLogout: () => void }) {
+/** Two initials from a username, e.g. `phong01` -> `PH`. */
+function chuCaiDau(username: string): string {
+  return username.slice(0, 2).toUpperCase();
+}
+
+export function AppLayout({
+  user,
+  onLogout,
+}: {
+  user: SessionUser;
+  onLogout: () => void;
+}) {
   const [opened, { toggle, close }] = useDisclosure();
   const { pathname } = useLocation();
-  const links = user.role === "MANAGER" ? QUAN_LY_LINKS : NGUOI_THUE_LINKS;
+  const quanLy = user.role === "MANAGER";
+  const links = quanLy ? QUAN_LY_LINKS : NGUOI_THUE_LINKS;
 
   return (
     <AppShell
       header={{ height: 56 }}
-      navbar={{ width: 220, breakpoint: "sm", collapsed: { mobile: !opened } }}
+      navbar={{ width: 236, breakpoint: "sm", collapsed: { mobile: !opened } }}
+      footer={{ height: 36 }}
       padding="md"
     >
       <AppShell.Header>
         <Group h="100%" px="md" justify="space-between" wrap="nowrap">
           <Group gap="sm" wrap="nowrap">
-            <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />
+            <Burger
+              opened={opened}
+              onClick={toggle}
+              hiddenFrom="sm"
+              size="sm"
+            />
+            <IconBuildingCommunity size={22} stroke={1.6} />
             <Title order={4}>Nhà trọ FMH</Title>
           </Group>
-          <Group gap="sm" wrap="nowrap">
-            <Text size="sm" c="dimmed" visibleFrom="xs">
-              {user.username} · {user.role === "MANAGER" ? "quản lý" : "người thuê"}
-            </Text>
-            <Button size="xs" variant="light" onClick={onLogout}>
-              Đăng xuất
-            </Button>
-          </Group>
+
+          {/* Search is manager-only: a tenant has one room and a short list of
+              invoices, so there is nothing to jump between. */}
+          {quanLy && (
+            <UnstyledButton
+              onClick={spotlight.open}
+              visibleFrom="sm"
+              aria-label="Tìm nhanh"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                padding: "5px 10px",
+                borderRadius: "var(--mantine-radius-sm)",
+                border: "1px solid var(--fmh-rule)",
+                color: "var(--mantine-color-dimmed)",
+              }}
+            >
+              <IconSearch size={15} stroke={1.8} />
+              <Text size="sm">Tìm nhanh</Text>
+              <Kbd size="xs">Ctrl+K</Kbd>
+            </UnstyledButton>
+          )}
         </Group>
       </AppShell.Header>
 
       <AppShell.Navbar p="sm">
-        {links.map((link) => (
-          <NavLink
-            key={link.to}
-            component={Link}
-            to={link.to}
-            label={link.label}
-            // Match on a path segment, not a raw prefix: plain startsWith lights
-            // "Hóa đơn" up on /my-invoices, which is a different screen.
-            active={pathname === link.to || pathname.startsWith(`${link.to}/`)}
-            onClick={close}
-          />
-        ))}
+        {/* Navigation grows; the account block is pinned to the bottom so the
+            identity and the way out sit together, away from the screen's work. */}
+        <AppShell.Section grow>
+          {links.map((link) => (
+            <NavLink
+              key={link.to}
+              component={Link}
+              to={link.to}
+              label={link.label}
+              leftSection={link.icon}
+              // Match on a path segment, not a raw prefix: plain startsWith
+              // lights "Hóa đơn" up on /my-invoices, a different screen.
+              active={
+                pathname === link.to || pathname.startsWith(`${link.to}/`)
+              }
+              onClick={close}
+            />
+          ))}
+        </AppShell.Section>
+
+        <AppShell.Section
+          pt="sm"
+          style={{ borderTop: "1px solid var(--fmh-rule)" }}
+        >
+          {/* Only the identity is on show. The two account actions are behind a
+              menu, so the sidebar's bottom edge stays one row tall and the
+              navigation above it reads as the only list on the screen. */}
+          <Menu position="top-start" width="target" withinPortal shadow="md">
+            <Menu.Target>
+              <UnstyledButton
+                aria-label="Tài khoản"
+                className="fmh-account"
+                style={{ display: "block", width: "100%" }}
+              >
+                <Group gap="sm" wrap="nowrap">
+                  <Avatar size={32} radius="sm" color={quanLy ? "settled" : "owed"}>
+                    {chuCaiDau(user.username)}
+                  </Avatar>
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <Text size="sm" fw={600} truncate>
+                      {user.username}
+                    </Text>
+                    <Text size="xs" c="dimmed">
+                      {quanLy ? "Quản lý" : "Người thuê"}
+                    </Text>
+                  </div>
+                  <IconChevronUp size={15} stroke={1.8} opacity={0.6} />
+                </Group>
+              </UnstyledButton>
+            </Menu.Target>
+
+            <Menu.Dropdown>
+              <Menu.Item
+                component={Link}
+                to="/change-password"
+                leftSection={<IconKey size={16} stroke={1.8} />}
+                onClick={close}
+              >
+                Đổi mật khẩu
+              </Menu.Item>
+              <Menu.Divider />
+              <Menu.Item
+                color="red"
+                leftSection={<IconLogout size={16} stroke={1.8} />}
+                onClick={onLogout}
+              >
+                Đăng xuất
+              </Menu.Item>
+            </Menu.Dropdown>
+          </Menu>
+        </AppShell.Section>
       </AppShell.Navbar>
 
       <AppShell.Main>
-        <Outlet />
+        <PageTransition>
+          <Outlet />
+        </PageTransition>
       </AppShell.Main>
+
+      <AppShell.Footer>
+        <Group h="100%" px="md" justify="center" wrap="nowrap">
+          <Text size="xs" c="dimmed">
+            © {new Date().getFullYear()} dev1sme · Software Engineer
+          </Text>
+        </Group>
+      </AppShell.Footer>
     </AppShell>
   );
 }

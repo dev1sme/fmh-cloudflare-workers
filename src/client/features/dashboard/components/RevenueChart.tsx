@@ -2,7 +2,7 @@ import { BarChart } from "@mantine/charts";
 import { Card, Text, Title } from "@mantine/core";
 
 import type { DashboardHistoryPoint } from "../../../../shared/types";
-import { tien } from "../../../format";
+import { tien, tienRutGon } from "../../../format";
 
 /** "2026-08" -> "08/26", short enough for an axis tick. */
 function nhan(period: string): string {
@@ -33,10 +33,13 @@ export function RevenueChart({ history }: { history: DashboardHistoryPoint[] }) 
           data={data}
           dataKey="period"
           series={[
-            { name: "Phải thu", color: "blue.6" },
-            { name: "Đã thu", color: "teal.6" },
+            { name: "Phải thu", color: "owed.5" },
+            { name: "Đã thu", color: "settled.5" },
           ]}
+          // Tooltip keeps the exact figure; the axis only needs magnitude, and
+          // "6.000.000 đ" does not fit in a tick.
           valueFormatter={tien}
+          yAxisProps={{ tickFormatter: tienRutGon, width: 46 }}
           withLegend
           tickLine="y"
         />

@@ -18,7 +18,7 @@ export function AccountsTable({
 }) {
   return (
     <Table.ScrollContainer minWidth={680}>
-      <Table striped highlightOnHover>
+      <Table>
         <Table.Thead>
           <Table.Tr>
             <Table.Th>Tên đăng nhập</Table.Th>
