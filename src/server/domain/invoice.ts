@@ -23,9 +23,14 @@ export function sinhMaHoaDon(): string {
  *
  * Banks upper-case and strip memos unpredictably, so the match is
  * case-insensitive and the result is normalised back to upper case.
+ *
+ * The `i` flag covers the `HD` prefix as well as the hex. Without it the
+ * character class accepted `hd…` digits while the prefix still demanded
+ * capitals, so a memo the bank had lower-cased was silently unmatched and the
+ * transfer went unrecognised.
  */
 export function parseMaHoaDon(text: string): string | null {
-  const match = /HD([0-9A-Fa-f]{8})/.exec(text);
+  const match = /HD([0-9A-F]{8})/i.exec(text);
   return match ? `HD${match[1]!.toUpperCase()}` : null;
 }
 

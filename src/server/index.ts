@@ -16,6 +16,7 @@ import { paymentRoutes } from "./routes/payments";
 import { readingRoutes } from "./routes/readings";
 import { roomRoutes } from "./routes/rooms";
 import { tenantRoutes } from "./routes/tenants";
+import { webhookRoutes } from "./routes/webhook";
 import type { AppEnv } from "./types";
 import { ValidationError } from "./validate";
 
@@ -24,9 +25,14 @@ const app = new Hono<AppEnv>();
 // First in the chain so it covers public routes, errors and 404s alike.
 app.use("*", securityHeaders);
 
-// Public.
+// Public. Registration order is what makes this work in Hono — anything
+// mounted here must come above the sub-apps that require a session.
 app.get("/api/health", (c) => ok(c, { ok: true }, "Service is healthy."));
 app.route("/api/auth", authRoutes);
+
+// SePay calls this with a shared token, not a session cookie, so it cannot sit
+// under `requireQuanLy`. It authenticates itself before touching anything.
+app.route("/api/webhook", webhookRoutes);
 
 // Tenant accounts: read-only, always scoped to the room in their token.
 // Registered before the management sub-app so /api/me/* is not swallowed by it.

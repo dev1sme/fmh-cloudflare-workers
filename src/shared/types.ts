@@ -176,6 +176,10 @@ export type Payment = {
   paid_on: string;
   method: PaymentMethod;
   note: string | null;
+  /** The bank transaction this came from, when it arrived by webhook. NULL for
+   *  a payment the manager entered by hand. Unique where present, which is
+   *  what makes a repeated webhook delivery harmless. */
+  external_id: string | null;
 };
 
 export type Role = "MANAGER" | "TENANT";

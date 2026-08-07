@@ -1,6 +1,7 @@
 import type { Payment, PaymentMethod } from "../../shared/types";
 
-const SELECT = "SELECT id, code, invoice_id, amount, paid_on, method, note FROM payments";
+const SELECT =
+  "SELECT id, code, invoice_id, amount, paid_on, method, note, external_id FROM payments";
 
 export async function listPayments(db: D1Database, invoiceId: number): Promise<Payment[]> {
   const { results } = await db
@@ -34,6 +35,8 @@ export type PaymentInput = {
   paid_on: string;
   method: PaymentMethod;
   note: string | null;
+  /** Set only by the webhook, and unique — see migration 0008. */
+  external_id?: string | null;
 };
 
 export async function createPayment(
@@ -42,10 +45,18 @@ export async function createPayment(
 ): Promise<Payment | null> {
   const row = await db
     .prepare(
-      `INSERT INTO payments (code, invoice_id, amount, paid_on, method, note)
-       VALUES (?, ?, ?, ?, ?, ?) RETURNING id`,
+      `INSERT INTO payments (code, invoice_id, amount, paid_on, method, note, external_id)
+       VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id`,
     )
-    .bind(input.code, input.invoice_id, input.amount, input.paid_on, input.method, input.note)
+    .bind(
+      input.code,
+      input.invoice_id,
+      input.amount,
+      input.paid_on,
+      input.method,
+      input.note,
+      input.external_id ?? null,
+    )
     .first<{ id: number }>();
 
   return row ? getPayment(db, row.id) : null;

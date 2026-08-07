@@ -82,6 +82,16 @@ async function deriveBits(
   return new Uint8Array(bits);
 }
 
+/**
+ * Compares two secrets without letting the time taken reveal how much of the
+ * guess was right. Exported for the SePay webhook, which authenticates with a
+ * shared token and must not leak it a byte at a time.
+ */
+export function soSanhBiMat(a: string, b: string): boolean {
+  const enc = new TextEncoder();
+  return timingSafeEqual(enc.encode(a), enc.encode(b));
+}
+
 function timingSafeEqual(a: Uint8Array, b: Uint8Array): boolean {
   if (a.length !== b.length) return false;
   let diff = 0;

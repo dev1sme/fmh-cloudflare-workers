@@ -14,8 +14,12 @@ compatibility_flags = ["nodejs_compat"]
 routes = [{ pattern = "rentals.dev1sme.cloud", custom_domain = true }]
 
 # Deploy fails loudly if these are not set on the Worker (`wrangler secret put`).
+#
+# This list also decides which secrets from `.dev.vars` get wired into the
+# local Worker — a name missing here is simply absent from `c.env` in dev, with
+# no warning. Add every new secret.
 [secrets]
-required = ["JWT_SECRET"]
+required = ["JWT_SECRET", "SEPAY_WEBHOOK_TOKEN"]
 
 [assets]
 not_found_handling = "single-page-application"

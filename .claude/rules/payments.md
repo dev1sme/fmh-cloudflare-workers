@@ -12,4 +12,14 @@ Every payment detail is copyable through `CopyableRow` (`src/client/components/`
 
 MoMo is text only, never a QR: MoMo's personal QR payload format is unverified here, and a guessed one could send money to the wrong wallet.
 
-Optional automation: SePay balance-change webhook at `/api/webhook/sepay` parses the invoice code out of the transfer memo (`parseMaHoaDon`, case-insensitive, normalised to upper case) and looks it up with `getInvoiceByCode`, sets `invoices.status = 'PAID'`, and inserts a `payments` row. The webhook must authenticate with `SEPAY_WEBHOOK_TOKEN` before mutating anything, using a constant-time compare rather than `===`.
+SePay balance-change webhook at `POST /api/webhook/sepay`. It parses the invoice code out of the transfer memo (`parseMaHoaDon`, case-insensitive, normalised to upper case), looks it up with `getInvoiceByCode`, inserts a `payments` row, and then calls `capNhatTrangThai`.
+
+It **re-derives** the status from `SUM(payments)` rather than setting `PAID` outright — the same path a hand-entered payment takes. A tenant who transfers less than the total has paid something, not everything, and the invoice has to keep saying so.
+
+Authentication is `Authorization: Apikey <SEPAY_WEBHOOK_TOKEN>`, compared with `soSanhBiMat` (constant-time) rather than `===`. With the secret unset the route answers 503 instead of 401: no token would ever work, and an unconfigured deployment must not accept anonymous writes to `payments`.
+
+**Read the status codes as instructions to SePay, not as a verdict.** SePay retries anything that is not 2xx with `{"success": true}` inside 30 seconds. So everything a retry cannot fix answers **200 and stops** — money going out rather than in, a memo with no code, an unknown invoice, a cancelled invoice, a delivery already recorded. Only bad credentials (401), unparseable JSON (400) and genuine faults (500) are refused.
+
+Retries are why `payments.external_id` exists (migration 0008): the SePay transaction id, with a partial unique index. The index is what makes a repeat safe, including two retries racing — a SELECT-then-INSERT check would let both through. The route catches the constraint failure and answers 200.
+
+A cancelled invoice is left alone. The money still arrived, so that is for the manager to sort out by hand rather than something to record against a bill that was never owed.
