@@ -1,5 +1,6 @@
 import { Group, Stack, Title } from "@mantine/core";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import type { ReadingDetail } from "../../../shared/types";
 import { PeriodPicker } from "../../components/PeriodPicker";
@@ -15,14 +16,18 @@ export function ReadingsPage() {
   const { phong, chiSoCuaPhong, loading, error, reload } = useReadingsTheoKy(period);
   const { goiY, luu, xoa } = useThaoTacChiSo(period, reload);
   const { xacNhan, hopThoai } = useConfirm();
+  const { t } = useTranslation();
 
   const [dangNhap, setDangNhap] = useState<MucTieu | null>(null);
 
   function hoiXoa(reading: ReadingDetail) {
     xacNhan({
-      title: "Xoá chỉ số",
-      message: `Xoá chỉ số ${reading.room_name} ${periodLabel(reading.period).toLowerCase()}? Hóa đơn của kỳ này sẽ không sinh lại được cho tới khi nhập lại.`,
-      confirmLabel: "Xoá",
+      title: t("readings.deleteTitle"),
+      message: t("readings.confirmDelete", {
+        room: reading.room_name,
+        period: periodLabel(reading.period),
+      }),
+      confirmLabel: t("common.delete"),
       onConfirm: () => xoa(reading.code),
     });
   }
@@ -30,7 +35,7 @@ export function ReadingsPage() {
   return (
     <Stack>
       <Group justify="space-between" align="flex-end">
-        <Title order={3}>Chỉ số điện nước</Title>
+        <Title order={3}>{t("nav.readings")}</Title>
         <PeriodPicker value={period} onChange={setPeriod} />
       </Group>
 

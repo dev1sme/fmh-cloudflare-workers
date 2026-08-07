@@ -1,4 +1,5 @@
 import { Button, Group, Menu, Table, Text } from "@mantine/core";
+import { useTranslation } from "react-i18next";
 
 import type { RoomDetail } from "../../../../shared/types";
 import { ngay, tien } from "../../../format";
@@ -16,16 +17,18 @@ export function RoomsTable({
   onMoveOut: (room: RoomDetail) => void;
   onDelete: (room: RoomDetail) => void;
 }) {
+  const { t } = useTranslation();
+
   return (
     <Table.ScrollContainer minWidth={720}>
       <Table>
         <Table.Thead>
           <Table.Tr>
-            <Table.Th>Phòng</Table.Th>
-            <Table.Th>Giá phòng</Table.Th>
-            <Table.Th>Diện tích</Table.Th>
-            <Table.Th>Người thuê</Table.Th>
-            <Table.Th>Từ ngày</Table.Th>
+            <Table.Th>{t("dashboard.colRoom")}</Table.Th>
+            <Table.Th>{t("rooms.colRent")}</Table.Th>
+            <Table.Th>{t("rooms.colArea")}</Table.Th>
+            <Table.Th>{t("rooms.colTenant")}</Table.Th>
+            <Table.Th>{t("rooms.colFrom")}</Table.Th>
             <Table.Th />
           </Table.Tr>
         </Table.Thead>
@@ -39,25 +42,29 @@ export function RoomsTable({
                 </Text>
               </Table.Td>
               <Table.Td>{tien(room.rent)}</Table.Td>
-              <Table.Td>{room.area ? `${room.area} m²` : "—"}</Table.Td>
+              <Table.Td>{room.area ? `${room.area} m²` : t("common.empty")}</Table.Td>
               <Table.Td>
                 {room.tenant ? (
                   <>
                     <Text>{room.tenant.full_name}</Text>
                     <Text size="xs" c="dimmed">
-                      {room.tenant.occupants} người ở ·{" "}
-                      {room.tenant.phone ?? "chưa có số điện thoại"}
+                      {t("rooms.occupantsLine", {
+                        count: room.tenant.occupants,
+                        phone: room.tenant.phone ?? t("rooms.noPhone"),
+                      })}
                     </Text>
                   </>
                 ) : (
-                  <Text c="dimmed">Đang trống</Text>
+                  <Text c="dimmed">{t("rooms.vacant")}</Text>
                 )}
               </Table.Td>
-              <Table.Td>{room.tenant ? ngay(room.tenant.moved_in) : "—"}</Table.Td>
+              <Table.Td>
+                {room.tenant ? ngay(room.tenant.moved_in) : t("common.empty")}
+              </Table.Td>
               <Table.Td>
                 <Group gap="xs" justify="flex-end" wrap="nowrap">
                   <Button size="xs" variant="light" onClick={() => onEdit(room)}>
-                    Sửa
+                    {t("common.edit")}
                   </Button>
                   {room.tenant ? (
                     <Button
@@ -66,11 +73,11 @@ export function RoomsTable({
                       color="orange"
                       onClick={() => onMoveOut(room)}
                     >
-                      Chuyển đi
+                      {t("rooms.moveOut")}
                     </Button>
                   ) : (
                     <Button size="xs" variant="subtle" onClick={() => onMoveIn(room)}>
-                      Thêm người thuê
+                      {t("rooms.moveIn")}
                     </Button>
                   )}
                   <Menu position="bottom-end" withinPortal>
@@ -81,7 +88,7 @@ export function RoomsTable({
                     </Menu.Target>
                     <Menu.Dropdown>
                       <Menu.Item color="red" onClick={() => onDelete(room)}>
-                        Xoá phòng
+                        {t("rooms.delete")}
                       </Menu.Item>
                     </Menu.Dropdown>
                   </Menu>

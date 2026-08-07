@@ -3,6 +3,7 @@ import { useCallback } from "react";
 import type { ReadingDetail } from "../../../shared/types";
 import { readings as readingsApi, rooms as roomsApi } from "../../api";
 import { baoLoi, baoThanhCong } from "../../errors";
+import i18n from "../../i18n";
 import { useResource } from "../../hooks/useResource";
 
 export type ChiSoNhap = {
@@ -50,7 +51,7 @@ export function useThaoTacChiSo(period: string, reload: () => void) {
       } else {
         await readingsApi.update(target.readingCode, input);
       }
-      baoThanhCong("Đã lưu chỉ số.");
+      baoThanhCong(i18n.t("readings.saved"));
       reload();
       return true;
     } catch (err) {
@@ -62,7 +63,7 @@ export function useThaoTacChiSo(period: string, reload: () => void) {
   async function xoa(code: string): Promise<boolean> {
     try {
       await readingsApi.remove(code);
-      baoThanhCong("Đã xoá chỉ số.");
+      baoThanhCong(i18n.t("readings.deleted"));
       reload();
       return true;
     } catch (err) {

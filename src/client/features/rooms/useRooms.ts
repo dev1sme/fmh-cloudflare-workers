@@ -5,6 +5,7 @@ import {
   type RoomInput,
 } from "../../api";
 import { baoLoi, baoThanhCong } from "../../errors";
+import i18n from "../../i18n";
 import { homNay } from "../../format";
 import { useResource } from "../../hooks/useResource";
 
@@ -37,7 +38,7 @@ export function useThaoTacPhong(reload: () => void) {
   async function themPhong(input: RoomInput): Promise<boolean> {
     try {
       await roomsApi.create(input);
-      baoThanhCong("Đã thêm phòng.");
+      baoThanhCong(i18n.t("rooms.added"));
       reload();
       return true;
     } catch (err) {
@@ -49,7 +50,7 @@ export function useThaoTacPhong(reload: () => void) {
   async function capNhatPhong(code: string, patch: Partial<RoomInput>): Promise<boolean> {
     try {
       await roomsApi.update(code, patch);
-      baoThanhCong("Đã lưu phòng.");
+      baoThanhCong(i18n.t("rooms.saved"));
       reload();
       return true;
     } catch (err) {
@@ -62,7 +63,7 @@ export function useThaoTacPhong(reload: () => void) {
   async function xoaPhong(code: string): Promise<boolean> {
     try {
       await roomsApi.remove(code);
-      baoThanhCong("Đã xoá phòng.");
+      baoThanhCong(i18n.t("rooms.deleted"));
       reload();
       return true;
     } catch (err) {
@@ -80,7 +81,7 @@ export function useThaoTacPhong(reload: () => void) {
         occupants: input.occupants,
         moved_in: input.moved_in,
       });
-      baoThanhCong("Đã thêm người thuê.");
+      baoThanhCong(i18n.t("tenantForm.added"));
       reload();
       return true;
     } catch (err) {
@@ -92,7 +93,7 @@ export function useThaoTacPhong(reload: () => void) {
   async function chuyenDi(tenantCode: string): Promise<boolean> {
     try {
       await tenantsApi.update(tenantCode, { moved_out: homNay() });
-      baoThanhCong("Đã ghi nhận chuyển đi.");
+      baoThanhCong(i18n.t("tenantForm.movedOutDone"));
       reload();
       return true;
     } catch (err) {

@@ -1,4 +1,5 @@
 import { Badge, Button, Group, Table } from "@mantine/core";
+import { useTranslation } from "react-i18next";
 
 import type { ReadingDetail, RoomDetail } from "../../../../shared/types";
 import { ngay } from "../../../format";
@@ -14,17 +15,19 @@ export function ReadingsTable({
   onEdit: (room: RoomDetail, reading: ReadingDetail | null) => void;
   onDelete: (reading: ReadingDetail) => void;
 }) {
+  const { t } = useTranslation();
+
   return (
     <Table.ScrollContainer minWidth={760}>
       <Table>
         <Table.Thead>
           <Table.Tr>
-            <Table.Th>Phòng</Table.Th>
-            <Table.Th>Điện (cũ → mới)</Table.Th>
-            <Table.Th>Số điện</Table.Th>
-            <Table.Th>Nước (cũ → mới)</Table.Th>
-            <Table.Th>Số nước</Table.Th>
-            <Table.Th>Ngày ghi</Table.Th>
+            <Table.Th>{t("dashboard.colRoom")}</Table.Th>
+            <Table.Th>{t("readings.colElectricity")}</Table.Th>
+            <Table.Th>{t("readings.colElectricityUsed")}</Table.Th>
+            <Table.Th>{t("readings.colWater")}</Table.Th>
+            <Table.Th>{t("readings.colWaterUsed")}</Table.Th>
+            <Table.Th>{t("readings.colRecordedOn")}</Table.Th>
             <Table.Th />
           </Table.Tr>
         </Table.Thead>
@@ -40,18 +43,18 @@ export function ReadingsTable({
                     `${reading.electricity_start} → ${reading.electricity_end}`
                   ) : (
                     <Badge color="gray" variant="light">
-                      Chưa nhập
+                      {t("readings.notEntered")}
                     </Badge>
                   )}
                 </Table.Td>
-                <Table.Td>{reading ? `${reading.electricity_used} kWh` : "—"}</Table.Td>
-                <Table.Td>{reading ? `${reading.water_start} → ${reading.water_end}` : "—"}</Table.Td>
-                <Table.Td>{reading ? `${reading.water_used} m³` : "—"}</Table.Td>
-                <Table.Td>{reading ? ngay(reading.recorded_on) : "—"}</Table.Td>
+                <Table.Td>{reading ? `${reading.electricity_used} kWh` : t("common.empty")}</Table.Td>
+                <Table.Td>{reading ? `${reading.water_start} → ${reading.water_end}` : t("common.empty")}</Table.Td>
+                <Table.Td>{reading ? `${reading.water_used} m³` : t("common.empty")}</Table.Td>
+                <Table.Td>{reading ? ngay(reading.recorded_on) : t("common.empty")}</Table.Td>
                 <Table.Td>
                   <Group justify="flex-end" gap="xs" wrap="nowrap">
                     <Button size="xs" variant="light" onClick={() => onEdit(room, reading)}>
-                      {reading ? "Sửa" : "Nhập"}
+                      {reading ? t("common.edit") : t("readings.enter")}
                     </Button>
                     {reading && (
                       <Button
@@ -60,7 +63,7 @@ export function ReadingsTable({
                         color="red"
                         onClick={() => onDelete(reading)}
                       >
-                        Xoá
+                        {t("common.delete")}
                       </Button>
                     )}
                   </Group>

@@ -1,6 +1,7 @@
 import { Button, Group, Stack, Title } from "@mantine/core";
 import { IconUserPlus } from "@tabler/icons-react";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import type { TenantDetail } from "../../../shared/types";
 import { PageState } from "../../components/PageState";
@@ -14,14 +15,18 @@ export function TenantsPage() {
   const { nguoiThue, phong, loading, error, reload } = useDanhSachNguoiThue();
   const { them, capNhat, chuyenDi, huyChuyenDi, xoa } = useThaoTacNguoiThue(reload);
   const { xacNhan, hopThoai } = useConfirm();
+  const { t } = useTranslation();
 
   const [dangMo, setDangMo] = useState<MucTieuNguoiThue>(null);
 
   function hoiChuyenDi(tenant: TenantDetail) {
     xacNhan({
-      title: "Ghi nhận chuyển đi",
-      message: `${tenant.full_name} đã chuyển khỏi ${tenant.room_name}? Phòng sẽ trống từ hôm nay và có thể nhận người mới.`,
-      confirmLabel: "Đã chuyển đi",
+      title: t("tenants.recordMoveOut"),
+      message: t("tenants.confirmMoveOut", {
+        name: tenant.full_name,
+        room: tenant.room_name,
+      }),
+      confirmLabel: t("tenants.movedOut"),
       color: "orange",
       onConfirm: () => chuyenDi(tenant.code),
     });
@@ -29,9 +34,13 @@ export function TenantsPage() {
 
   function hoiHuyChuyenDi(tenant: TenantDetail) {
     xacNhan({
-      title: "Huỷ chuyển đi",
-      message: `Đưa ${tenant.full_name} trở lại thành người đang thuê ${tenant.room_name} (đã ghi chuyển đi ngày ${ngay(tenant.moved_out)}). Không được nếu phòng đã có người khác.`,
-      confirmLabel: "Đưa trở lại",
+      title: t("tenants.confirmUndoTitle"),
+      message: t("tenants.confirmUndo", {
+        name: tenant.full_name,
+        room: tenant.room_name,
+        date: ngay(tenant.moved_out),
+      }),
+      confirmLabel: t("tenants.undoLabel"),
       color: "teal",
       onConfirm: () => huyChuyenDi(tenant.code),
     });
@@ -39,9 +48,12 @@ export function TenantsPage() {
 
   function hoiXoa(tenant: TenantDetail) {
     xacNhan({
-      title: "Xoá bản ghi người thuê",
-      message: `Xoá hẳn ${tenant.full_name} khỏi lịch sử ${tenant.room_name}. Chỉ dùng khi nhập nhầm — người đã chuyển đi nên giữ lại để tra cứu.`,
-      confirmLabel: "Xoá",
+      title: t("tenants.confirmDeleteTitle"),
+      message: t("tenants.confirmDelete", {
+        name: tenant.full_name,
+        room: tenant.room_name,
+      }),
+      confirmLabel: t("common.delete"),
       onConfirm: () => xoa(tenant.code),
     });
   }
@@ -49,12 +61,12 @@ export function TenantsPage() {
   return (
     <Stack>
       <Group justify="space-between">
-        <Title order={3}>Người thuê</Title>
+        <Title order={3}>{t("nav.tenants")}</Title>
         <Button
           onClick={() => setDangMo({ tenant: null })}
           leftSection={<IconUserPlus size={16} stroke={1.8} />}
         >
-          Thêm người thuê
+          {t("tenants.add")}
         </Button>
       </Group>
 

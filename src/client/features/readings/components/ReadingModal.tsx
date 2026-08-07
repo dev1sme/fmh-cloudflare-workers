@@ -1,5 +1,6 @@
 import { Button, Group, Modal, NumberInput, Stack, Text, TextInput } from "@mantine/core";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import type { ReadingDetail, RoomDetail } from "../../../../shared/types";
 import { baoLoi } from "../../../errors";
@@ -32,6 +33,7 @@ export function ReadingModal({
   const [ngayGhi, setNgayGhi] = useState(homNay());
   const [ghiChuGoiY, setGhiChuGoiY] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const { t } = useTranslation();
 
   /**
    * Editing shows the stored numbers; a new entry pulls the opening numbers
@@ -60,12 +62,12 @@ export function ReadingModal({
         setNuocCu(suggestion.water_start);
         setGhiChuGoiY(
           suggestion.previous_period
-            ? `Chỉ số đầu kỳ lấy từ kỳ ${suggestion.previous_period}.`
-            : "Chưa có kỳ trước, chỉ số đầu kỳ mặc định 0.",
+            ? t("readings.carriedFrom", { period: suggestion.previous_period })
+            : t("readings.noPrevious"),
         );
       })
       .catch(baoLoi);
-  }, [target, goiY]);
+  }, [target, goiY, t]);
 
   async function save() {
     if (!target) return;
@@ -90,7 +92,7 @@ export function ReadingModal({
     <Modal
       opened={target !== null}
       onClose={onClose}
-      title={`Chỉ số ${target?.room.room_name ?? ""} — kỳ ${period}`}
+      title={t("readings.modalTitle", { room: target?.room.room_name ?? "", period })}
     >
       <Stack>
         {ghiChuGoiY && (
@@ -100,27 +102,32 @@ export function ReadingModal({
         )}
 
         <Group grow>
-          <NumberInput label="Điện cũ" value={dienCu} onChange={setDienCu} min={0} />
-          <NumberInput label="Điện mới" value={dienMoi} onChange={setDienMoi} min={0} />
+          <NumberInput label={t("readings.electricityStart")} value={dienCu} onChange={setDienCu} min={0} />
+          <NumberInput label={t("readings.electricityEnd")} value={dienMoi} onChange={setDienMoi} min={0} />
         </Group>
         <Group grow>
-          <NumberInput label="Nước cũ" value={nuocCu} onChange={setNuocCu} min={0} />
-          <NumberInput label="Nước mới" value={nuocMoi} onChange={setNuocMoi} min={0} />
+          <NumberInput label={t("readings.waterStart")} value={nuocCu} onChange={setNuocCu} min={0} />
+          <NumberInput label={t("readings.waterEnd")} value={nuocMoi} onChange={setNuocMoi} min={0} />
         </Group>
         <TextInput
           type="date"
-          label="Ngày ghi"
+          label={t("readings.colRecordedOn")}
           value={ngayGhi}
           onChange={(e) => setNgayGhi(e.currentTarget.value)}
         />
 
+        {/* Two labelled figures rather than one sentence with two values
+            spliced into it: the sentence only reads naturally in Vietnamese,
+            and the labels already exist. */}
         <Text size="sm">
-          Tiêu thụ: <Consumption cu={Number(dienCu)} moi={Number(dienMoi)} donVi="kWh" /> điện,{" "}
-          <Consumption cu={Number(nuocCu)} moi={Number(nuocMoi)} donVi="m³" /> nước.
+          {t("meter.electricityUsed")}:{" "}
+          <Consumption cu={Number(dienCu)} moi={Number(dienMoi)} donVi="kWh" /> ·{" "}
+          {t("meter.waterUsed")}:{" "}
+          <Consumption cu={Number(nuocCu)} moi={Number(nuocMoi)} donVi="m³" />
         </Text>
 
         <Button onClick={save} loading={busy}>
-          Lưu
+          {t("common.save")}
         </Button>
       </Stack>
     </Modal>

@@ -5,6 +5,7 @@ import {
   type TenantPatch,
 } from "../../api";
 import { baoLoi, baoThanhCong } from "../../errors";
+import i18n from "../../i18n";
 import { homNay } from "../../format";
 import { useResource } from "../../hooks/useResource";
 
@@ -26,7 +27,7 @@ export function useThaoTacNguoiThue(reload: () => void) {
   async function them(input: TenantInput): Promise<boolean> {
     try {
       await tenantsApi.create(input);
-      baoThanhCong("Đã thêm người thuê.");
+      baoThanhCong(i18n.t("tenantForm.added"));
       reload();
       return true;
     } catch (err) {
@@ -38,7 +39,7 @@ export function useThaoTacNguoiThue(reload: () => void) {
   async function capNhat(code: string, patch: TenantPatch): Promise<boolean> {
     try {
       await tenantsApi.update(code, patch);
-      baoThanhCong("Đã lưu người thuê.");
+      baoThanhCong(i18n.t("tenants.saved"));
       reload();
       return true;
     } catch (err) {
@@ -55,7 +56,7 @@ export function useThaoTacNguoiThue(reload: () => void) {
   async function xoa(code: string): Promise<boolean> {
     try {
       await tenantsApi.remove(code);
-      baoThanhCong("Đã xoá bản ghi người thuê.");
+      baoThanhCong(i18n.t("tenants.deleted"));
       reload();
       return true;
     } catch (err) {

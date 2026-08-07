@@ -1,5 +1,6 @@
 import { Button, Modal, NumberInput, Select, Stack, TextInput } from "@mantine/core";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import type { RoomDetail, TenantDetail } from "../../../../shared/types";
 import type { TenantInput, TenantPatch } from "../../../api";
@@ -22,6 +23,7 @@ export function TenantModal({
   onUpdate: (code: string, patch: TenantPatch) => Promise<boolean>;
 }) {
   const dangSua = target?.tenant ?? null;
+  const { t } = useTranslation();
 
   const [roomId, setRoomId] = useState<string | null>(null);
   const [hoTen, setHoTen] = useState("");
@@ -76,11 +78,13 @@ export function TenantModal({
     <Modal
       opened={target !== null}
       onClose={onClose}
-      title={dangSua ? `Sửa người thuê — ${dangSua.room_name}` : "Thêm người thuê"}
+      title={
+        dangSua ? t("tenants.editTitle", { room: dangSua.room_name }) : t("tenants.add")
+      }
     >
       <Stack>
         <Select
-          label="Phòng"
+          label={t("tenants.room")}
           value={roomId}
           onChange={setRoomId}
           data={phong.map((room) => ({ value: String(room.id), label: room.room_name }))}
@@ -89,32 +93,32 @@ export function TenantModal({
           allowDeselect={false}
         />
         <TextInput
-          label="Người đứng tên"
+          label={t("tenants.named")}
           value={hoTen}
           onChange={(e) => setHoTen(e.currentTarget.value)}
           required
         />
         <TextInput
-          label="Số điện thoại"
+          label={t("tenantForm.phone")}
           value={phone}
           onChange={(e) => setSdt(e.currentTarget.value)}
         />
         <NumberInput
-          label="Số người ở"
-          description="Tính cả người đứng tên"
+          label={t("tenantForm.occupants")}
+          description={t("tenantForm.occupantsHint")}
           value={soNguoi}
           onChange={setSoNguoi}
           min={1}
         />
         <TextInput
           type="date"
-          label="Ngày vào"
+          label={t("tenantForm.movedIn")}
           value={ngayVao}
           onChange={(e) => setNgayVao(e.currentTarget.value)}
         />
 
         <Button onClick={save} loading={busy}>
-          Lưu
+          {t("common.save")}
         </Button>
       </Stack>
     </Modal>

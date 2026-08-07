@@ -1,6 +1,7 @@
 import { Button, Group, Stack, Title } from "@mantine/core";
 import { IconPlus } from "@tabler/icons-react";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import type { RoomDetail } from "../../../shared/types";
 import { PageState } from "../../components/PageState";
@@ -14,6 +15,7 @@ export function RoomsPage() {
   const { phong, nha, loading, error, reload } = useDanhSachPhong();
   const { themPhong, capNhatPhong, xoaPhong, themNguoiThue, chuyenDi } = useThaoTacPhong(reload);
   const { xacNhan, hopThoai } = useConfirm();
+  const { t } = useTranslation();
 
   const [dangMo, setDangMo] = useState<MucTieuPhong>(null);
   const [dangThemNguoi, setDangThemNguoi] = useState<RoomDetail | null>(null);
@@ -22,9 +24,12 @@ export function RoomsPage() {
     if (!room.tenant) return;
 
     xacNhan({
-      title: "Xác nhận chuyển đi",
-      message: `${room.tenant.full_name} đã chuyển khỏi ${room.room_name}? Phòng sẽ được đánh dấu trống từ hôm nay.`,
-      confirmLabel: "Đã chuyển đi",
+      title: t("rooms.confirmMoveOutTitle"),
+      message: t("rooms.confirmMoveOut", {
+        name: room.tenant.full_name,
+        room: room.room_name,
+      }),
+      confirmLabel: t("rooms.movedOutLabel"),
       color: "orange",
       onConfirm: () => chuyenDi(room.tenant!.code),
     });
@@ -32,9 +37,9 @@ export function RoomsPage() {
 
   function hoiXoaPhong(room: RoomDetail) {
     xacNhan({
-      title: "Xoá phòng",
-      message: `Xoá ${room.room_name}? Chỉ xoá được khi phòng chưa có chỉ số, hóa đơn hay người thuê nào.`,
-      confirmLabel: "Xoá",
+      title: t("rooms.delete"),
+      message: t("rooms.confirmDelete", { room: room.room_name }),
+      confirmLabel: t("common.delete"),
       onConfirm: () => xoaPhong(room.code),
     });
   }
@@ -42,13 +47,13 @@ export function RoomsPage() {
   return (
     <Stack>
       <Group justify="space-between">
-        <Title order={3}>Phòng</Title>
+        <Title order={3}>{t("nav.rooms")}</Title>
         <Button
           onClick={() => setDangMo({ room: null })}
           disabled={nha.length === 0}
           leftSection={<IconPlus size={16} stroke={1.8} />}
         >
-          Thêm phòng
+          {t("rooms.add")}
         </Button>
       </Group>
 

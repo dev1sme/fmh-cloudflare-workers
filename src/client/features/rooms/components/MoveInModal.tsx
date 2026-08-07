@@ -1,5 +1,6 @@
 import { Button, Modal, NumberInput, Stack, TextInput } from "@mantine/core";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import type { RoomDetail } from "../../../../shared/types";
 import { homNay } from "../../../format";
@@ -19,6 +20,7 @@ export function MoveInModal({
   const [soNguoi, setSoNguoi] = useState<number | string>(1);
   const [ngayVao, setNgayVao] = useState(homNay());
   const [busy, setBusy] = useState(false);
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (!room) return;
@@ -44,34 +46,34 @@ export function MoveInModal({
   }
 
   return (
-    <Modal opened={room !== null} onClose={onClose} title={`Thêm người thuê — ${room?.room_name}`}>
+    <Modal opened={room !== null} onClose={onClose} title={t("tenantForm.moveInTitle", { room: room?.room_name ?? "" })}>
       <Stack>
         <TextInput
-          label="Họ tên"
+          label={t("tenantForm.fullName")}
           value={hoTen}
           onChange={(e) => setHoTen(e.currentTarget.value)}
           required
         />
         <TextInput
-          label="Số điện thoại"
+          label={t("tenantForm.phone")}
           value={phone}
           onChange={(e) => setSdt(e.currentTarget.value)}
         />
         <NumberInput
-          label="Số người ở"
-          description="Tính cả người đứng tên"
+          label={t("tenantForm.occupants")}
+          description={t("tenantForm.occupantsHint")}
           value={soNguoi}
           onChange={setSoNguoi}
           min={1}
         />
         <TextInput
           type="date"
-          label="Ngày vào"
+          label={t("tenantForm.movedIn")}
           value={ngayVao}
           onChange={(e) => setNgayVao(e.currentTarget.value)}
         />
         <Button onClick={save} loading={busy}>
-          Lưu
+          {t("common.save")}
         </Button>
       </Stack>
     </Modal>

@@ -1,4 +1,5 @@
 import { Badge, Button, Group, Menu, Table, Text } from "@mantine/core";
+import { useTranslation } from "react-i18next";
 
 import type { TenantDetail } from "../../../../shared/types";
 import { ngay } from "../../../format";
@@ -16,18 +17,20 @@ export function TenantsTable({
   onUndoMoveOut: (tenant: TenantDetail) => void;
   onDelete: (tenant: TenantDetail) => void;
 }) {
+  const { t } = useTranslation();
+
   return (
     <Table.ScrollContainer minWidth={820}>
       <Table>
         <Table.Thead>
           <Table.Tr>
-            <Table.Th>Phòng</Table.Th>
-            <Table.Th>Người đứng tên</Table.Th>
-            <Table.Th>Số điện thoại</Table.Th>
-            <Table.Th>Số người ở</Table.Th>
-            <Table.Th>Vào</Table.Th>
-            <Table.Th>Ra</Table.Th>
-            <Table.Th>Trạng thái</Table.Th>
+            <Table.Th>{t("tenants.room")}</Table.Th>
+            <Table.Th>{t("tenants.named")}</Table.Th>
+            <Table.Th>{t("tenants.colPhone")}</Table.Th>
+            <Table.Th>{t("tenants.colOccupants")}</Table.Th>
+            <Table.Th>{t("tenants.colIn")}</Table.Th>
+            <Table.Th>{t("tenants.colOut")}</Table.Th>
+            <Table.Th>{t("tenants.colStatus")}</Table.Th>
             <Table.Th />
           </Table.Tr>
         </Table.Thead>
@@ -39,19 +42,19 @@ export function TenantsTable({
               <Table.Tr key={tenant.id}>
                 <Table.Td fw={500}>{tenant.room_name}</Table.Td>
                 <Table.Td>{tenant.full_name}</Table.Td>
-                <Table.Td>{tenant.phone ?? "—"}</Table.Td>
-                <Table.Td>{tenant.occupants} người</Table.Td>
+                <Table.Td>{tenant.phone ?? t("common.empty")}</Table.Td>
+                <Table.Td>{t("tenants.occupantsCell", { count: tenant.occupants })}</Table.Td>
                 <Table.Td>{ngay(tenant.moved_in)}</Table.Td>
                 <Table.Td>{ngay(tenant.moved_out)}</Table.Td>
                 <Table.Td>
                   <Badge color={dangThue ? "teal" : "gray"} variant="light">
-                    {dangThue ? "Đang thuê" : "Đã chuyển đi"}
+                    {dangThue ? t("tenants.renting") : t("tenants.movedOut")}
                   </Badge>
                 </Table.Td>
                 <Table.Td>
                   <Group gap="xs" justify="flex-end" wrap="nowrap">
                     <Button size="xs" variant="light" onClick={() => onEdit(tenant)}>
-                      Sửa
+                      {t("common.edit")}
                     </Button>
                     <Menu position="bottom-end" withinPortal>
                       <Menu.Target>
@@ -62,15 +65,15 @@ export function TenantsTable({
                       <Menu.Dropdown>
                         {dangThue ? (
                           <Menu.Item color="orange" onClick={() => onMoveOut(tenant)}>
-                            Ghi nhận chuyển đi
+                            {t("tenants.recordMoveOut")}
                           </Menu.Item>
                         ) : (
                           <Menu.Item onClick={() => onUndoMoveOut(tenant)}>
-                            Huỷ chuyển đi
+                            {t("tenants.undoMoveOut")}
                           </Menu.Item>
                         )}
                         <Menu.Item color="red" onClick={() => onDelete(tenant)}>
-                          Xoá bản ghi
+                          {t("tenants.deleteRecord")}
                         </Menu.Item>
                       </Menu.Dropdown>
                     </Menu>
@@ -84,7 +87,7 @@ export function TenantsTable({
 
       {nguoiThue.length === 0 && (
         <Text c="dimmed" py="md">
-          Chưa có người thuê nào.
+          {t("tenants.empty")}
         </Text>
       )}
     </Table.ScrollContainer>

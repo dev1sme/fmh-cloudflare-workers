@@ -1,8 +1,10 @@
 import { Button, Modal, NumberInput, Select, Stack, TextInput } from "@mantine/core";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import type { Building, RoomDetail } from "../../../../shared/types";
 import type { RoomInput } from "../../../api";
+import { dauPhanCach } from "../../../format";
 
 /** Adding when `room` is null, editing otherwise. */
 export type MucTieuPhong = { room: RoomDetail | null } | null;
@@ -21,6 +23,7 @@ export function RoomModal({
   onUpdate: (code: string, patch: Partial<RoomInput>) => Promise<boolean>;
 }) {
   const dangSua = target?.room ?? null;
+  const { t } = useTranslation();
 
   const [buildingId, setBuildingId] = useState<string | null>(null);
   const [tenPhong, setTenPhong] = useState("");
@@ -67,11 +70,13 @@ export function RoomModal({
     <Modal
       opened={target !== null}
       onClose={onClose}
-      title={dangSua ? `Sửa phòng — ${dangSua.room_name}` : "Thêm phòng"}
+      title={
+        dangSua ? t("rooms.editTitle", { name: dangSua.room_name }) : t("rooms.add")
+      }
     >
       <Stack>
         <Select
-          label="Nhà"
+          label={t("rooms.building")}
           value={buildingId}
           onChange={setBuildingId}
           data={nha.map((item) => ({ value: String(item.id), label: item.name }))}
@@ -81,30 +86,29 @@ export function RoomModal({
           allowDeselect={false}
         />
         <TextInput
-          label="Tên phòng"
+          label={t("rooms.name")}
           placeholder="FMH-P03"
           value={tenPhong}
           onChange={(e) => setTenPhong(e.currentTarget.value)}
           required
         />
         <NumberInput
-          label="Giá phòng (đ/tháng)"
+          label={t("rooms.rentField")}
           value={giaPhong}
           onChange={setGiaPhong}
           min={0}
           step={100000}
-          thousandSeparator="."
-          decimalSeparator=","
+          {...dauPhanCach()}
         />
         <NumberInput
-          label="Diện tích (m²)"
+          label={t("rooms.areaField")}
           value={dienTich}
           onChange={setDienTich}
           min={0}
           allowDecimal
         />
         <Button onClick={save} loading={busy}>
-          Lưu
+          {t("common.save")}
         </Button>
       </Stack>
     </Modal>

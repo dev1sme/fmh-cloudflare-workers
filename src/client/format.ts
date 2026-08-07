@@ -54,6 +54,17 @@ export function periodLabel(period: string): string {
   return i18n.t("format.period", { month, year, monthName });
 }
 
+/**
+ * Separators for Mantine's `NumberInput`, which takes them as props rather
+ * than deriving them from a locale. Hard-coding the Vietnamese pair left an
+ * English-language manager typing rent into a field that groups with dots.
+ */
+export function dauPhanCach(): { thousandSeparator: string; decimalSeparator: string } {
+  return laTiengAnh()
+    ? { thousandSeparator: ",", decimalSeparator: "." }
+    : { thousandSeparator: ".", decimalSeparator: "," };
+}
+
 /** "2026-08" -> "08/26", short enough for a chart axis tick. */
 export function periodTick(period: string): string {
   const [year, month] = period.split("-");
