@@ -2,12 +2,23 @@
 JWT_SECRET="doi-thanh-chuoi-ngau-nhien-dai"
 
 # The "Secret Key" from the SePay webhook settings. Signs the HMAC-SHA256 the
-# route verifies; without it /api/webhook/sepay answers 503 and records nothing.
+# route verifies; without it /hooks/sepay-payment answers 503 and records nothing.
 SEPAY_WEBHOOK_SECRET="doi-thanh-secret-key-cua-sepay"
 
 # Zalo bot notifications. Leave any of the three empty to turn them off.
-# Token comes from the "Zalo Bot Manager" OA; the two chat ids come out of
-# getUpdates after someone messages the bot and @-mentions it in the group.
+#
+# The token comes from the "Zalo Bot Manager" OA and is NEVER written here —
+# this file is committed and the repository is public. Keep it in `.dev.vars`
+# (gitignored) and on the Worker via `wrangler secret put`.
+#
+# The two chat ids below are the live ones, recorded on purpose so they do not
+# have to be rediscovered. They are identifiers, not credentials: without the
+# bot token nobody can send to them. Re-derive them at any time by calling
+# getUpdates after messaging the bot and @-mentioning it in the group.
+#
+#   bot         Bot Júp Việc (id 4137284325147592749)
+#   group       tenants' shared group
+#   manager     the owner's own chat with the bot
 ZALO_BOT_TOKEN=""
-ZALO_GROUP_CHAT_ID=""
-ZALO_MANAGER_CHAT_ID=""
+ZALO_GROUP_CHAT_ID="zgr-b1532963c80e2150781f"
+ZALO_MANAGER_CHAT_ID="a996c024b96850360979"

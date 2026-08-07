@@ -1,5 +1,9 @@
 # Secrets
 
+**The GitHub repository is public.** Anything committed is world-readable, which is why `.dev.vars` is gitignored and why no token, key or password belongs in `.dev.vars.example`, a rule file, or a comment. Check before adding anything that identifies a person or authorises an action.
+
+The two Zalo chat ids *are* in `.dev.vars.example`, deliberately. They identify destinations but authorise nothing — without the bot token they cannot be sent to — and having them written down beats rediscovering them through `getUpdates` every time.
+
 Set via `wrangler secret put`, never committed:
 
 - `JWT_SECRET`
