@@ -79,6 +79,7 @@ export async function createReading(
        VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`,
     )
     .bind(
+      input.code,
       input.room_id,
       input.period,
       input.electricity_start,
