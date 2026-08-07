@@ -1,8 +1,10 @@
 import { Avatar, Box, Container, Group, Menu, Text, UnstyledButton } from "@mantine/core";
 import { IconBuildingCommunity, IconChevronDown, IconKey, IconLogout } from "@tabler/icons-react";
+import { useTranslation } from "react-i18next";
 import { Link, Outlet } from "react-router-dom";
 
 import type { SessionUser } from "../api";
+import { LanguageMenuItems } from "./LanguageMenu";
 import { PageTransition } from "./PageTransition";
 
 /**
@@ -23,6 +25,8 @@ export function TenantLayout({
   user: SessionUser;
   onLogout: () => void;
 }) {
+  const { t } = useTranslation();
+
   return (
     <Box mih="100dvh" style={{ display: "flex", flexDirection: "column" }}>
       <Box
@@ -35,12 +39,12 @@ export function TenantLayout({
             {/* The room name lives on the page, which has the data for it. */}
             <Group gap="sm" wrap="nowrap">
               <IconBuildingCommunity size={22} stroke={1.6} />
-              <Text fw={700}>Nhà trọ FMH</Text>
+              <Text fw={700}>{t("app.name")}</Text>
             </Group>
 
             <Menu position="bottom-end" shadow="md" width={190}>
               <Menu.Target>
-                <UnstyledButton aria-label="Tài khoản" className="fmh-account">
+                <UnstyledButton aria-label={t("common.account")} className="fmh-account">
                   <Group gap="xs" wrap="nowrap">
                     <Avatar size={30} radius="xl" color="owed">
                       {user.username.slice(0, 2).toUpperCase()}
@@ -57,15 +61,19 @@ export function TenantLayout({
                   to="/change-password"
                   leftSection={<IconKey size={16} stroke={1.8} />}
                 >
-                  Đổi mật khẩu
+                  {t("common.changePassword")}
                 </Menu.Item>
+
+                <Menu.Divider />
+                <LanguageMenuItems />
+
                 <Menu.Divider />
                 <Menu.Item
                   color="red"
                   leftSection={<IconLogout size={16} stroke={1.8} />}
                   onClick={onLogout}
                 >
-                  Đăng xuất
+                  {t("common.logout")}
                 </Menu.Item>
               </Menu.Dropdown>
             </Menu>

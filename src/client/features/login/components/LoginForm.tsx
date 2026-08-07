@@ -1,6 +1,7 @@
 import { Alert, Button, PasswordInput, Stack, Text, TextInput, Title } from "@mantine/core";
 import { IconAlertCircle, IconLock, IconUser } from "@tabler/icons-react";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 export function LoginForm({
   onSubmit,
@@ -13,6 +14,7 @@ export function LoginForm({
 }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const { t } = useTranslation();
 
   return (
     <form
@@ -23,10 +25,10 @@ export function LoginForm({
     >
       <Stack gap="lg">
         <div>
-          <Title order={3}>Đăng nhập</Title>
+          <Title order={3}>{t("login.title")}</Title>
           {/* Both roles land here, so the copy names neither. */}
           <Text size="sm" c="dimmed" mt={4}>
-            Dùng tài khoản chủ nhà cấp cho phòng của bạn.
+            {t("login.subtitle")}
           </Text>
         </div>
 
@@ -38,7 +40,7 @@ export function LoginForm({
 
         <Stack gap="sm">
           <TextInput
-            label="Tài khoản"
+            label={t("login.username")}
             placeholder="phong01"
             leftSection={<IconUser size={16} stroke={1.7} />}
             value={username}
@@ -48,7 +50,7 @@ export function LoginForm({
             required
           />
           <PasswordInput
-            label="Mật khẩu"
+            label={t("login.password")}
             leftSection={<IconLock size={16} stroke={1.7} />}
             value={password}
             onChange={(e) => setPassword(e.currentTarget.value)}
@@ -58,11 +60,11 @@ export function LoginForm({
         </Stack>
 
         <Button type="submit" loading={dangChay} fullWidth size="md">
-          Đăng nhập
+          {t("login.submit")}
         </Button>
 
         <Text size="xs" c="dimmed" ta="center">
-          Quên mật khẩu? Liên hệ chủ nhà để được cấp lại.
+          {t("login.forgot")}
         </Text>
       </Stack>
     </form>

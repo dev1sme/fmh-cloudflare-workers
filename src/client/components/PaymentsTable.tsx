@@ -1,12 +1,8 @@
 import { Button, Table } from "@mantine/core";
+import { useTranslation } from "react-i18next";
 
 import type { Payment } from "../../shared/types";
 import { ngay, tien } from "../format";
-
-export const TEN_PHUONG_THUC: Record<Payment["method"], string> = {
-  BANK_TRANSFER: "Chuyển khoản",
-  CASH: "Tiền mặt",
-};
 
 export function PaymentsTable({
   payments,
@@ -15,14 +11,16 @@ export function PaymentsTable({
   payments: Payment[];
   onDelete?: (payment: Payment) => void;
 }) {
+  const { t } = useTranslation();
+
   return (
     <Table>
       <Table.Thead>
         <Table.Tr>
-          <Table.Th>Ngày</Table.Th>
-          <Table.Th>Số tiền</Table.Th>
-          <Table.Th>Hình thức</Table.Th>
-          <Table.Th>Ghi chú</Table.Th>
+          <Table.Th>{t("payment.date")}</Table.Th>
+          <Table.Th>{t("payment.amount")}</Table.Th>
+          <Table.Th>{t("payment.method")}</Table.Th>
+          <Table.Th>{t("payment.note")}</Table.Th>
           {onDelete && <Table.Th />}
         </Table.Tr>
       </Table.Thead>
@@ -31,12 +29,12 @@ export function PaymentsTable({
           <Table.Tr key={payment.id}>
             <Table.Td>{ngay(payment.paid_on)}</Table.Td>
             <Table.Td>{tien(payment.amount)}</Table.Td>
-            <Table.Td>{TEN_PHUONG_THUC[payment.method]}</Table.Td>
+            <Table.Td>{t(`method.${payment.method}`)}</Table.Td>
             <Table.Td>{payment.note ?? "—"}</Table.Td>
             {onDelete && (
               <Table.Td>
                 <Button size="xs" variant="subtle" color="red" onClick={() => onDelete(payment)}>
-                  Xoá
+                  {t("common.delete")}
                 </Button>
               </Table.Td>
             )}

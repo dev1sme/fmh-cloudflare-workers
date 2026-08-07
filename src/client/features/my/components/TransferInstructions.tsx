@@ -1,4 +1,5 @@
 import { Card, Stack, Text } from "@mantine/core";
+import { useTranslation } from "react-i18next";
 
 import { CopyableRow } from "../../../components/CopyableRow";
 
@@ -9,14 +10,15 @@ import { CopyableRow } from "../../../components/CopyableRow";
  * copy button as the full card.
  */
 export function TransferInstructions({ maHoaDon }: { maHoaDon: string }) {
+  const { t } = useTranslation();
+
   return (
     <Card withBorder padding="md">
       <Stack gap="xs">
         <Text size="sm" c="dimmed">
-          Chủ nhà chưa cấu hình tài khoản nhận tiền nên chưa có mã QR. Khi chuyển khoản, ghi nội
-          dung dưới đây để đối chiếu.
+          {t("payment.noBankYet")}
         </Text>
-        <CopyableRow label="Nội dung" value={maHoaDon} />
+        <CopyableRow label={t("payment.memo")} value={maHoaDon} />
       </Stack>
     </Card>
   );

@@ -1,5 +1,6 @@
 import { Box, Group, Text, Tooltip } from "@mantine/core";
 import { IconCheck } from "@tabler/icons-react";
+import { useTranslation } from "react-i18next";
 
 import type { InvoiceStatus } from "../../shared/types";
 import { tien } from "../format";
@@ -25,10 +26,12 @@ export function CollectionBar({
   paid: number;
   status: InvoiceStatus;
 }) {
+  const { t } = useTranslation();
+
   if (status === "CANCELLED") {
     return (
       <Text size="xs" c="dimmed" fw={500}>
-        Đã huỷ
+        {t("status.CANCELLED")}
       </Text>
     );
   }
@@ -39,7 +42,11 @@ export function CollectionBar({
 
   return (
     <Tooltip
-      label={done ? "Đã thu đủ" : `Còn ${tien(outstanding)}`}
+      label={
+        done
+          ? t("invoice.collectedAll")
+          : t("invoice.stillOwed", { amount: tien(outstanding) })
+      }
       withArrow
       position="left"
     >

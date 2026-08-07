@@ -1,4 +1,5 @@
 import { Card, Stack, Text } from "@mantine/core";
+import { Trans, useTranslation } from "react-i18next";
 
 import type { MomoInfo } from "../../shared/types";
 import { tien } from "../format";
@@ -10,27 +11,36 @@ import { CopyableRow } from "./CopyableRow";
  * a code that pays the wrong wallet.
  */
 export function MomoCard({ momo, xemTruoc = false }: { momo: MomoInfo; xemTruoc?: boolean }) {
+  const { t } = useTranslation();
+
   return (
     <Card withBorder padding="md">
       <Stack gap="xs">
         <div>
-          <Text fw={500}>Hoặc chuyển qua MoMo</Text>
+          <Text fw={500}>{t("payment.momoTitle")}</Text>
           {xemTruoc && (
             <Text size="xs" c="dimmed">
-              Xem trước để đối chiếu.
+              {t("payment.previewShort")}
             </Text>
           )}
         </div>
 
-        <CopyableRow label="Số điện thoại" value={momo.phone} />
-        {momo.name && <CopyableRow label="Người nhận" value={momo.name} />}
-        <CopyableRow label="Số tiền" value={String(momo.amount)} display={tien(momo.amount)} />
-        <CopyableRow label="Nội dung" value={momo.transfer_note} />
+        <CopyableRow label={t("payment.momoPhone")} value={momo.phone} />
+        {momo.name && <CopyableRow label={t("payment.momoReceiver")} value={momo.name} />}
+        <CopyableRow
+          label={t("payment.amount")}
+          value={String(momo.amount)}
+          display={tien(momo.amount)}
+        />
+        <CopyableRow label={t("payment.memo")} value={momo.transfer_note} />
 
         {!xemTruoc && (
           <Text size="xs" c="dimmed" mt="xs">
-            Mở app MoMo, chọn Chuyển tiền tới số điện thoại trên, ghi nội dung{" "}
-            <b>{momo.transfer_note}</b>.
+            <Trans
+              i18nKey="payment.momoHowTo"
+              values={{ memo: momo.transfer_note }}
+              components={{ b: <b /> }}
+            />
           </Text>
         )}
       </Stack>

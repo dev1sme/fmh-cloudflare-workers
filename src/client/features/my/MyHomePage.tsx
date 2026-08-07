@@ -1,6 +1,7 @@
 import { Alert, Box, Card, Group, SegmentedControl, Stack, Text, Title } from "@mantine/core";
 import { IconCircleCheck } from "@tabler/icons-react";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import { BankTransferCard } from "../../components/BankTransferCard";
 import { InvoiceLines } from "../../components/InvoiceLines";
@@ -34,12 +35,6 @@ import { useDashboardCuaToi, useInvoicesCuaToiChiTiet } from "./useMine";
  * month on record.
  */
 
-const PHAM_VI = [
-  { value: "3", label: "3 tháng" },
-  { value: "6", label: "6 tháng" },
-  { value: "all", label: "Tất cả" },
-];
-
 /** Six, not three: three months is too short to show that electricity climbs
  *  in the hot season, which is the question the trend exists to answer. Not
  *  all, because the server hands back up to 24 and that is unreadable on a
@@ -49,6 +44,13 @@ const MAC_DINH = "6";
 export function MyHomePage() {
   const { soLieu, loading, error } = useDashboardCuaToi();
   const [phamVi, setPhamVi] = useState(MAC_DINH);
+  const { t } = useTranslation();
+
+  const luaChon = [
+    { value: "3", label: t("tenant.range3") },
+    { value: "6", label: t("tenant.range6") },
+    { value: "all", label: t("tenant.rangeAll") },
+  ];
 
   const tatCa = soLieu?.months ?? [];
   const ganNhat = tatCa.find((m) => m.code !== null) ?? tatCa[0];
@@ -78,19 +80,19 @@ export function MyHomePage() {
           <Group justify="space-between" align="flex-end" wrap="wrap">
             <div>
               <Text size="xs" c="dimmed" tt="uppercase" fw={600} style={{ letterSpacing: "0.06em" }}>
-                Phòng
+                {t("tenant.room")}
               </Text>
               <Title order={2}>{soLieu.room_name}</Title>
             </div>
 
             {soLieu.outstanding_total > 0 ? (
               <Text className="fmh-num" fw={700} fz="1.35rem" c="owed.6">
-                Cần đóng {tien(soLieu.outstanding_total)}
+                {t("tenant.needToPay", { amount: tien(soLieu.outstanding_total) })}
               </Text>
             ) : (
               <Group gap={6} c="settled.6">
                 <IconCircleCheck size={18} stroke={1.8} />
-                <Text fw={600}>Đã thanh toán đủ</Text>
+                <Text fw={600}>{t("tenant.paidUp")}</Text>
               </Group>
             )}
           </Group>
@@ -112,7 +114,7 @@ export function MyHomePage() {
 
                     {ganNhat.total === null ? (
                       <Alert color="gray" variant="light">
-                        Chủ nhà đã ghi chỉ số nhưng chưa phát hành hóa đơn cho kỳ này.
+                        {t("tenant.noInvoiceYet")}
                       </Alert>
                     ) : (
                       hoaDon && <InvoiceLines invoice={hoaDon} />
@@ -137,14 +139,14 @@ export function MyHomePage() {
                   fw={600}
                   style={{ letterSpacing: "0.06em" }}
                 >
-                  Lịch sử
+                  {t("tenant.history")}
                 </Text>
                 <SegmentedControl
                   size="xs"
                   value={phamVi}
                   onChange={setPhamVi}
-                  data={PHAM_VI}
-                  aria-label="Khoảng thời gian"
+                  data={luaChon}
+                  aria-label={t("tenant.rangeLabel")}
                 />
               </Group>
 
@@ -155,7 +157,7 @@ export function MyHomePage() {
               ) : (
                 <Card>
                   <Text size="sm" c="dimmed">
-                    Chưa có tháng nào trước đó để xem lại — lịch sử sẽ hiện ở đây từ tháng kế tiếp.
+                    {t("tenant.emptyHistory")}
                   </Text>
                 </Card>
               )}

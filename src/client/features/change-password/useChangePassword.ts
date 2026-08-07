@@ -2,6 +2,7 @@ import { useState } from "react";
 
 import { auth } from "../../api";
 import { baoThanhCong, thongBaoLoi } from "../../errors";
+import i18n from "../../i18n";
 
 /**
  * Self-service password change. Shows the error inline rather than as a toast:
@@ -17,7 +18,8 @@ export function useChangePassword() {
 
     try {
       await auth.doiMatKhau(matKhauCu, matKhauMoi);
-      baoThanhCong("Đã đổi mật khẩu.");
+      // `i18n.t`, not the hook: this is a plain function, not a component.
+      baoThanhCong(i18n.t("changePassword.done"));
       return true;
     } catch (err) {
       setLoi(thongBaoLoi(err));

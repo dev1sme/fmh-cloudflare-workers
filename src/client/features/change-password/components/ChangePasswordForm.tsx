@@ -1,5 +1,6 @@
 import { Alert, Button, PasswordInput, Stack } from "@mantine/core";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 const TOI_THIEU = 8;
 
@@ -15,6 +16,7 @@ export function ChangePasswordForm({
   const [matKhauCu, setMatKhauCu] = useState("");
   const [matKhauMoi, setMatKhauMoi] = useState("");
   const [nhapLai, setNhapLai] = useState("");
+  const { t } = useTranslation();
 
   const lechNhau = nhapLai !== "" && nhapLai !== matKhauMoi;
   const hopLe = matKhauCu !== "" && matKhauMoi.length >= TOI_THIEU && nhapLai === matKhauMoi;
@@ -39,31 +41,31 @@ export function ChangePasswordForm({
         )}
 
         <PasswordInput
-          label="Mật khẩu hiện tại"
+          label={t("changePassword.current")}
           value={matKhauCu}
           onChange={(e) => setMatKhauCu(e.currentTarget.value)}
           autoComplete="current-password"
           required
         />
         <PasswordInput
-          label="Mật khẩu mới"
-          description={`Tối thiểu ${TOI_THIEU} ký tự`}
+          label={t("changePassword.new")}
+          description={t("changePassword.minChars", { count: TOI_THIEU })}
           value={matKhauMoi}
           onChange={(e) => setMatKhauMoi(e.currentTarget.value)}
           autoComplete="new-password"
           required
         />
         <PasswordInput
-          label="Nhập lại mật khẩu mới"
+          label={t("changePassword.repeat")}
           value={nhapLai}
           onChange={(e) => setNhapLai(e.currentTarget.value)}
-          error={lechNhau ? "Hai mật khẩu không khớp." : null}
+          error={lechNhau ? t("changePassword.mismatch") : null}
           autoComplete="new-password"
           required
         />
 
         <Button type="submit" loading={dangChay} disabled={!hopLe}>
-          Đổi mật khẩu
+          {t("changePassword.title")}
         </Button>
       </Stack>
     </form>

@@ -1,7 +1,9 @@
 import { Box, Group, Paper, Stack, Text, Title } from "@mantine/core";
 import { IconBolt, IconBuildingCommunity, IconFileInvoice } from "@tabler/icons-react";
+import { useTranslation } from "react-i18next";
 
 import type { SessionUser } from "../../api";
+import { LanguageMenu } from "../../components/LanguageMenu";
 import { LoginForm } from "./components/LoginForm";
 import { useLogin } from "./useLogin";
 
@@ -29,6 +31,7 @@ function DiemBan({ icon, children }: { icon: React.ReactNode; children: React.Re
 
 export function LoginPage({ onLogin }: { onLogin: (user: SessionUser) => void }) {
   const { dangNhap, loi, dangChay } = useLogin(onLogin);
+  const { t } = useTranslation();
 
   return (
     <Box mih="100dvh" style={{ display: "grid", placeItems: "center" }} p="md">
@@ -49,15 +52,15 @@ export function LoginPage({ onLogin }: { onLogin: (user: SessionUser) => void })
             <Stack gap="lg" h="100%" justify="space-between">
               <Group gap="sm" wrap="nowrap">
                 <IconBuildingCommunity size={26} stroke={1.6} />
-                <Title order={3}>Nhà trọ FMH</Title>
+                <Title order={3}>{t("app.name")}</Title>
               </Group>
 
               <Stack gap="md">
                 <DiemBan icon={<IconFileInvoice size={18} stroke={1.7} />}>
-                  Xem hóa đơn từng tháng, quét mã QR để chuyển khoản.
+                  {t("login.sellingInvoice")}
                 </DiemBan>
                 <DiemBan icon={<IconBolt size={18} stroke={1.7} />}>
-                  Tra chỉ số điện nước đã ghi, biết tháng nào dùng nhiều.
+                  {t("login.sellingUsage")}
                 </DiemBan>
               </Stack>
 
@@ -68,6 +71,12 @@ export function LoginPage({ onLogin }: { onLogin: (user: SessionUser) => void })
           </Box>
 
           <Box p="xl">
+            {/* Above the form, not buried in it: someone who cannot read the
+                form is exactly who needs to reach this. */}
+            <Group justify="flex-end" mb="xs">
+              <LanguageMenu />
+            </Group>
+
             <LoginForm onSubmit={dangNhap} loi={loi} dangChay={dangChay} />
           </Box>
         </Box>

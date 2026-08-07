@@ -1,4 +1,5 @@
 import { Button, Card, Group, Stack, Text, Title } from "@mantine/core";
+import { useTranslation } from "react-i18next";
 import { Link, useParams } from "react-router-dom";
 
 import { BankTransferCard } from "../../components/BankTransferCard";
@@ -14,6 +15,7 @@ import { useInvoicesCuaToiChiTiet } from "./useMine";
 export function MyInvoiceDetailPage() {
   const code = (useParams().code ?? "").toUpperCase();
   const { hoaDon, loading, error } = useInvoicesCuaToiChiTiet(code);
+  const { t } = useTranslation();
 
   return (
     // Capped independently of the shell's wide container: this is a single
@@ -21,9 +23,9 @@ export function MyInvoiceDetailPage() {
     // is harder to read than a narrow one.
     <Stack maw={560} mx="auto">
       <Group justify="space-between">
-        <Title order={3}>{hoaDon ? hoaDon.code : "Hóa đơn"}</Title>
+        <Title order={3}>{hoaDon ? hoaDon.code : t("invoice.fallbackTitle")}</Title>
         <Button variant="subtle" component={Link} to="/">
-          ← Về trang chủ
+          ← {t("common.home")}
         </Button>
       </Group>
 
@@ -40,7 +42,7 @@ export function MyInvoiceDetailPage() {
             {hoaDon.payments.length > 0 && (
               <Card withBorder padding="md">
                 <Stack gap="sm">
-                  <Text fw={500}>Đã thanh toán</Text>
+                  <Text fw={500}>{t("invoice.paidSection")}</Text>
                   <PaymentsTable payments={hoaDon.payments} />
                 </Stack>
               </Card>

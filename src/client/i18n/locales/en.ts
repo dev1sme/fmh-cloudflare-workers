@@ -1,0 +1,202 @@
+import type { vi } from "./vi";
+
+/**
+ * English copy, shaped exactly like `vi.ts` — the type below is what enforces
+ * that, so a key added to Vietnamese and forgotten here is a build error
+ * rather than a string that silently falls back at runtime.
+ *
+ * Written for a tenant who reads English, not translated word for word. The
+ * currency stays `đ`: the money is VND whatever language the page is in, and
+ * relabelling it would suggest a conversion that never happens.
+ */
+type Resources = {
+  [K in keyof typeof vi]: { [P in keyof (typeof vi)[K]]: string };
+};
+
+export const en: Resources = {
+  app: {
+    name: "FMH Rentals",
+  },
+
+  common: {
+    account: "Account",
+    changePassword: "Change password",
+    logout: "Sign out",
+    language: "Language",
+    home: "Back to home",
+    error: "Error",
+    loadFailed: "Could not load data",
+    copy: "Copy {{what}}",
+    copied: "Copied",
+    delete: "Delete",
+  },
+
+  login: {
+    title: "Sign in",
+    subtitle: "Use the account your landlord issued for your room.",
+    username: "Username",
+    password: "Password",
+    submit: "Sign in",
+    forgot: "Forgotten your password? Ask your landlord to issue a new one.",
+    sellingInvoice: "See each month's bill and scan a QR code to pay it.",
+    sellingUsage: "Check the meter readings on record and spot a heavy month.",
+  },
+
+  tenant: {
+    room: "Room",
+    needToPay: "{{amount}} due",
+    paidUp: "All settled",
+    noInvoiceYet: "Your landlord has recorded the meters but has not issued a bill for this month.",
+    history: "History",
+    rangeLabel: "Time range",
+    range3: "3 months",
+    range6: "6 months",
+    rangeAll: "All",
+    otherMonths: "Other months",
+    outOfRangeDebt: "plus {{count}} unpaid month(s) outside the selected range",
+    emptyHistory: "No earlier months yet — history will appear here from next month.",
+    noReading: "no reading yet",
+    monthMeta: "{{eStart}} → {{eEnd}} kWh · {{wStart}} → {{wEnd}} m³ · read {{date}}",
+    electricityByMonth: "Electricity by month",
+    waterByMonth: "Water by month",
+  },
+
+  invoice: {
+    fallbackTitle: "Invoice",
+    rent: "Rent",
+    electricity: "Electricity",
+    water: "Water",
+    otherFees: "Other fees",
+    total: "Total",
+    collected: "Received",
+    outstanding: "Outstanding",
+    unitPrice: "{{price}}/{{unit}}",
+    meterNote: "{{start}} → {{end}} = {{used}} {{unit}} × {{price}}",
+    paidSection: "Payments received",
+    collectedAll: "Paid in full",
+    stillOwed: "{{amount}} left",
+  },
+
+  payment: {
+    scanToPay: "Scan to pay by transfer",
+    previewTitle: "The QR code your tenant sees",
+    previewNote: "Preview only. Your tenant scans this from their room account.",
+    previewShort: "Preview only.",
+    accountNo: "Account number",
+    accountName: "Account name",
+    amount: "Amount",
+    memo: "Transfer memo",
+    keepMemo:
+      "Keep the memo <b>{{memo}}</b> exactly as it is so the transfer is matched to the right bill. The QR code already carries the amount and the memo.",
+    momoTitle: "Or pay by MoMo",
+    momoPhone: "Phone number",
+    momoReceiver: "Recipient",
+    momoHowTo:
+      "Open MoMo, send to the phone number above, and use the memo <b>{{memo}}</b>.",
+    noBankYet:
+      "Your landlord has not set up an account to receive transfers, so there is no QR code yet. Use the memo below when you transfer.",
+    date: "Date",
+    method: "Method",
+    note: "Note",
+  },
+
+  status: {
+    UNPAID: "Unpaid",
+    PAID: "Paid",
+    CANCELLED: "Cancelled",
+  },
+
+  method: {
+    BANK_TRANSFER: "Bank transfer",
+    CASH: "Cash",
+  },
+
+  changePassword: {
+    title: "Change password",
+    hint: "Your current password is required. If you have forgotten it, ask your landlord to reset it.",
+    current: "Current password",
+    new: "New password",
+    minChars: "At least {{count}} characters",
+    repeat: "Repeat new password",
+    mismatch: "The two passwords do not match.",
+    done: "Password changed.",
+  },
+
+  notFound: {
+    title: "Page not found",
+    body: "That path does not exist, or this account has no such screen.",
+  },
+
+  /** `period` uses the month name; `ngay` stays dd/mm/yyyy in both languages. */
+  format: {
+    currency: "{{value}} đ",
+    billion: "{{value}}B",
+    million: "{{value}}M",
+    thousand: "{{value}}K",
+    period: "{{monthName}} {{year}}",
+  },
+
+  errors: {
+    fallback: "Something went wrong. Try again.",
+    missingField: "Missing {{field}}.",
+    tooLongField: "Too long: {{field}}.",
+    invalidField: "Invalid {{field}}.",
+
+    UNAUTHORIZED: "Your session has expired. Sign in again.",
+    FORBIDDEN: "This account is not allowed to do that.",
+    NO_ROOM_BOUND: "This account is not linked to a room.",
+    INVALID_CREDENTIALS: "Wrong username or password.",
+    MISSING_CREDENTIALS: "Enter both a username and a password.",
+    NOT_FOUND: "Not found.",
+    DUPLICATE_DATA: "That record already exists.",
+    RELATED_DATA_EXISTS: "Cannot delete: related records still exist.",
+    INVALID_DATA: "Invalid data.",
+    INVALID_PERIOD: "A period must look like YYYY-MM.",
+    READING_ALREADY_EXISTS: "This room already has a reading for that month.",
+    ELECTRICITY_END_BELOW_START: "The new electricity reading cannot be below the old one.",
+    WATER_END_BELOW_START: "The new water reading cannot be below the old one.",
+    ROOM_NOT_FOUND: "No such room.",
+    EMPTY_ROOM_IDS: "Pick at least one room to bill.",
+    MISSING_ROOM_ID_OR_PERIOD: "A room and a period are both required.",
+    INVOICE_CANCELLED: "This bill is cancelled, so no payment can be recorded against it.",
+    PASSWORD_TOO_SHORT: "A password must be at least 8 characters.",
+    WRONG_CURRENT_PASSWORD: "That is not your current password.",
+    INVALID_BANK_BIN: "A bank code must be 6 digits.",
+    INVALID_BANK_ACCOUNT_NO: "An account number must be digits only.",
+    INVALID_MOMO_PHONE: "That MoMo number is not valid.",
+    INVALID_OCCUPANTS: "The number of occupants must be at least 1.",
+    CANNOT_DELETE_SELF: "You cannot delete the account you are signed in as.",
+    LAST_MANAGER_REQUIRED: "At least one manager account must remain.",
+    INTERNAL_ERROR: "System error. Try again later.",
+  },
+
+  fields: {
+    room_name: "room name",
+    rent: "rent",
+    area: "area",
+    full_name: "full name",
+    phone: "phone number",
+    occupants: "occupants",
+    moved_in: "move-in date",
+    moved_out: "move-out date",
+    period: "period",
+    electricity_start: "old electricity reading",
+    electricity_end: "new electricity reading",
+    water_start: "old water reading",
+    water_end: "new water reading",
+    recorded_on: "reading date",
+    rent_amount: "rent",
+    other_fees: "other fees",
+    amount: "amount",
+    paid_on: "payment date",
+    method: "method",
+    note: "note",
+    username: "username",
+    role: "role",
+    room_id: "room",
+    building_id: "building",
+    name: "name",
+    electricity_rate: "electricity rate",
+    water_rate: "water rate",
+  },
+};

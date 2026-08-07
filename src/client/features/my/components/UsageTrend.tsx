@@ -1,10 +1,10 @@
 import { LineChart } from "@mantine/charts";
 import { Card, Group, Text, Title } from "@mantine/core";
+import { useTranslation } from "react-i18next";
 
 import type { TenantMonth } from "../../../../shared/types";
+import { laTiengAnh } from "../../../i18n";
 import { periodTick } from "../../../format";
-
-const SO = new Intl.NumberFormat("vi-VN");
 
 type Diem = { period: string; value: number | null };
 
@@ -65,7 +65,9 @@ function Bieu({
         // line there. Dropping it instead would put 05/26 next to 07/26 as if
         // they were consecutive.
         connectNulls={false}
-        valueFormatter={(v) => `${SO.format(v)} ${donVi}`}
+        valueFormatter={(v) =>
+          `${v.toLocaleString(laTiengAnh() ? "en-US" : "vi-VN")} ${donVi}`
+        }
         // Scaled to the data, not to zero. Household usage never approaches
         // zero, so a zero baseline spends most of the height on a range that
         // carries no information and flattens the change being asked about.
@@ -100,6 +102,8 @@ function Bieu({
  * handles an empty history.
  */
 export function UsageTrend({ months }: { months: TenantMonth[] }) {
+  const { t } = useTranslation();
+
   // `months` arrives newest-first; a chart reads left to right as time passing.
   const theoThoiGian = months.slice().reverse();
   if (theoThoiGian.filter((m) => m.electricity_used !== null).length < 2) return null;
@@ -116,8 +120,8 @@ export function UsageTrend({ months }: { months: TenantMonth[] }) {
 
   return (
     <>
-      <Bieu tieuDe="Điện theo tháng" data={dien} mau="owed.5" donVi="kWh" />
-      <Bieu tieuDe="Nước theo tháng" data={nuoc} mau="settled.5" donVi="m³" />
+      <Bieu tieuDe={t("tenant.electricityByMonth")} data={dien} mau="owed.5" donVi="kWh" />
+      <Bieu tieuDe={t("tenant.waterByMonth")} data={nuoc} mau="settled.5" donVi="m³" />
     </>
   );
 }

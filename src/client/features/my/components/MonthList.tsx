@@ -1,5 +1,6 @@
 import { Card, Group, Stack, Text, UnstyledButton } from "@mantine/core";
 import { IconChevronRight } from "@tabler/icons-react";
+import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
 import type { TenantMonth } from "../../../../shared/types";
@@ -26,6 +27,7 @@ import { ngay, periodLabel, tien } from "../../../format";
  * A month with no invoice yet is not a link — there is nothing to open.
  */
 function Dong({ month }: { month: TenantMonth }) {
+  const { t } = useTranslation();
   const coChiSo = month.electricity_used !== null;
 
   const noiDung = (
@@ -34,8 +36,16 @@ function Dong({ month }: { month: TenantMonth }) {
         <Text fw={600}>{periodLabel(month.period)}</Text>
         <Text size="xs" c="dimmed">
           {coChiSo
-            ? `${month.electricity_start} → ${month.electricity_end} kWh · ${month.water_start} → ${month.water_end} m³ · ghi ${ngay(month.recorded_on).slice(0, 5)}`
-            : "chưa có chỉ số"}
+            ? // Non-null asserted: all five come from the same `readings` row,
+              // so `electricity_used` being present means the rest are too.
+              t("tenant.monthMeta", {
+                eStart: month.electricity_start!,
+                eEnd: month.electricity_end!,
+                wStart: month.water_start!,
+                wEnd: month.water_end!,
+                date: ngay(month.recorded_on).slice(0, 5),
+              })
+            : t("tenant.noReading")}
         </Text>
       </div>
 
@@ -82,16 +92,18 @@ export function MonthList({
   months: TenantMonth[];
   noNgoaiKhoang: number;
 }) {
+  const { t } = useTranslation();
+
   return (
     <Stack gap="xs">
       <Group justify="space-between" align="baseline" gap="xs" wrap="wrap">
         <Text size="xs" c="dimmed" tt="uppercase" fw={600} style={{ letterSpacing: "0.06em" }}>
-          Các tháng khác
+          {t("tenant.otherMonths")}
         </Text>
 
         {noNgoaiKhoang > 0 && (
           <Text size="xs" c="owed.6">
-            kèm {noNgoaiKhoang} tháng chưa thanh toán ngoài khoảng đã chọn
+            {t("tenant.outOfRangeDebt", { count: noNgoaiKhoang })}
           </Text>
         )}
       </Group>

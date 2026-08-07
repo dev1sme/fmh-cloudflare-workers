@@ -1,4 +1,5 @@
 import { Button, Code, Stack, Text, Title } from "@mantine/core";
+import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "react-router-dom";
 
 /**
@@ -11,21 +12,22 @@ import { Link, useLocation } from "react-router-dom";
  */
 export function NotFoundPage({ home }: { home: string }) {
   const { pathname } = useLocation();
+  const { t } = useTranslation();
 
   return (
     <Stack align="center" justify="center" mih="60vh" gap="xs" ta="center">
       <Title order={1} c="dimmed" fz={64} lh={1}>
         404
       </Title>
-      <Title order={3}>Không tìm thấy trang</Title>
+      <Title order={3}>{t("notFound.title")}</Title>
 
       <Text c="dimmed" maw={420}>
-        Đường dẫn không tồn tại, hoặc tài khoản này không có màn hình đó.
+        {t("notFound.body")}
       </Text>
       <Code>{pathname}</Code>
 
       <Button component={Link} to={home} mt="md">
-        Về trang chủ
+        {t("common.home")}
       </Button>
     </Stack>
   );

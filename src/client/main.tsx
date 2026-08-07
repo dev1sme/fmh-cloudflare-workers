@@ -16,6 +16,11 @@ import "@fontsource/be-vietnam-pro/vietnamese-700.css";
 
 import "./theme.css";
 
+// Side-effect import: initialises i18next before anything renders, so the
+// first paint is already in the stored language rather than flashing the
+// fallback and correcting itself.
+import "./i18n";
+
 import { MantineProvider } from "@mantine/core";
 import { Notifications } from "@mantine/notifications";
 import { StrictMode } from "react";

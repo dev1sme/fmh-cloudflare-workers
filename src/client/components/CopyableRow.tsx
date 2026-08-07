@@ -1,4 +1,5 @@
 import { ActionIcon, CopyButton, Group, Text, Tooltip } from "@mantine/core";
+import { useTranslation } from "react-i18next";
 
 /** Two overlapping sheets. Inline so the app takes no icon dependency. */
 function CopyIcon() {
@@ -39,6 +40,9 @@ export function CopyableRow({
   value: string;
   display?: string;
 }) {
+  const { t } = useTranslation();
+  const moTa = t("common.copy", { what: label.toLowerCase() });
+
   return (
     <Group justify="space-between" gap="md" wrap="nowrap">
       <Text size="sm" c="dimmed">
@@ -52,13 +56,13 @@ export function CopyableRow({
 
         <CopyButton value={value} timeout={1500}>
           {({ copied, copy }) => (
-            <Tooltip label={copied ? "Đã copy" : `Copy ${label.toLowerCase()}`} withArrow>
+            <Tooltip label={copied ? t("common.copied") : moTa} withArrow>
               <ActionIcon
                 variant={copied ? "filled" : "light"}
                 color={copied ? "teal" : "gray"}
                 size="sm"
                 onClick={copy}
-                aria-label={`Copy ${label.toLowerCase()}`}
+                aria-label={moTa}
               >
                 {copied ? <CheckIcon /> : <CopyIcon />}
               </ActionIcon>

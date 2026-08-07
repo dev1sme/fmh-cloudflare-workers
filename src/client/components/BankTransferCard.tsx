@@ -1,4 +1,5 @@
 import { Card, Group, Stack, Text } from "@mantine/core";
+import { Trans, useTranslation } from "react-i18next";
 
 import type { BankTransfer } from "../../shared/types";
 import { tien } from "../format";
@@ -20,16 +21,16 @@ export function BankTransferCard({
   chuyenKhoan: BankTransfer;
   xemTruoc?: boolean;
 }) {
+  const { t } = useTranslation();
+
   return (
     <Card withBorder padding="md">
       <Stack>
         <div>
-          <Text fw={500}>
-            {xemTruoc ? "Mã QR người thuê nhìn thấy" : "Quét mã để chuyển khoản"}
-          </Text>
+          <Text fw={500}>{xemTruoc ? t("payment.previewTitle") : t("payment.scanToPay")}</Text>
           {xemTruoc && (
             <Text size="xs" c="dimmed">
-              Xem trước để đối chiếu. Người thuê quét mã này trong tài khoản phòng.
+              {t("payment.previewNote")}
             </Text>
           )}
         </div>
@@ -38,22 +39,31 @@ export function BankTransferCard({
           <VietQR payload={chuyenKhoan.vietqr} />
 
           <Stack gap="xs" flex={1} miw={220}>
-            <CopyableRow label="Số tài khoản" value={chuyenKhoan.bank_account_no} />
+            <CopyableRow label={t("payment.accountNo")} value={chuyenKhoan.bank_account_no} />
             {chuyenKhoan.bank_account_name && (
-              <CopyableRow label="Chủ tài khoản" value={chuyenKhoan.bank_account_name} />
+              <CopyableRow
+                label={t("payment.accountName")}
+                value={chuyenKhoan.bank_account_name}
+              />
             )}
             {/* Copy the raw number: a banking app rejects "2.415.000 đ". */}
             <CopyableRow
-              label="Số tiền"
+              label={t("payment.amount")}
               value={String(chuyenKhoan.amount)}
               display={tien(chuyenKhoan.amount)}
             />
-            <CopyableRow label="Nội dung" value={chuyenKhoan.transfer_note} />
+            <CopyableRow label={t("payment.memo")} value={chuyenKhoan.transfer_note} />
 
             {!xemTruoc && (
               <Text size="xs" c="dimmed" mt="xs">
-                Giữ nguyên nội dung <b>{chuyenKhoan.transfer_note}</b> khi chuyển khoản để đối chiếu
-                đúng hóa đơn. Mã QR đã điền sẵn số tiền và nội dung.
+                {/* `Trans` rather than `t`, because the memo is bolded inside
+                    the sentence and the two languages put it in different
+                    places. */}
+                <Trans
+                  i18nKey="payment.keepMemo"
+                  values={{ memo: chuyenKhoan.transfer_note }}
+                  components={{ b: <b /> }}
+                />
               </Text>
             )}
           </Stack>

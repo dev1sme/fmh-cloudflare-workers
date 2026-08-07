@@ -1,5 +1,6 @@
 import { Alert, Center, Loader } from "@mantine/core";
 import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 
 import { thongBaoLoi } from "../errors";
 
@@ -13,9 +14,11 @@ export function PageState({
   error: unknown;
   children: ReactNode;
 }) {
+  const { t } = useTranslation();
+
   if (error) {
     return (
-      <Alert color="red" title="Không tải được dữ liệu">
+      <Alert color="red" title={t("common.loadFailed")}>
         {thongBaoLoi(error)}
       </Alert>
     );

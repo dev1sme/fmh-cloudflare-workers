@@ -1,18 +1,20 @@
 import { Badge } from "@mantine/core";
+import { useTranslation } from "react-i18next";
 
 import type { InvoiceStatus } from "../../shared/types";
 
-const LABELS: Record<InvoiceStatus, { text: string; color: string }> = {
-  UNPAID: { text: "Chưa thanh toán", color: "orange" },
-  PAID: { text: "Đã thanh toán", color: "teal" },
-  CANCELLED: { text: "Đã huỷ", color: "gray" },
+const COLOURS: Record<InvoiceStatus, string> = {
+  UNPAID: "orange",
+  PAID: "teal",
+  CANCELLED: "gray",
 };
 
 export function StatusBadge({ value }: { value: InvoiceStatus }) {
-  const { text, color } = LABELS[value];
+  const { t } = useTranslation();
+
   return (
-    <Badge color={color} variant="light">
-      {text}
+    <Badge color={COLOURS[value]} variant="light">
+      {t(`status.${value}`)}
     </Badge>
   );
 }

@@ -47,7 +47,12 @@ export function RevenueChart({ history }: { history: DashboardHistoryPoint[] }) 
           dataKey="period"
           series={[
             { name: "Phải thu", color: "owed.5" },
-            { name: "Đã thu", color: "settled.5" },
+            // Dashed, and drawn second. A fully collected month has both
+            // values equal, so a solid line on top hides the one underneath
+            // and the amber track looks like it stops. Through the gaps in a
+            // dashed stroke both are visible where they coincide, and the two
+            // still read apart where they diverge.
+            { name: "Đã thu", color: "settled.5", strokeDasharray: "6 4" },
           ]}
           // Straight segments: each period is one measurement, and a smoothed
           // curve would draw revenue on dates that were never billed.
