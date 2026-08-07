@@ -52,16 +52,15 @@ export function LoginPage({
       <Paper
         withBorder
         radius="md"
+        className="fmh-login-card"
         style={{ overflow: "hidden", width: "100%", maxWidth: 820 }}
       >
         <Box className="fmh-login-grid">
           <Box
             visibleFrom="sm"
             p="xl"
-            style={{
-              backgroundColor: "var(--mantine-color-default)",
-              borderRight: "1px solid var(--fmh-rule)",
-            }}
+            className="fmh-login-panel"
+            style={{ borderRight: "1px solid var(--fmh-rule)" }}
           >
             <Stack gap="lg" h="100%" justify="space-between">
               <Group gap="sm" wrap="nowrap">
