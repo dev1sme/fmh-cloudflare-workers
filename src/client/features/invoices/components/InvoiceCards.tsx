@@ -1,5 +1,6 @@
 import { Card, Group, Stack, Text, UnstyledButton } from "@mantine/core";
 import { IconChevronRight } from "@tabler/icons-react";
+import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
 import type { InvoiceWithRoom } from "../../../../shared/types";
@@ -16,6 +17,8 @@ import { tien } from "../../../format";
  * breakdown a tap away.
  */
 export function InvoiceCards({ hoaDon }: { hoaDon: InvoiceWithRoom[] }) {
+  const { t } = useTranslation();
+
   return (
     <Stack gap="xs">
       {hoaDon.map((invoice) => (
@@ -44,8 +47,11 @@ export function InvoiceCards({ hoaDon }: { hoaDon: InvoiceWithRoom[] }) {
 
               <Group justify="space-between" wrap="nowrap" gap="sm">
                 <Text size="xs" c="dimmed">
-                  Phòng {tien(invoice.rent_amount)} · Điện {tien(invoice.electricity_amount)} · Nước{" "}
-                  {tien(invoice.water_amount)}
+                  {t("invoices.cardBreakdown", {
+                    rent: tien(invoice.rent_amount),
+                    electricity: tien(invoice.electricity_amount),
+                    water: tien(invoice.water_amount),
+                  })}
                 </Text>
               </Group>
 

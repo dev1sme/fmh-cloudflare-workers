@@ -1,4 +1,5 @@
 import { Card, Stack, Text } from "@mantine/core";
+import { useTranslation } from "react-i18next";
 
 import type { InvoiceDetail, Payment } from "../../../../shared/types";
 import { PaymentsTable } from "../../../components/PaymentsTable";
@@ -14,17 +15,19 @@ export function PaymentsCard({
   onPay: (input: ThanhToanMoi) => Promise<boolean>;
   onDeletePayment: (payment: Payment) => void;
 }) {
+  const { t } = useTranslation();
+
   return (
     <Card withBorder padding="md">
       <Stack>
-        <Text fw={500}>Thanh toán</Text>
+        <Text fw={500}>{t("invoices.paymentsTitle")}</Text>
 
         {hoaDon.payments.length > 0 && (
           <PaymentsTable payments={hoaDon.payments} onDelete={onDeletePayment} />
         )}
 
         {hoaDon.status === "CANCELLED" ? (
-          <Text c="dimmed">Hóa đơn đã huỷ, không ghi nhận thêm thanh toán.</Text>
+          <Text c="dimmed">{t("invoices.cancelledNoPayments")}</Text>
         ) : (
           <PaymentForm conLai={hoaDon.outstanding} onSubmit={onPay} />
         )}

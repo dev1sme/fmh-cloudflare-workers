@@ -1,5 +1,6 @@
 import { invoices as invoicesApi } from "../../api";
 import { baoLoi, baoThanhCong } from "../../errors";
+import i18n from "../../i18n";
 import { useResource } from "../../hooks/useResource";
 
 export type ThanhToanMoi = {
@@ -25,7 +26,7 @@ export function useThaoTacHoaDon(code: string, reload: () => void, onDeleted: ()
   async function luuPhiKhac(phiKhac: number): Promise<boolean> {
     try {
       await invoicesApi.update(code, { other_fees: phiKhac });
-      baoThanhCong("Đã cập nhật phí khác.");
+      baoThanhCong(i18n.t("invoices.otherFeesSaved"));
       reload();
       return true;
     } catch (err) {
@@ -37,7 +38,7 @@ export function useThaoTacHoaDon(code: string, reload: () => void, onDeleted: ()
   async function huy(): Promise<boolean> {
     try {
       await invoicesApi.update(code, { status: "CANCELLED" });
-      baoThanhCong("Đã huỷ hóa đơn.");
+      baoThanhCong(i18n.t("invoices.cancelled"));
       reload();
       return true;
     } catch (err) {
@@ -49,7 +50,7 @@ export function useThaoTacHoaDon(code: string, reload: () => void, onDeleted: ()
   async function xoa(): Promise<boolean> {
     try {
       await invoicesApi.remove(code);
-      baoThanhCong("Đã xoá hóa đơn.");
+      baoThanhCong(i18n.t("invoices.deleted"));
       onDeleted();
       return true;
     } catch (err) {
@@ -61,7 +62,7 @@ export function useThaoTacHoaDon(code: string, reload: () => void, onDeleted: ()
   async function ghiNhanThanhToan(input: ThanhToanMoi): Promise<boolean> {
     try {
       await invoicesApi.pay(code, input);
-      baoThanhCong("Đã ghi nhận thanh toán.");
+      baoThanhCong(i18n.t("invoices.paymentRecorded"));
       reload();
       return true;
     } catch (err) {
@@ -73,7 +74,7 @@ export function useThaoTacHoaDon(code: string, reload: () => void, onDeleted: ()
   async function xoaThanhToan(paymentCode: string): Promise<boolean> {
     try {
       await invoicesApi.removePayment(paymentCode);
-      baoThanhCong("Đã xoá khoản thu.");
+      baoThanhCong(i18n.t("invoices.paymentDeleted"));
       reload();
       return true;
     } catch (err) {

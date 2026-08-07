@@ -1,4 +1,5 @@
 import { Button, Table, Text } from "@mantine/core";
+import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
 import type { InvoiceWithRoom } from "../../../../shared/types";
@@ -12,19 +13,21 @@ export function InvoicesTable({
   hoaDon: InvoiceWithRoom[];
   tongTien: number;
 }) {
+  const { t } = useTranslation();
+
   return (
     <Table.ScrollContainer minWidth={860}>
       <Table>
         <Table.Thead>
           <Table.Tr>
-            <Table.Th>Mã</Table.Th>
-            <Table.Th>Phòng</Table.Th>
-            <Table.Th ta="right">Tiền phòng</Table.Th>
-            <Table.Th ta="right">Điện</Table.Th>
-            <Table.Th ta="right">Nước</Table.Th>
-            <Table.Th ta="right">Phí khác</Table.Th>
-            <Table.Th ta="right">Tổng</Table.Th>
-            <Table.Th>Đã thu</Table.Th>
+            <Table.Th>{t("invoices.colCode")}</Table.Th>
+            <Table.Th>{t("dashboard.colRoom")}</Table.Th>
+            <Table.Th ta="right">{t("invoice.rent")}</Table.Th>
+            <Table.Th ta="right">{t("meter.electricity")}</Table.Th>
+            <Table.Th ta="right">{t("meter.water")}</Table.Th>
+            <Table.Th ta="right">{t("invoice.otherFees")}</Table.Th>
+            <Table.Th ta="right">{t("invoices.colTotal")}</Table.Th>
+            <Table.Th>{t("invoice.collected")}</Table.Th>
             <Table.Th />
           </Table.Tr>
         </Table.Thead>
@@ -54,7 +57,7 @@ export function InvoicesTable({
               </Table.Td>
               <Table.Td>
                 <Button size="compact-sm" variant="subtle" component={Link} to={`/invoices/${invoice.code}`}>
-                  Chi tiết
+                  {t("invoices.details")}
                 </Button>
               </Table.Td>
             </Table.Tr>
@@ -65,7 +68,7 @@ export function InvoicesTable({
           <Table.Tr>
             <Table.Td colSpan={6} ta="right">
               <Text size="xs" tt="uppercase" c="dimmed" fw={600} style={{ letterSpacing: "0.06em" }}>
-                Tổng cộng
+                {t("invoice.total")}
               </Text>
             </Table.Td>
             <Table.Td className="fmh-num" fw={700}>

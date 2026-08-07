@@ -1,5 +1,6 @@
 import { Box, Button, Group, Stack, Text, Title } from "@mantine/core";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import { PeriodPicker } from "../../components/PeriodPicker";
 import { PageState } from "../../components/PageState";
@@ -17,6 +18,7 @@ export function InvoicesPage() {
   const { hoaDon, tongTien, loading, error, reload } = useInvoicesTheoKy(period);
   const { sinh, dangChay, ketQua, xoaKetQua } = useSinhHoaDon(period, reload);
   const xemTruoc = useXemTruocSinh(period, moSinh);
+  const { t } = useTranslation();
 
   async function xacNhanSinh(roomIds: number[]) {
     if (await sinh(roomIds)) setMoSinh(false);
@@ -25,11 +27,11 @@ export function InvoicesPage() {
   return (
     <Stack>
       <Group justify="space-between" align="flex-end">
-        <Title order={3}>Hóa đơn</Title>
+        <Title order={3}>{t("nav.invoices")}</Title>
         <Group align="flex-end">
           <PeriodPicker value={period} onChange={setPeriod} />
           <Button onClick={() => setMoSinh(true)}>
-            Sinh hóa đơn {periodLabel(period).toLowerCase()}
+            {t("invoices.generateFor", { period: periodLabel(period) })}
           </Button>
         </Group>
       </Group>
@@ -38,7 +40,7 @@ export function InvoicesPage() {
 
       <PageState loading={loading} error={error}>
         {hoaDon.length === 0 ? (
-          <Text c="dimmed">Chưa có hóa đơn nào cho {periodLabel(period).toLowerCase()}.</Text>
+          <Text c="dimmed">{t("invoices.emptyPeriod", { period: periodLabel(period) })}</Text>
         ) : (
           <>
             {/* Nine columns do not fit a phone; cards carry the same facts. */}

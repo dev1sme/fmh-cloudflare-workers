@@ -7,6 +7,7 @@ import {
   type AccountWithPassword,
 } from "../../api";
 import { baoLoi, baoThanhCong } from "../../errors";
+import i18n from "../../i18n";
 import { useResource } from "../../hooks/useResource";
 
 export function useDanhSachTaiKhoan() {
@@ -35,7 +36,7 @@ export function useThaoTacTaiKhoan(reload: () => void) {
   async function them(input: AccountInput): Promise<boolean> {
     try {
       setMatKhauMoi(await accountsApi.create(input));
-      baoThanhCong("Đã tạo tài khoản.");
+      baoThanhCong(i18n.t("accounts.created"));
       reload();
       return true;
     } catch (err) {
@@ -47,7 +48,7 @@ export function useThaoTacTaiKhoan(reload: () => void) {
   async function doiTen(code: string, username: string): Promise<boolean> {
     try {
       await accountsApi.rename(code, username);
-      baoThanhCong("Đã đổi tên đăng nhập.");
+      baoThanhCong(i18n.t("accounts.renamed"));
       reload();
       return true;
     } catch (err) {
@@ -60,7 +61,7 @@ export function useThaoTacTaiKhoan(reload: () => void) {
   async function datLaiMatKhau(code: string, password?: string): Promise<boolean> {
     try {
       setMatKhauMoi(await accountsApi.resetPassword(code, password));
-      baoThanhCong("Đã đặt lại mật khẩu.");
+      baoThanhCong(i18n.t("accounts.passwordReset"));
       return true;
     } catch (err) {
       baoLoi(err);
@@ -71,7 +72,7 @@ export function useThaoTacTaiKhoan(reload: () => void) {
   async function xoa(code: string): Promise<boolean> {
     try {
       await accountsApi.remove(code);
-      baoThanhCong("Đã xoá tài khoản.");
+      baoThanhCong(i18n.t("accounts.deleted"));
       reload();
       return true;
     } catch (err) {

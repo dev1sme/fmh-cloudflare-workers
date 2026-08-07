@@ -1,4 +1,5 @@
 import { Select, Stack, Text, TextInput } from "@mantine/core";
+import { useTranslation } from "react-i18next";
 
 import { KHAC, NGAN_HANG } from "../banks";
 
@@ -21,18 +22,19 @@ export function BankFields({
   value: BankValue;
   onChange: (next: BankValue) => void;
 }) {
+  const { t } = useTranslation();
   const trongDanhSach = value.bin !== null && NGAN_HANG.some((bank) => bank.bin === value.bin);
   const luaChon = value.bin === null ? null : trongDanhSach ? value.bin : KHAC;
 
   return (
     <Stack gap="sm">
       <Text fw={500} size="sm">
-        Tài khoản nhận tiền (VietQR)
+        {t("bank.title")}
       </Text>
 
       <Select
-        label="Ngân hàng"
-        placeholder="Chưa cấu hình"
+        label={t("bank.bank")}
+        placeholder={t("bank.notConfigured")}
         searchable
         clearable
         value={luaChon}
@@ -41,14 +43,14 @@ export function BankFields({
         }
         data={[
           ...NGAN_HANG.map((bank) => ({ value: bank.bin, label: `${bank.ten} — ${bank.bin}` })),
-          { value: KHAC, label: "Ngân hàng khác — tự nhập mã BIN" },
+          { value: KHAC, label: t("bank.other") },
         ]}
       />
 
       {luaChon === KHAC && (
         <TextInput
-          label="Mã BIN"
-          description="6 chữ số theo chuẩn NAPAS"
+          label={t("bank.bin")}
+          description={t("bank.binHint")}
           value={value.bin ?? ""}
           onChange={(e) => onChange({ ...value, bin: e.currentTarget.value })}
           maxLength={6}
@@ -56,32 +58,31 @@ export function BankFields({
       )}
 
       <TextInput
-        label="Số tài khoản"
+        label={t("bank.accountNo")}
         value={value.soTk}
         onChange={(e) => onChange({ ...value, soTk: e.currentTarget.value })}
       />
       <TextInput
-        label="Tên chủ tài khoản"
+        label={t("bank.accountName")}
         value={value.chuTk}
         onChange={(e) => onChange({ ...value, chuTk: e.currentTarget.value })}
       />
 
       <Text fw={500} size="sm" mt="sm">
-        MoMo (tuỳ chọn)
+        {t("bank.momoTitle")}
       </Text>
       <Text size="xs" c="dimmed" mt={-8}>
-        Hiện thêm dưới mã QR dạng thông tin để người thuê tự chuyển trong app MoMo. Không có mã QR
-        MoMo vì chuẩn mã của MoMo chưa được xác minh.
+        {t("bank.momoNote")}
       </Text>
 
       <TextInput
-        label="Số điện thoại MoMo"
+        label={t("bank.momoPhone")}
         placeholder="09xxxxxxxx"
         value={value.momoSdt}
         onChange={(e) => onChange({ ...value, momoSdt: e.currentTarget.value })}
       />
       <TextInput
-        label="Tên người nhận MoMo"
+        label={t("bank.momoName")}
         value={value.momoTen}
         onChange={(e) => onChange({ ...value, momoTen: e.currentTarget.value })}
       />

@@ -1,7 +1,8 @@
 import { Button, Group, NumberInput, Select, TextInput } from "@mantine/core";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 
-import { homNay } from "../../../format";
+import { dauPhanCach, homNay } from "../../../format";
 import type { ThanhToanMoi } from "../useInvoiceDetail";
 
 export function PaymentForm({
@@ -16,6 +17,7 @@ export function PaymentForm({
   const [phuongThuc, setPhuongThuc] = useState<string | null>("BANK_TRANSFER");
   const [ghiChu, setGhiChu] = useState("");
   const [busy, setBusy] = useState(false);
+  const { t } = useTranslation();
 
   // Default to what is still owed, refreshed after each payment.
   useEffect(() => setSoTien(conLai), [conLai]);
@@ -37,41 +39,40 @@ export function PaymentForm({
   return (
     <Group align="flex-end" wrap="wrap">
       <NumberInput
-        label="Số tiền"
+        label={t("payment.amount")}
         value={soTien}
         onChange={setSoTien}
         min={0}
         step={100000}
-        thousandSeparator="."
-        decimalSeparator=","
+        {...dauPhanCach()}
         w={180}
       />
       <TextInput
         type="date"
-        label="Ngày thu"
+        label={t("invoices.paidOn")}
         value={ngayTt}
         onChange={(e) => setNgayTt(e.currentTarget.value)}
         w={160}
       />
       <Select
-        label="Hình thức"
+        label={t("payment.method")}
         value={phuongThuc}
         onChange={setPhuongThuc}
         data={[
-          { value: "BANK_TRANSFER", label: "Chuyển khoản" },
-          { value: "CASH", label: "Tiền mặt" },
+          { value: "BANK_TRANSFER", label: t("method.BANK_TRANSFER") },
+          { value: "CASH", label: t("method.CASH") },
         ]}
         w={160}
       />
       <TextInput
-        label="Ghi chú"
+        label={t("payment.note")}
         value={ghiChu}
         onChange={(e) => setGhiChu(e.currentTarget.value)}
         flex={1}
         miw={160}
       />
       <Button onClick={submit} loading={busy}>
-        Ghi nhận
+        {t("invoices.record")}
       </Button>
     </Group>
   );

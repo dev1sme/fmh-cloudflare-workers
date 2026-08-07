@@ -1,5 +1,6 @@
 import { buildings as buildingsApi, type BuildingInput } from "../../api";
 import { baoLoi, baoThanhCong } from "../../errors";
+import i18n from "../../i18n";
 import { useResource } from "../../hooks/useResource";
 
 export function useDanhSachNha() {
@@ -11,7 +12,7 @@ export function useThaoTacNha(reload: () => void) {
   async function them(input: BuildingInput): Promise<boolean> {
     try {
       await buildingsApi.create(input);
-      baoThanhCong("Đã thêm nhà.");
+      baoThanhCong(i18n.t("settings.added"));
       reload();
       return true;
     } catch (err) {
@@ -23,7 +24,7 @@ export function useThaoTacNha(reload: () => void) {
   async function luu(id: number, patch: Partial<BuildingInput>): Promise<boolean> {
     try {
       await buildingsApi.update(id, patch);
-      baoThanhCong("Đã lưu cài đặt nhà.");
+      baoThanhCong(i18n.t("settings.saved"));
       reload();
       return true;
     } catch (err) {
@@ -36,7 +37,7 @@ export function useThaoTacNha(reload: () => void) {
   async function xoa(id: number): Promise<boolean> {
     try {
       await buildingsApi.remove(id);
-      baoThanhCong("Đã xoá nhà.");
+      baoThanhCong(i18n.t("settings.deleted"));
       reload();
       return true;
     } catch (err) {

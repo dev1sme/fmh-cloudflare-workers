@@ -1,6 +1,7 @@
 import { Button, Group, Stack, Text, Title } from "@mantine/core";
 import { IconUserPlus } from "@tabler/icons-react";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import type { Account } from "../../../shared/types";
 import type { SessionUser } from "../../api";
@@ -17,6 +18,7 @@ export function AccountsPage({ user }: { user: SessionUser }) {
   const { taiKhoan, phong, loading, error, reload } = useDanhSachTaiKhoan();
   const { them, doiTen, datLaiMatKhau, xoa, matKhauMoi, quenMatKhau } = useThaoTacTaiKhoan(reload);
   const { xacNhan, hopThoai } = useConfirm();
+  const { t } = useTranslation();
 
   const [dangThem, setDangThem] = useState(false);
   const [dangReset, setDangReset] = useState<Account | null>(null);
@@ -24,9 +26,9 @@ export function AccountsPage({ user }: { user: SessionUser }) {
 
   function hoiXoa(account: Account) {
     xacNhan({
-      title: "Xoá tài khoản",
-      message: `Xoá "${account.username}"? Người dùng này sẽ không đăng nhập được nữa. Hóa đơn và dữ liệu phòng không bị ảnh hưởng.`,
-      confirmLabel: "Xoá",
+      title: t("accounts.delete"),
+      message: t("accounts.confirmDelete", { name: account.username }),
+      confirmLabel: t("common.delete"),
       onConfirm: () => xoa(account.code),
     });
   }
@@ -34,18 +36,17 @@ export function AccountsPage({ user }: { user: SessionUser }) {
   return (
     <Stack>
       <Group justify="space-between">
-        <Title order={3}>Tài khoản</Title>
+        <Title order={3}>{t("nav.accounts")}</Title>
         <Button
           onClick={() => setDangThem(true)}
           leftSection={<IconUserPlus size={16} stroke={1.8} />}
         >
-          Thêm tài khoản
+          {t("accounts.add")}
         </Button>
       </Group>
 
       <Text c="dimmed" size="sm">
-        Mỗi phòng một tài khoản để người thuê xem hóa đơn. Mật khẩu lưu dạng đã băm — chỉ hiện một
-        lần lúc tạo hoặc đặt lại, không tra cứu lại được.
+        {t("accounts.note")}
       </Text>
 
       <PageState loading={loading} error={error}>

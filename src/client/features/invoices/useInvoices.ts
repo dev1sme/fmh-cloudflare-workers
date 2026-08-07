@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import type { GenerateResult } from "../../../shared/types";
 import { invoices as invoicesApi } from "../../api";
 import { baoLoi, baoThanhCong } from "../../errors";
+import i18n from "../../i18n";
 import { useResource } from "../../hooks/useResource";
 
 export function useInvoicesTheoKy(period: string) {
@@ -49,7 +50,7 @@ export function useSinhHoaDon(period: string, reload: () => void) {
     try {
       const result = await invoicesApi.generate(period, roomIds);
       setKetQua(result);
-      baoThanhCong(`Đã sinh ${result.created.length} hóa đơn.`);
+      baoThanhCong(i18n.t("invoices.generated", { count: result.created.length }));
       reload();
       return true;
     } catch (err) {

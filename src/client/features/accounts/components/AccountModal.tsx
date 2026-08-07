@@ -1,5 +1,6 @@
 import { Button, Modal, PasswordInput, Select, Stack, Text, TextInput } from "@mantine/core";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import type { RoomDetail } from "../../../../shared/types";
 import type { AccountInput } from "../../../api";
@@ -20,6 +21,7 @@ export function AccountModal({
   const [roomId, setRoomId] = useState<string | null>(null);
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (!opened) return;
@@ -45,29 +47,29 @@ export function AccountModal({
   }
 
   return (
-    <Modal opened={opened} onClose={onClose} title="Thêm tài khoản">
+    <Modal opened={opened} onClose={onClose} title={t("accounts.add")}>
       <Stack>
         <TextInput
-          label="Tên đăng nhập"
+          label={t("accounts.colUsername")}
           placeholder="phong03"
           value={username}
           onChange={(e) => setUsername(e.currentTarget.value)}
           required
         />
         <Select
-          label="Vai trò"
+          label={t("accounts.role")}
           value={vaiTro}
           onChange={setVaiTro}
           data={[
-            { value: "TENANT", label: "Người thuê — chỉ xem hóa đơn phòng mình" },
-            { value: "MANAGER", label: "Quản lý — toàn quyền" },
+            { value: "TENANT", label: t("accounts.roleTenant") },
+            { value: "MANAGER", label: t("accounts.roleManager") },
           ]}
           allowDeselect={false}
         />
         {vaiTro === "TENANT" && (
           <Select
-            label="Phòng"
-            description="Mỗi phòng chỉ có một tài khoản"
+            label={t("dashboard.colRoom")}
+            description={t("accounts.roomHint")}
             value={roomId}
             onChange={setRoomId}
             data={phong.map((room) => ({ value: String(room.id), label: room.room_name }))}
@@ -75,18 +77,18 @@ export function AccountModal({
           />
         )}
         <PasswordInput
-          label="Mật khẩu"
-          description="Để trống thì hệ thống tự sinh mật khẩu mạnh và hiện ra một lần"
+          label={t("login.password")}
+          description={t("accounts.passwordHint")}
           value={password}
           onChange={(e) => setPassword(e.currentTarget.value)}
         />
 
         <Text size="xs" c="dimmed">
-          Mật khẩu được băm trước khi lưu, không xem lại được. Quên thì đặt lại.
+          {t("accounts.hashedNote")}
         </Text>
 
         <Button onClick={save} loading={busy}>
-          Tạo tài khoản
+          {t("accounts.create")}
         </Button>
       </Stack>
     </Modal>

@@ -28,8 +28,3 @@ export const NGAN_HANG = [
 ] as const;
 
 export const KHAC = "khac";
-
-export function tenNganHang(bin: string | null): string | null {
-  if (!bin) return null;
-  return NGAN_HANG.find((bank) => bank.bin === bin)?.ten ?? `Mã ${bin}`;
-}

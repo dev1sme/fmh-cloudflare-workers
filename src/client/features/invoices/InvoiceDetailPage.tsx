@@ -1,4 +1,5 @@
 import { Button, Group, Stack, Title } from "@mantine/core";
+import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useParams } from "react-router-dom";
 
 import type { Payment } from "../../../shared/types";
@@ -23,12 +24,13 @@ export function InvoiceDetailPage() {
     navigate("/invoices"),
   );
   const { xacNhan, hopThoai } = useConfirm();
+  const { t } = useTranslation();
 
   function hoiHuy() {
     xacNhan({
-      title: "Huỷ hóa đơn",
-      message: "Hóa đơn được giữ lại để tra cứu nhưng không thu tiền được nữa.",
-      confirmLabel: "Huỷ hóa đơn",
+      title: t("invoices.cancel"),
+      message: t("invoices.confirmCancel"),
+      confirmLabel: t("invoices.cancel"),
       color: "orange",
       onConfirm: huy,
     });
@@ -36,18 +38,18 @@ export function InvoiceDetailPage() {
 
   function hoiXoa() {
     xacNhan({
-      title: "Xoá hóa đơn",
-      message: "Xoá hẳn hóa đơn này. Chỉ số của kỳ vẫn còn nên có thể sinh lại.",
-      confirmLabel: "Xoá",
+      title: t("invoices.delete"),
+      message: t("invoices.confirmDelete"),
+      confirmLabel: t("common.delete"),
       onConfirm: xoa,
     });
   }
 
   function hoiXoaThanhToan(payment: Payment) {
     xacNhan({
-      title: "Xoá khoản thu",
-      message: `Xoá khoản thu ${tien(payment.amount)}? Trạng thái hóa đơn sẽ được tính lại.`,
-      confirmLabel: "Xoá",
+      title: t("invoices.deletePaymentTitle"),
+      message: t("invoices.confirmDeletePayment", { amount: tien(payment.amount) }),
+      confirmLabel: t("common.delete"),
       onConfirm: () => xoaThanhToan(payment.code),
     });
   }
@@ -56,10 +58,10 @@ export function InvoiceDetailPage() {
     <Stack>
       <Group justify="space-between">
         <Title order={3}>
-          {hoaDon ? `${hoaDon.code} — ${hoaDon.room_name}` : "Hóa đơn"}
+          {hoaDon ? `${hoaDon.code} — ${hoaDon.room_name}` : t("invoice.fallbackTitle")}
         </Title>
         <Button variant="subtle" component={Link} to="/invoices">
-          ← Danh sách
+          ← {t("invoices.backToList")}
         </Button>
       </Group>
 

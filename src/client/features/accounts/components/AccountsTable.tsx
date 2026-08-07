@@ -1,4 +1,5 @@
 import { Badge, Button, Group, Menu, Table, Text } from "@mantine/core";
+import { useTranslation } from "react-i18next";
 
 import type { Account } from "../../../../shared/types";
 
@@ -16,14 +17,16 @@ export function AccountsTable({
   onResetPassword: (account: Account) => void;
   onDelete: (account: Account) => void;
 }) {
+  const { t } = useTranslation();
+
   return (
     <Table.ScrollContainer minWidth={680}>
       <Table>
         <Table.Thead>
           <Table.Tr>
-            <Table.Th>Tên đăng nhập</Table.Th>
-            <Table.Th>Vai trò</Table.Th>
-            <Table.Th>Phòng</Table.Th>
+            <Table.Th>{t("accounts.colUsername")}</Table.Th>
+            <Table.Th>{t("accounts.colRole")}</Table.Th>
+            <Table.Th>{t("dashboard.colRoom")}</Table.Th>
             <Table.Th />
           </Table.Tr>
         </Table.Thead>
@@ -34,7 +37,7 @@ export function AccountsTable({
                 <Text fw={500}>{account.username}</Text>
                 {account.id === idHienTai && (
                   <Text size="xs" c="dimmed">
-                    tài khoản đang đăng nhập
+                    {t("accounts.currentAccount")}
                   </Text>
                 )}
               </Table.Td>
@@ -43,14 +46,14 @@ export function AccountsTable({
                   color={account.role === "MANAGER" ? "teal" : "blue"}
                   variant="light"
                 >
-                  {account.role === "MANAGER" ? "Quản lý" : "Người thuê"}
+                  {account.role === "MANAGER" ? t("common.manager") : t("accounts.tenantRole")}
                 </Badge>
               </Table.Td>
-              <Table.Td>{account.room_name ?? "—"}</Table.Td>
+              <Table.Td>{account.room_name ?? t("common.empty")}</Table.Td>
               <Table.Td>
                 <Group gap="xs" justify="flex-end" wrap="nowrap">
                   <Button size="xs" variant="light" onClick={() => onResetPassword(account)}>
-                    Đặt lại mật khẩu
+                    {t("accounts.resetPassword")}
                   </Button>
                   <Menu position="bottom-end" withinPortal>
                     <Menu.Target>
@@ -59,13 +62,13 @@ export function AccountsTable({
                       </Button>
                     </Menu.Target>
                     <Menu.Dropdown>
-                      <Menu.Item onClick={() => onRename(account)}>Đổi tên đăng nhập</Menu.Item>
+                      <Menu.Item onClick={() => onRename(account)}>{t("accounts.rename")}</Menu.Item>
                       <Menu.Item
                         color="red"
                         disabled={account.id === idHienTai}
                         onClick={() => onDelete(account)}
                       >
-                        Xoá tài khoản
+                        {t("accounts.delete")}
                       </Menu.Item>
                     </Menu.Dropdown>
                   </Menu>

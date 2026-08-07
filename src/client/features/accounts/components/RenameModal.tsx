@@ -1,5 +1,6 @@
 import { Button, Modal, Stack, TextInput } from "@mantine/core";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import type { Account } from "../../../../shared/types";
 
@@ -14,6 +15,7 @@ export function RenameModal({
 }) {
   const [username, setUsername] = useState("");
   const [busy, setBusy] = useState(false);
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (account) setUsername(account.username);
@@ -33,17 +35,17 @@ export function RenameModal({
     <Modal
       opened={account !== null}
       onClose={onClose}
-      title={`Đổi tên đăng nhập — ${account?.username ?? ""}`}
+      title={t("accounts.renameTitle", { name: account?.username ?? "" })}
     >
       <Stack>
         <TextInput
-          label="Tên đăng nhập mới"
+          label={t("accounts.newUsername")}
           value={username}
           onChange={(e) => setUsername(e.currentTarget.value)}
           required
         />
         <Button onClick={save} loading={busy} disabled={username.trim() === ""}>
-          Lưu
+          {t("common.save")}
         </Button>
       </Stack>
     </Modal>

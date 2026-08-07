@@ -1,4 +1,5 @@
 import { Button, Group } from "@mantine/core";
+import { useTranslation } from "react-i18next";
 
 export function InvoiceActions({
   daHuy,
@@ -9,15 +10,17 @@ export function InvoiceActions({
   onCancel: () => void;
   onDelete: () => void;
 }) {
+  const { t } = useTranslation();
+
   return (
     <Group>
       {!daHuy && (
         <Button variant="light" color="orange" onClick={onCancel}>
-          Huỷ hóa đơn
+          {t("invoices.cancel")}
         </Button>
       )}
       <Button variant="subtle" color="red" onClick={onDelete}>
-        Xoá hóa đơn
+        {t("invoices.delete")}
       </Button>
     </Group>
   );

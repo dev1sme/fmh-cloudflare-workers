@@ -1,5 +1,6 @@
 import { Button, Modal, PasswordInput, Stack, Text } from "@mantine/core";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import type { Account } from "../../../../shared/types";
 
@@ -15,6 +16,7 @@ export function ResetPasswordModal({
 }) {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (account) setPassword("");
@@ -34,20 +36,20 @@ export function ResetPasswordModal({
     <Modal
       opened={account !== null}
       onClose={onClose}
-      title={`Đặt lại mật khẩu — ${account?.username ?? ""}`}
+      title={t("accounts.resetTitle", { name: account?.username ?? "" })}
     >
       <Stack>
         <Text size="sm" c="dimmed">
-          Không cần mật khẩu hiện tại. Mật khẩu cũ ngừng dùng được ngay sau khi đặt lại.
+          {t("accounts.resetNote")}
         </Text>
 
         <Button onClick={() => submit(true)} loading={busy}>
-          Sinh mật khẩu ngẫu nhiên
+          {t("accounts.generateRandom")}
         </Button>
 
         <PasswordInput
-          label="Hoặc tự đặt mật khẩu"
-          description="Tối thiểu 8 ký tự"
+          label={t("accounts.orSetOwn")}
+          description={t("changePassword.minChars", { count: 8 })}
           value={password}
           onChange={(e) => setPassword(e.currentTarget.value)}
         />
@@ -57,7 +59,7 @@ export function ResetPasswordModal({
           loading={busy}
           onClick={() => submit(false)}
         >
-          Dùng mật khẩu này
+          {t("accounts.useThis")}
         </Button>
       </Stack>
     </Modal>

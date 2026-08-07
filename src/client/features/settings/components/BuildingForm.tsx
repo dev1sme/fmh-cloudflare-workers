@@ -1,7 +1,9 @@
 import { Button, Card, Divider, Group, NumberInput, Stack, TextInput } from "@mantine/core";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import type { Building } from "../../../../shared/types";
+import { dauPhanCach } from "../../../format";
 import { BankFields, type BankValue } from "./BankFields";
 
 export function BuildingForm({
@@ -25,6 +27,7 @@ export function BuildingForm({
     momoTen: nha.momo_name ?? "",
   });
   const [busy, setBusy] = useState(false);
+  const { t } = useTranslation();
 
   useEffect(() => {
     setName(nha.name);
@@ -61,30 +64,28 @@ export function BuildingForm({
   return (
     <Card withBorder padding="md">
       <Stack>
-        <TextInput label="Tên nhà" value={name} onChange={(e) => setName(e.currentTarget.value)} />
+        <TextInput label={t("settings.buildingName")} value={name} onChange={(e) => setName(e.currentTarget.value)} />
         <TextInput
-          label="Địa chỉ"
+          label={t("settings.address")}
           value={address}
           onChange={(e) => setAddress(e.currentTarget.value)}
         />
         <Group grow>
           <NumberInput
-            label="Đơn giá điện (đ/kWh)"
+            label={t("settings.electricityRate")}
             value={dien}
             onChange={setDien}
             min={0}
             step={500}
-            thousandSeparator="."
-            decimalSeparator=","
+            {...dauPhanCach()}
           />
           <NumberInput
-            label="Đơn giá nước (đ/m³)"
+            label={t("settings.waterRate")}
             value={nuoc}
             onChange={setNuoc}
             min={0}
             step={1000}
-            thousandSeparator="."
-            decimalSeparator=","
+            {...dauPhanCach()}
           />
         </Group>
         <Divider my="xs" />
@@ -93,10 +94,10 @@ export function BuildingForm({
 
         <Group justify="space-between">
           <Button onClick={save} loading={busy}>
-            Lưu
+            {t("common.save")}
           </Button>
           <Button variant="subtle" color="red" onClick={() => onDelete(nha)}>
-            Xoá nhà
+            {t("settings.deleteBuilding")}
           </Button>
         </Group>
       </Stack>
