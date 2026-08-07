@@ -21,25 +21,27 @@ function hopLe(value: string | null | undefined): NgonNgu | null {
 }
 
 /**
- * Stored choice first, browser preference second, Vietnamese last.
+ * A stored choice, or Vietnamese.
+ *
+ * `navigator.language` is deliberately not consulted. The tenants here are
+ * Vietnamese; a phone set to English is common and says nothing about which
+ * language someone wants to read their own bill in. Letting the browser decide
+ * meant a first-time visitor on such a phone landed in English, which is the
+ * exception, not the default. English stays one click away and is remembered
+ * once chosen.
  *
  * Read and written here rather than through `i18next-browser-languagedetector`.
  * The detector was persisting under its own default key while reading the one
  * configured here, so a language picked from the menu survived until the next
- * full page load and then reverted. Ten lines of explicit storage removes both
- * the bug and the dependency, and the fallback chain is now readable in one
- * place.
+ * full page load and then reverted.
  */
 function ngonNguBanDau(): NgonNgu {
   try {
-    const daLuu = hopLe(localStorage.getItem(LUU_TAI));
-    if (daLuu) return daLuu;
+    return hopLe(localStorage.getItem(LUU_TAI)) ?? "vi";
   } catch {
-    // Storage can throw in a locked-down browser; the browser preference and
-    // the fallback below still give a usable answer.
+    // Storage throws in a locked-down browser; the default still applies.
+    return "vi";
   }
-
-  return hopLe(navigator.language) ?? "vi";
 }
 
 void i18n.use(initReactI18next).init({

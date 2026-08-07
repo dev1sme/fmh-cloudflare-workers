@@ -1,5 +1,9 @@
 import { Box, Group, Paper, Stack, Text, Title } from "@mantine/core";
-import { IconBolt, IconBuildingCommunity, IconFileInvoice } from "@tabler/icons-react";
+import {
+  IconBolt,
+  IconBuildingCommunity,
+  IconFileInvoice,
+} from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
 import type { SessionUser } from "../../api";
@@ -16,7 +20,13 @@ import { useLogin } from "./useLogin";
  * holds the form. On mobile the panel collapses away — a phone keyboard leaves
  * no room for a statement of purpose.
  */
-function DiemBan({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) {
+function DiemBan({
+  icon,
+  children,
+}: {
+  icon: React.ReactNode;
+  children: React.ReactNode;
+}) {
   return (
     <Group gap="sm" wrap="nowrap" align="flex-start">
       <Box c="settled.4" mt={2}>
@@ -29,7 +39,11 @@ function DiemBan({ icon, children }: { icon: React.ReactNode; children: React.Re
   );
 }
 
-export function LoginPage({ onLogin }: { onLogin: (user: SessionUser) => void }) {
+export function LoginPage({
+  onLogin,
+}: {
+  onLogin: (user: SessionUser) => void;
+}) {
   const { dangNhap, loi, dangChay } = useLogin(onLogin);
   const { t } = useTranslation();
 
@@ -65,7 +79,7 @@ export function LoginPage({ onLogin }: { onLogin: (user: SessionUser) => void })
               </Stack>
 
               <Text size="xs" c="dimmed">
-                © {new Date().getFullYear()} dev1sme
+                © {new Date().getFullYear()} dev1sme · Software Engineer
               </Text>
             </Stack>
           </Box>
