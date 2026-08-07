@@ -12,25 +12,36 @@
  * input look like it is set into the card, without introducing a third accent
  * to do that job. The accents stay reserved for money.
  */
+/*
+ * Light is beige, not white.
+ *
+ * The glare was coming from the cards more than the page: a pure `#ffffff`
+ * card under a landlord's desk lamp is the brightest thing on the screen, and
+ * every screen here is mostly card. The whole scale drops onto warm paper
+ * tones, which also matches what the theme is an analogy for — a ledger, not a
+ * spreadsheet. Cards stay a step *lighter* than the page so they still read as
+ * lying on top of it.
+ */
 :root {
-  --fmh-paper: #faf7f1;
-  --fmh-card: #ffffff;
-  --fmh-raised: #f2ece1;
-  --fmh-input: #ffffff;
-  --fmh-rule: #e4dcce;
+  --fmh-paper: #ece3d3;
+  --fmh-card: #f7f2e7;
+  --fmh-raised: #e3d9c6;
+  --fmh-input: #fbf8f1;
+  --fmh-rule: #d8ccb6;
 
   /* Card lift. Warm-tinted rather than neutral black, so a shadow on a warm
      page does not turn grey. */
-  --fmh-shadow: 0 1px 2px rgba(74, 59, 38, 0.06), 0 6px 18px rgba(74, 59, 38, 0.05);
-  --fmh-shadow-lg: 0 2px 6px rgba(74, 59, 38, 0.08), 0 24px 60px rgba(74, 59, 38, 0.14);
-  --fmh-edge: rgba(255, 255, 255, 0.7);
+  --fmh-shadow: 0 1px 2px rgba(74, 59, 38, 0.07), 0 6px 18px rgba(74, 59, 38, 0.06);
+  --fmh-shadow-lg: 0 2px 6px rgba(74, 59, 38, 0.09), 0 24px 60px rgba(74, 59, 38, 0.16);
+  --fmh-edge: rgba(255, 255, 255, 0.65);
 
-  /* Ambient layer. Weaker on light: the same strength that reads as a glow on
-     a dark page reads as a stain on a pale one. */
-  --fmh-orb-owed: rgba(221, 133, 26, 0.16);
-  --fmh-orb-settled: rgba(86, 150, 98, 0.14);
-  --fmh-aurora: rgba(221, 133, 26, 0.09);
-  --fmh-grain: 0.025;
+  /* Ambient layer, weaker here than on dark. The same strength that reads as a
+     glow on a dark page reads as a stain on a pale one, and beige is already
+     carrying warmth of its own. */
+  --fmh-orb-owed: rgba(221, 133, 26, 0.12);
+  --fmh-orb-settled: rgba(86, 150, 98, 0.11);
+  --fmh-aurora: rgba(221, 133, 26, 0.07);
+  --fmh-grain: 0.022;
 }
 
 :root[data-mantine-color-scheme="dark"] {

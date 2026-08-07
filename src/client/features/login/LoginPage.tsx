@@ -7,7 +7,7 @@ import {
 import { useTranslation } from "react-i18next";
 
 import type { SessionUser } from "../../api";
-import { LanguageMenu } from "../../components/LanguageMenu";
+import { PreferencesMenu } from "../../components/PreferencesMenu";
 import { LoginForm } from "./components/LoginForm";
 import { useLogin } from "./useLogin";
 
@@ -87,7 +87,7 @@ export function LoginPage({
             {/* Above the form, not buried in it: someone who cannot read the
                 form is exactly who needs to reach this. */}
             <Group justify="flex-end" mb="xs">
-              <LanguageMenu />
+              <PreferencesMenu />
             </Group>
 
             <LoginForm onSubmit={dangNhap} loi={loi} dangChay={dangChay} />
