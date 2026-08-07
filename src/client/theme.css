@@ -4,16 +4,13 @@
  */
 
 /*
- * Surfaces come as a scale, not a single page colour.
+ * Surfaces come as a scale, not a single page colour, and light is beige
+ * rather than white.
  *
  * Everything used to sit at one tone with a 1px rule between, which reads flat
- * — the card and the page it lay on were the same colour. Four steps (page,
- * card, raised, input) let a card look like it is on top of the page and an
- * input look like it is set into the card, without introducing a third accent
- * to do that job. The accents stay reserved for money.
- */
-/*
- * Light is beige, not white.
+ * — a card was the same colour as the page it lay on. The scale gives depth
+ * without spending a third accent on it; amber and green stay reserved for
+ * money.
  *
  * The glare was coming from the cards more than the page: a pure `#ffffff`
  * card under a landlord's desk lamp is the brightest thing on the screen, and
@@ -24,10 +21,10 @@
  */
 :root {
   --fmh-paper: #ece3d3;
+  --fmh-panel: #f2ebdd;
   --fmh-card: #f7f2e7;
-  --fmh-raised: #e3d9c6;
   --fmh-input: #fbf8f1;
-  --fmh-rule: #d8ccb6;
+  --fmh-rule: #cdbfa4;
 
   /* Card lift. Warm-tinted rather than neutral black, so a shadow on a warm
      page does not turn grey. */
@@ -46,10 +43,10 @@
 
 :root[data-mantine-color-scheme="dark"] {
   --fmh-paper: #17140f;
+  --fmh-panel: #1c1914;
   --fmh-card: #211d18;
-  --fmh-raised: #2a251e;
   --fmh-input: #1b1814;
-  --fmh-rule: #332e26;
+  --fmh-rule: #3a342b;
 
   --fmh-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.3);
   --fmh-shadow-lg: 0 2px 8px rgba(0, 0, 0, 0.5), 0 28px 70px rgba(0, 0, 0, 0.55);
@@ -70,10 +67,10 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-mantine-color-scheme="light"]) {
     --fmh-paper: #17140f;
+    --fmh-panel: #1c1914;
     --fmh-card: #211d18;
-    --fmh-raised: #2a251e;
     --fmh-input: #1b1814;
-    --fmh-rule: #332e26;
+    --fmh-rule: #3a342b;
   }
 }
 
@@ -248,11 +245,53 @@ textarea {
   border-top: 1px solid var(--fmh-edge);
 }
 
+/*
+ * The shell reads as chrome around the work, not as more page.
+ *
+ * These were a translucent wash of the page colour, which on beige left the
+ * sidebar, the header and the content area all the same tone with no edge
+ * between them. They now take the card surface and a hairline on the side
+ * facing the content, so the boundary is visible without a heavy border.
+ */
 .mantine-AppShell-header,
 .mantine-AppShell-navbar,
 .mantine-AppShell-footer {
-  background-color: color-mix(in srgb, var(--fmh-paper) 82%, transparent);
-  backdrop-filter: blur(12px);
+  background-color: var(--fmh-card);
+  backdrop-filter: none;
+}
+
+.mantine-AppShell-header {
+  border-bottom: 1px solid var(--fmh-rule);
+}
+
+.mantine-AppShell-navbar {
+  border-right: 1px solid var(--fmh-rule);
+}
+
+.mantine-AppShell-footer {
+  background-color: var(--fmh-paper);
+  border-top: 1px solid var(--fmh-rule);
+}
+
+/*
+ * A table standing directly on the page had nothing to separate its rows from
+ * the background — the hairlines were the only cue, and on beige they were
+ * doing it alone. Giving the table the card surface puts the rows on something,
+ * the way the dashboard's tables already were by virtue of sitting in a Card.
+ */
+.mantine-Table-table {
+  background-color: var(--fmh-card);
+  border: 1px solid var(--fmh-rule);
+  border-radius: var(--mantine-radius-md);
+}
+
+/* Inside a card or a modal the surface already exists; a second one would be a
+   box in a box. */
+.mantine-Card-root .mantine-Table-table,
+.mantine-Modal-content .mantine-Table-table {
+  background-color: transparent;
+  border: 0;
+  border-radius: 0;
 }
 
 .mantine-Input-input {
@@ -292,9 +331,13 @@ textarea {
   box-shadow: var(--fmh-shadow-lg);
 }
 
-/* The statement panel is a step up from the card, not a different colour. */
+/*
+ * The statement panel is one step back from the form beside it, but still
+ * ahead of the page — it belongs to the card, and reading the same tone as the
+ * background made the card look like it had a bite taken out of it.
+ */
 .fmh-login-panel {
-  background-color: var(--fmh-raised);
+  background-color: var(--fmh-panel);
 }
 
 .fmh-login-grid {
