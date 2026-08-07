@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Nhà trọ FMH">
+  <!--
+    A tab favicon renders at 16px, so this is drawn as blocks rather than as a
+    line icon: the header's IconBuildingCommunity has 1.6px strokes that
+    disappear at that size. Two solid masses and a doorway survive.
+
+    The background is solid `settled.6`, the app's primary green, so the mark
+    does not depend on the browser's tab colour — a transparent icon vanishes
+    against a dark tab strip on one machine and a light one on the next.
+  -->
+  <rect width="64" height="64" rx="14" fill="#569662" />
+
+  <g fill="#F7F2E7">
+    <!-- Taller block, left. -->
+    <path d="M14 24 L26 17 L38 24 L38 50 L14 50 Z" />
+    <!-- Lower wing, right. -->
+    <rect x="40" y="30" width="12" height="20" rx="1.5" />
+  </g>
+
+  <!-- Windows and the doorway are cut back to the background colour, which
+       keeps the mark to two tones. -->
+  <g fill="#569662">
+    <rect x="19" y="28" width="5" height="5" rx="1" />
+    <rect x="28" y="28" width="5" height="5" rx="1" />
+    <rect x="19" y="37" width="5" height="5" rx="1" />
+    <rect x="24" y="44" width="6" height="6" />
+    <rect x="44" y="35" width="4" height="4" rx="1" />
+    <rect x="44" y="43" width="4" height="4" rx="1" />
+  </g>
+</svg>
