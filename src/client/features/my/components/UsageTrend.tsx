@@ -33,11 +33,15 @@ function daiTruc([min, max]: readonly [number, number]): [number, number] {
  */
 function Bieu({
   tieuDe,
+  nhan,
   data,
   mau,
   donVi,
 }: {
+  /** Above the chart, where the axis already says the unit. */
   tieuDe: string;
+  /** Inside the tooltip, which pops up over a bare point with no context. */
+  nhan: string;
   data: Diem[];
   mau: string;
   donVi: string;
@@ -55,7 +59,7 @@ function Bieu({
         h={150}
         data={data}
         dataKey="period"
-        series={[{ name: "value", label: tieuDe, color: mau }]}
+        series={[{ name: "value", label: nhan, color: mau }]}
         // Straight segments between measurements, not the default `monotone`:
         // a smooth curve draws values between two months that were never read,
         // and can overshoot the highest point — showing a peak above the real
@@ -120,8 +124,20 @@ export function UsageTrend({ months }: { months: TenantMonth[] }) {
 
   return (
     <>
-      <Bieu tieuDe={t("tenant.electricityByMonth")} data={dien} mau="owed.5" donVi="kWh" />
-      <Bieu tieuDe={t("tenant.waterByMonth")} data={nuoc} mau="settled.5" donVi="m³" />
+      <Bieu
+        tieuDe={t("meter.electricity")}
+        nhan={t("meter.electricityUsed")}
+        data={dien}
+        mau="owed.5"
+        donVi="kWh"
+      />
+      <Bieu
+        tieuDe={t("meter.water")}
+        nhan={t("meter.waterUsed")}
+        data={nuoc}
+        mau="settled.5"
+        donVi="m³"
+      />
     </>
   );
 }

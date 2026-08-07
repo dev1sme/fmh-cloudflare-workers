@@ -25,40 +25,30 @@ import {
   IconSettings,
   IconUsers,
 } from "@tabler/icons-react";
+import { useTranslation } from "react-i18next";
 import { Link, Outlet, useLocation } from "react-router-dom";
 
 import type { SessionUser } from "../api";
+import { LanguageMenuItems } from "./LanguageMenu";
 import { PageTransition } from "./PageTransition";
 
 const ICON = { size: 18, stroke: 1.6 };
 
-const QUAN_LY_LINKS = [
-  {
-    to: "/dashboard",
-    label: "Tổng quan",
-    icon: <IconLayoutDashboard {...ICON} />,
-  },
-  { to: "/rooms", label: "Phòng", icon: <IconHome {...ICON} /> },
-  { to: "/tenants", label: "Người thuê", icon: <IconUsers {...ICON} /> },
-  { to: "/readings", label: "Chỉ số điện nước", icon: <IconBolt {...ICON} /> },
-  { to: "/invoices", label: "Hóa đơn", icon: <IconFileInvoice {...ICON} /> },
-  { to: "/accounts", label: "Tài khoản", icon: <IconKey {...ICON} /> },
-  { to: "/settings", label: "Cài đặt", icon: <IconSettings {...ICON} /> },
-];
-
-const NGUOI_THUE_LINKS = [
-  {
-    to: "/dashboard",
-    label: "Tổng quan",
-    icon: <IconLayoutDashboard {...ICON} />,
-  },
-  {
-    to: "/my-invoices",
-    label: "Hóa đơn của tôi",
-    icon: <IconFileInvoice {...ICON} />,
-  },
-  { to: "/my-readings", label: "Lịch sử chỉ số", icon: <IconBolt {...ICON} /> },
-];
+/**
+ * The manager's shell, and only the manager's — `routes.tsx` gives a tenant
+ * `TenantLayout` instead. It used to carry a second link list for tenants;
+ * that became unreachable when the tenant screens collapsed into one page, so
+ * it is gone rather than translated.
+ */
+const LINKS = [
+  { to: "/dashboard", key: "nav.dashboard", icon: <IconLayoutDashboard {...ICON} /> },
+  { to: "/rooms", key: "nav.rooms", icon: <IconHome {...ICON} /> },
+  { to: "/tenants", key: "nav.tenants", icon: <IconUsers {...ICON} /> },
+  { to: "/readings", key: "nav.readings", icon: <IconBolt {...ICON} /> },
+  { to: "/invoices", key: "nav.invoices", icon: <IconFileInvoice {...ICON} /> },
+  { to: "/accounts", key: "nav.accounts", icon: <IconKey {...ICON} /> },
+  { to: "/settings", key: "nav.settings", icon: <IconSettings {...ICON} /> },
+] as const;
 
 /** Two initials from a username, e.g. `phong01` -> `PH`. */
 function chuCaiDau(username: string): string {
@@ -74,8 +64,7 @@ export function AppLayout({
 }) {
   const [opened, { toggle, close }] = useDisclosure();
   const { pathname } = useLocation();
-  const quanLy = user.role === "MANAGER";
-  const links = quanLy ? QUAN_LY_LINKS : NGUOI_THUE_LINKS;
+  const { t } = useTranslation();
 
   return (
     <AppShell
@@ -94,31 +83,27 @@ export function AppLayout({
               size="sm"
             />
             <IconBuildingCommunity size={22} stroke={1.6} />
-            <Title order={4}>Nhà trọ FMH</Title>
+            <Title order={4}>{t("app.name")}</Title>
           </Group>
 
-          {/* Search is manager-only: a tenant has one room and a short list of
-              invoices, so there is nothing to jump between. */}
-          {quanLy && (
-            <UnstyledButton
-              onClick={spotlight.open}
-              visibleFrom="sm"
-              aria-label="Tìm nhanh"
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                padding: "5px 10px",
-                borderRadius: "var(--mantine-radius-sm)",
-                border: "1px solid var(--fmh-rule)",
-                color: "var(--mantine-color-dimmed)",
-              }}
-            >
-              <IconSearch size={15} stroke={1.8} />
-              <Text size="sm">Tìm nhanh</Text>
-              <Kbd size="xs">Ctrl+K</Kbd>
-            </UnstyledButton>
-          )}
+          <UnstyledButton
+            onClick={spotlight.open}
+            visibleFrom="sm"
+            aria-label={t("common.search")}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              padding: "5px 10px",
+              borderRadius: "var(--mantine-radius-sm)",
+              border: "1px solid var(--fmh-rule)",
+              color: "var(--mantine-color-dimmed)",
+            }}
+          >
+            <IconSearch size={15} stroke={1.8} />
+            <Text size="sm">{t("common.search")}</Text>
+            <Kbd size="xs">Ctrl+K</Kbd>
+          </UnstyledButton>
         </Group>
       </AppShell.Header>
 
@@ -126,12 +111,12 @@ export function AppLayout({
         {/* Navigation grows; the account block is pinned to the bottom so the
             identity and the way out sit together, away from the screen's work. */}
         <AppShell.Section grow>
-          {links.map((link) => (
+          {LINKS.map((link) => (
             <NavLink
               key={link.to}
               component={Link}
               to={link.to}
-              label={link.label}
+              label={t(link.key)}
               leftSection={link.icon}
               // Match on a path segment, not a raw prefix: plain startsWith
               // lights "Hóa đơn" up on /my-invoices, a different screen.
@@ -147,18 +132,18 @@ export function AppLayout({
           pt="sm"
           style={{ borderTop: "1px solid var(--fmh-rule)" }}
         >
-          {/* Only the identity is on show. The two account actions are behind a
+          {/* Only the identity is on show. The account actions are behind a
               menu, so the sidebar's bottom edge stays one row tall and the
               navigation above it reads as the only list on the screen. */}
           <Menu position="top-start" width="target" withinPortal shadow="md">
             <Menu.Target>
               <UnstyledButton
-                aria-label="Tài khoản"
+                aria-label={t("common.account")}
                 className="fmh-account"
                 style={{ display: "block", width: "100%" }}
               >
                 <Group gap="sm" wrap="nowrap">
-                  <Avatar size={32} radius="sm" color={quanLy ? "settled" : "owed"}>
+                  <Avatar size={32} radius="sm" color="settled">
                     {chuCaiDau(user.username)}
                   </Avatar>
                   <div style={{ minWidth: 0, flex: 1 }}>
@@ -166,7 +151,7 @@ export function AppLayout({
                       {user.username}
                     </Text>
                     <Text size="xs" c="dimmed">
-                      {quanLy ? "Quản lý" : "Người thuê"}
+                      {t("common.manager")}
                     </Text>
                   </div>
                   <IconChevronUp size={15} stroke={1.8} opacity={0.6} />
@@ -181,15 +166,19 @@ export function AppLayout({
                 leftSection={<IconKey size={16} stroke={1.8} />}
                 onClick={close}
               >
-                Đổi mật khẩu
+                {t("common.changePassword")}
               </Menu.Item>
+
+              <Menu.Divider />
+              <LanguageMenuItems />
+
               <Menu.Divider />
               <Menu.Item
                 color="red"
                 leftSection={<IconLogout size={16} stroke={1.8} />}
                 onClick={onLogout}
               >
-                Đăng xuất
+                {t("common.logout")}
               </Menu.Item>
             </Menu.Dropdown>
           </Menu>

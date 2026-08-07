@@ -1,5 +1,6 @@
 import { LineChart } from "@mantine/charts";
 import { Card, Text, Title } from "@mantine/core";
+import { useTranslation } from "react-i18next";
 
 import type { DashboardHistoryPoint } from "../../../../shared/types";
 import { periodTick, tien, tienRutGon } from "../../../format";
@@ -24,21 +25,25 @@ import { periodTick, tien, tienRutGon } from "../../../format";
  * drops to the floor rather than breaking.
  */
 export function RevenueChart({ history }: { history: DashboardHistoryPoint[] }) {
+  const { t } = useTranslation();
+
+  // Series names are the data keys, so they are stable English identifiers;
+  // `label` is what the legend and tooltip actually show.
   const data = history.map((point) => ({
     period: periodTick(point.period),
-    "Phải thu": point.billed,
-    "Đã thu": point.collected,
+    billed: point.billed,
+    collected: point.collected,
   }));
 
   return (
     <Card withBorder padding="md" radius="md">
       <Title order={5} mb="sm">
-        Doanh thu {history.length} kỳ gần nhất
+        {t("dashboard.revenueTitle", { count: history.length })}
       </Title>
 
       {history.length === 0 ? (
         <Text c="dimmed" size="sm">
-          Chưa có hóa đơn nào để thống kê.
+          {t("dashboard.noInvoicesYet")}
         </Text>
       ) : (
         <LineChart
@@ -46,13 +51,18 @@ export function RevenueChart({ history }: { history: DashboardHistoryPoint[] }) 
           data={data}
           dataKey="period"
           series={[
-            { name: "Phải thu", color: "owed.5" },
+            { name: "billed", label: t("dashboard.billed"), color: "owed.5" },
             // Dashed, and drawn second. A fully collected month has both
             // values equal, so a solid line on top hides the one underneath
             // and the amber track looks like it stops. Through the gaps in a
             // dashed stroke both are visible where they coincide, and the two
             // still read apart where they diverge.
-            { name: "Đã thu", color: "settled.5", strokeDasharray: "6 4" },
+            {
+              name: "collected",
+              label: t("dashboard.collected"),
+              color: "settled.5",
+              strokeDasharray: "6 4",
+            },
           ]}
           // Straight segments: each period is one measurement, and a smoothed
           // curve would draw revenue on dates that were never billed.

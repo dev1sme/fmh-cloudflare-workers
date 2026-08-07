@@ -1,6 +1,7 @@
 import { Spotlight, type SpotlightActionData } from "@mantine/spotlight";
 import { IconFileInvoice, IconHome, IconSearch, IconUsers } from "@tabler/icons-react";
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 
 import { invoices as invoicesApi, rooms as roomsApi } from "../api";
@@ -20,6 +21,7 @@ import { useResource } from "../hooks/useResource";
  */
 export function QuickSearch() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { data: roomData } = useResource(() => roomsApi.list(), []);
   const { data: invoiceData } = useResource(() => invoicesApi.list(), []);
 
@@ -27,7 +29,9 @@ export function QuickSearch() {
     const rooms = (roomData?.rooms ?? []).map((room) => ({
       id: `room-${room.code}`,
       label: room.room_name,
-      description: room.tenant ? `${room.tenant.full_name} · đang thuê` : "Đang trống",
+      description: room.tenant
+        ? t("search.renting", { name: room.tenant.full_name })
+        : t("search.vacant"),
       leftSection: <IconHome size={18} stroke={1.6} />,
       onClick: () => navigate("/rooms"),
     }));
@@ -41,21 +45,26 @@ export function QuickSearch() {
     }));
 
     const screens = [
-      { id: "go-tenants", label: "Người thuê", leftSection: <IconUsers size={18} stroke={1.6} />, onClick: () => navigate("/tenants") },
+      {
+        id: "go-tenants",
+        label: t("nav.tenants"),
+        leftSection: <IconUsers size={18} stroke={1.6} />,
+        onClick: () => navigate("/tenants"),
+      },
     ];
 
     return [...rooms, ...invoices, ...screens];
-  }, [roomData, invoiceData, navigate]);
+  }, [roomData, invoiceData, navigate, t]);
 
   return (
     <Spotlight
       actions={actions}
       shortcut={["mod + K", "mod + P"]}
-      nothingFound="Không tìm thấy."
+      nothingFound={t("search.nothingFound")}
       highlightQuery
       searchProps={{
         leftSection: <IconSearch size={18} stroke={1.6} />,
-        placeholder: "Tìm phòng, mã hóa đơn…",
+        placeholder: t("search.placeholder"),
       }}
     />
   );

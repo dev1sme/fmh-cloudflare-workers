@@ -1,4 +1,5 @@
 import { Anchor, Card, Table, Text, Title } from "@mantine/core";
+import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
 import type { DashboardDebt } from "../../../../shared/types";
@@ -10,25 +11,27 @@ import { periodLabel, tien } from "../../../format";
  * exists to surface.
  */
 export function DebtsTable({ debts }: { debts: DashboardDebt[] }) {
+  const { t } = useTranslation();
+
   return (
     <Card withBorder padding="md" radius="md">
       <Title order={5} mb="sm">
-        Công nợ theo phòng
+        {t("dashboard.debtsTitle")}
       </Title>
 
       {debts.length === 0 ? (
         <Text c="dimmed" size="sm">
-          Không phòng nào còn nợ.
+          {t("dashboard.noDebts")}
         </Text>
       ) : (
         <Table.ScrollContainer minWidth={420}>
           <Table highlightOnHover>
             <Table.Thead>
               <Table.Tr>
-                <Table.Th>Phòng</Table.Th>
-                <Table.Th>Số hóa đơn</Table.Th>
-                <Table.Th>Nợ từ kỳ</Table.Th>
-                <Table.Th ta="right">Còn nợ</Table.Th>
+                <Table.Th>{t("dashboard.colRoom")}</Table.Th>
+                <Table.Th>{t("dashboard.colInvoices")}</Table.Th>
+                <Table.Th>{t("dashboard.colOldest")}</Table.Th>
+                <Table.Th ta="right">{t("dashboard.colOutstanding")}</Table.Th>
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>

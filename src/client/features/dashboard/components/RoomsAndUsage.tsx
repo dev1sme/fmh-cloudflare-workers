@@ -1,17 +1,10 @@
 import { SimpleGrid } from "@mantine/core";
 import { IconBolt, IconDroplet, IconHome, IconNotebook } from "@tabler/icons-react";
+import { useTranslation } from "react-i18next";
 
 import type { DashboardRooms, DashboardUsage } from "../../../../shared/types";
+import { laTiengAnh } from "../../../i18n";
 import { StatCard } from "./StatCard";
-
-const SO = new Intl.NumberFormat("vi-VN");
-
-/** Signed percentage change, or null when there is no earlier figure to compare. */
-function chenhLech(now: number, before: number): string | null {
-  if (before === 0) return null;
-  const percent = Math.round(((now - before) / before) * 100);
-  return `${percent >= 0 ? "+" : ""}${percent}% so với kỳ trước`;
-}
 
 export function RoomsAndUsage({
   rooms,
@@ -20,32 +13,52 @@ export function RoomsAndUsage({
   rooms: DashboardRooms;
   usage: DashboardUsage;
 }) {
+  const { t } = useTranslation();
+  const so = (value: number) => value.toLocaleString(laTiengAnh() ? "en-US" : "vi-VN");
+
+  /** Signed percentage change, or the "no earlier period" note when there is
+   *  nothing to compare against. */
+  const chenhLech = (now: number, before: number): string => {
+    if (before === 0) return t("dashboard.noPrevious");
+    const percent = Math.round(((now - before) / before) * 100);
+    return t("dashboard.changeVsPrevious", {
+      percent: `${percent >= 0 ? "+" : ""}${percent}`,
+    });
+  };
+
   return (
     <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }}>
       <StatCard
-        label="Phòng đang thuê"
+        label={t("dashboard.occupied")}
         icon={<IconHome size={16} stroke={1.8} />}
         value={`${rooms.occupied}/${rooms.total}`}
-        hint={`${rooms.vacant} phòng trống · ${rooms.occupants} người ở`}
+        hint={t("dashboard.occupiedHint", {
+          vacant: rooms.vacant,
+          occupants: rooms.occupants,
+        })}
       />
       <StatCard
-        label="Chưa nhập chỉ số"
+        label={t("dashboard.missingReadings")}
         icon={<IconNotebook size={16} stroke={1.8} />}
         value={rooms.missing_readings}
-        hint={rooms.missing_readings > 0 ? "Chưa sinh được hóa đơn" : "Đã nhập đủ kỳ này"}
+        hint={
+          rooms.missing_readings > 0
+            ? t("dashboard.cannotGenerate")
+            : t("dashboard.allRecorded")
+        }
         color={rooms.missing_readings > 0 ? "owed" : "settled"}
       />
       <StatCard
-        label="Điện tiêu thụ"
+        label={t("meter.electricityUsed")}
         icon={<IconBolt size={16} stroke={1.8} />}
-        value={`${SO.format(usage.electricity)} kWh`}
-        hint={chenhLech(usage.electricity, usage.electricity_previous) ?? "Chưa có kỳ trước"}
+        value={`${so(usage.electricity)} kWh`}
+        hint={chenhLech(usage.electricity, usage.electricity_previous)}
       />
       <StatCard
-        label="Nước tiêu thụ"
+        label={t("meter.waterUsed")}
         icon={<IconDroplet size={16} stroke={1.8} />}
-        value={`${SO.format(usage.water)} m³`}
-        hint={chenhLech(usage.water, usage.water_previous) ?? "Chưa có kỳ trước"}
+        value={`${so(usage.water)} m³`}
+        hint={chenhLech(usage.water, usage.water_previous)}
       />
     </SimpleGrid>
   );

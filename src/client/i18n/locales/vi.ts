@@ -22,6 +22,32 @@ export const vi = {
     copy: "Copy {{what}}",
     copied: "Đã copy",
     delete: "Xoá",
+    cancel: "Huỷ bỏ",
+    confirm: "Xác nhận",
+    save: "Lưu",
+    add: "Thêm",
+    edit: "Sửa",
+    close: "Đóng",
+    manager: "Quản lý",
+    search: "Tìm nhanh",
+    empty: "—",
+  },
+
+  nav: {
+    dashboard: "Tổng quan",
+    rooms: "Phòng",
+    tenants: "Người thuê",
+    readings: "Chỉ số điện nước",
+    invoices: "Hóa đơn",
+    accounts: "Tài khoản",
+    settings: "Cài đặt",
+  },
+
+  search: {
+    placeholder: "Tìm phòng, mã hóa đơn…",
+    nothingFound: "Không tìm thấy.",
+    renting: "{{name}} · đang thuê",
+    vacant: "Đang trống",
   },
 
   login: {
@@ -54,8 +80,46 @@ export const vi = {
     noReading: "chưa có chỉ số",
     monthMeta:
       "{{eStart}} → {{eEnd}} kWh · {{wStart}} → {{wEnd}} m³ · ghi {{date}}",
-    electricityByMonth: "Điện theo tháng",
-    waterByMonth: "Nước theo tháng",
+  },
+
+  /**
+   * Meter wording, shared by the tenant's charts and the manager's dashboard.
+   *
+   * The bare noun and the "used" form are separate on purpose: a chart title
+   * sits above an axis that already says kWh, so "Điện" is enough, while a
+   * tooltip pops up over a lone data point with no context and has to say what
+   * the number measures.
+   */
+  meter: {
+    electricity: "Điện",
+    water: "Nước",
+    electricityUsed: "Điện tiêu thụ",
+    waterUsed: "Nước tiêu thụ",
+  },
+
+  dashboard: {
+    billed: "Phải thu",
+    collected: "Đã thu",
+    outstanding: "Còn nợ",
+    invoices: "{{count}} hóa đơn",
+    invoicesWithCancelled: "{{count}} hóa đơn · {{cancelled}} đã huỷ",
+    paidCount: "{{count}} hóa đơn đã thanh toán",
+    unpaidCount: "{{count}} hóa đơn chưa thanh toán",
+    occupied: "Phòng đang thuê",
+    occupiedHint: "{{vacant}} phòng trống · {{occupants}} người ở",
+    missingReadings: "Chưa nhập chỉ số",
+    cannotGenerate: "Chưa sinh được hóa đơn",
+    allRecorded: "Đã nhập đủ kỳ này",
+    noPrevious: "Chưa có kỳ trước",
+    changeVsPrevious: "{{percent}}% so với kỳ trước",
+    revenueTitle: "Doanh thu {{count}} kỳ gần nhất",
+    noInvoicesYet: "Chưa có hóa đơn nào để thống kê.",
+    debtsTitle: "Công nợ theo phòng",
+    noDebts: "Không phòng nào còn nợ.",
+    colRoom: "Phòng",
+    colInvoices: "Số hóa đơn",
+    colOldest: "Nợ từ kỳ",
+    colOutstanding: "Còn nợ",
   },
 
   invoice: {

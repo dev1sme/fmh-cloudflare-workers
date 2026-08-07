@@ -1,5 +1,6 @@
 import { Group, Stack, Title } from "@mantine/core";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import { PageState } from "../../components/PageState";
 import { PeriodPicker } from "../../components/PeriodPicker";
@@ -13,11 +14,12 @@ import { useDashboard } from "./useDashboard";
 export function DashboardPage() {
   const [period, setPeriod] = useState(currentPeriod());
   const { soLieu, loading, error } = useDashboard(period);
+  const { t } = useTranslation();
 
   return (
     <Stack>
       <Group justify="space-between" align="flex-end">
-        <Title order={3}>Tổng quan</Title>
+        <Title order={3}>{t("nav.dashboard")}</Title>
         <PeriodPicker value={period} onChange={setPeriod} />
       </Group>
 

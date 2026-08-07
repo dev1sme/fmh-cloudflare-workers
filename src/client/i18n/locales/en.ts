@@ -29,6 +29,32 @@ export const en: Resources = {
     copy: "Copy {{what}}",
     copied: "Copied",
     delete: "Delete",
+    cancel: "Cancel",
+    confirm: "Confirm",
+    save: "Save",
+    add: "Add",
+    edit: "Edit",
+    close: "Close",
+    manager: "Manager",
+    search: "Quick search",
+    empty: "—",
+  },
+
+  nav: {
+    dashboard: "Overview",
+    rooms: "Rooms",
+    tenants: "Tenants",
+    readings: "Meter readings",
+    invoices: "Invoices",
+    accounts: "Accounts",
+    settings: "Settings",
+  },
+
+  search: {
+    placeholder: "Search rooms, invoice codes…",
+    nothingFound: "Nothing found.",
+    renting: "{{name}} · renting",
+    vacant: "Vacant",
   },
 
   login: {
@@ -57,8 +83,38 @@ export const en: Resources = {
     emptyHistory: "No earlier months yet — history will appear here from next month.",
     noReading: "no reading yet",
     monthMeta: "{{eStart}} → {{eEnd}} kWh · {{wStart}} → {{wEnd}} m³ · read {{date}}",
-    electricityByMonth: "Electricity by month",
-    waterByMonth: "Water by month",
+  },
+
+  meter: {
+    electricity: "Electricity",
+    water: "Water",
+    electricityUsed: "Electricity used",
+    waterUsed: "Water used",
+  },
+
+  dashboard: {
+    billed: "Billed",
+    collected: "Collected",
+    outstanding: "Outstanding",
+    invoices: "{{count}} invoice(s)",
+    invoicesWithCancelled: "{{count}} invoice(s) · {{cancelled}} cancelled",
+    paidCount: "{{count}} invoice(s) paid",
+    unpaidCount: "{{count}} invoice(s) unpaid",
+    occupied: "Rooms occupied",
+    occupiedHint: "{{vacant}} vacant · {{occupants}} occupants",
+    missingReadings: "Readings missing",
+    cannotGenerate: "Cannot bill these yet",
+    allRecorded: "All recorded for this period",
+    noPrevious: "No earlier period",
+    changeVsPrevious: "{{percent}}% vs last period",
+    revenueTitle: "Revenue, last {{count}} periods",
+    noInvoicesYet: "No invoices to report on yet.",
+    debtsTitle: "Debt by room",
+    noDebts: "No room owes anything.",
+    colRoom: "Room",
+    colInvoices: "Invoices",
+    colOldest: "Owing since",
+    colOutstanding: "Outstanding",
   },
 
   invoice: {
