@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 
 import type { SessionUser } from "./api";
+import { LoginPage } from "./features/login/LoginPage";
 import { AppLayout } from "./components/AppLayout";
 import { TenantLayout } from "./components/TenantLayout";
 import { QuickSearch } from "./components/QuickSearch";
@@ -18,6 +19,36 @@ import { RoomsPage } from "./features/rooms/RoomsPage";
 import { AccountsPage } from "./features/accounts/AccountsPage";
 
 /**
+ * The signed-out table: one real screen at `/login`, everything else sent
+ * there.
+ *
+ * `/login` exists so the address bar says which screen is on show. Without it
+ * the login form rendered over whatever path happened to be there, which broke
+ * in two ways. A path from the previous session was handed to the next one —
+ * sign out of a tenant account on `/my-invoices/HD3C8EA506`, sign back in as
+ * the manager, and the manager's table has no such route, so a successful
+ * login landed on a 404. And once signed-out paths were normalised to `/`
+ * instead, `/` meant the login screen to a visitor and the tenant's home
+ * screen to a tenant — one URL, two screens.
+ *
+ * The catch-all redirect does the normalising declaratively. Doing it with an
+ * effect meant `navigate` ran in the same pass as the state change, with the
+ * outgoing role's table still mounted to resolve the new path first.
+ *
+ * Deliberately no `returnTo`: carrying the attempted path across a login is
+ * exactly what produced the 404, since the path belongs to whichever role was
+ * signed in before, not to whoever signs in next.
+ */
+export function LoginRoutes({ onLogin }: { onLogin: (user: SessionUser) => void }) {
+  return (
+    <Routes>
+      <Route path="/login" element={<LoginPage onLogin={onLogin} />} />
+      <Route path="*" element={<Navigate to="/login" replace />} />
+    </Routes>
+  );
+}
+
+/**
  * Which screens exist depends on the role. This is navigation convenience,
  * not access control — the API enforces the roles on every request.
  */
@@ -30,6 +61,9 @@ export function AppRoutes({ user, onLogout }: { user: SessionUser; onLogout: () 
       {quanLy && <QuickSearch />}
 
       <Routes>
+        {/* Signing in leaves `/login` in the address bar; send it to the role's
+            own landing screen rather than letting the catch-all 404 it. */}
+        <Route path="/login" element={<Navigate to="/" replace />} />
         {quanLy ? (
           <Route element={<AppLayout user={user} onLogout={onLogout} />}>
             <Route path="/" element={<Navigate to="/dashboard" replace />} />

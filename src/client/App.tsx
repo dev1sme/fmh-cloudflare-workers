@@ -1,9 +1,8 @@
 import { Center, Loader } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 
-import { LoginPage } from "./features/login/LoginPage";
 import { useSession } from "./features/login/useSession";
-import { AppRoutes } from "./routes";
+import { AppRoutes, LoginRoutes } from "./routes";
 
 export function App() {
   const { phien, dangNhapXong, dangXuat } = useSession();
@@ -23,8 +22,11 @@ export function App() {
     );
   }
 
+  // Two route tables rather than one with guards: a screen a signed-out
+  // visitor can reach and a screen only a session can reach have nothing in
+  // common, and there is no path from one table into the other.
   if (phien.status === "out") {
-    return <LoginPage onLogin={dangNhapXong} />;
+    return <LoginRoutes onLogin={dangNhapXong} />;
   }
 
   return <AppRoutes user={phien.user} onLogout={dangXuat} />;
