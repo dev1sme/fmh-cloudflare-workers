@@ -243,7 +243,7 @@ Ngày giữ `dd/mm/yyyy` ở **cả hai** ngôn ngữ. Dùng `en-US` sẽ khiế
 
   Mọi dòng thông tin chuyển khoản đều có nút copy riêng. Số tiền **copy ra số nguyên** (`2415000`) trong khi hiển thị `2.415.000 đ` — dán chuỗi đã format vào app ngân hàng thì chuyển sai số hoặc bị từ chối.
 
-- **Tự động (tùy chọn):** đăng ký SePay để nhận webhook biến động số dư. Route `/api/webhook/sepay` bóc mã hóa đơn từ nội dung chuyển khoản, ghi vào `payments` rồi **suy lại** trạng thái từ tổng đã thu — chuyển thiếu thì hóa đơn vẫn là `UNPAID`. Gói miễn phí của SePay đủ cho quy mô này.
+- **Tự động (tùy chọn):** đăng ký SePay để nhận webhook biến động số dư. Route `/hooks/sepay-payment` bóc mã hóa đơn từ nội dung chuyển khoản, ghi vào `payments` rồi **suy lại** trạng thái từ tổng đã thu — chuyển thiếu thì hóa đơn vẫn là `UNPAID`. Gói miễn phí của SePay đủ cho quy mô này.
 
   Xác thực bằng **HMAC-SHA256**: SePay gửi `X-SePay-Signature` và `X-SePay-Timestamp`, ký chuỗi `{timestamp}.{raw_body}` bằng Secret Key. Chữ ký được kiểm trên **raw body trước khi parse** — parse rồi tạo chuỗi lại là đổi thứ tự khoá và khoảng trắng, chữ ký sẽ không bao giờ khớp. Chênh lệch thời gian quá 300 giây thì từ chối, để một request bị bắt lại trên đường không dùng lại được mãi.
 

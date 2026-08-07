@@ -14,7 +14,7 @@ That distinction is the whole reason this line reads the way it does. It once sa
 
 The local D1 holds throwaway accounts (`quanly`, `phong01`, `phong02`, passwords `<name>-test-123`) plus test readings, invoices and a second building; none of that exists in production.
 
-The SePay webhook is built (`POST /api/webhook/sepay`) but has never been exercised against SePay itself — only against hand-made payloads on the local Worker. `SEPAY_WEBHOOK_SECRET` is now in `[secrets] required`, so **`wrangler deploy` fails until it is set on the Worker**. `README.md` (Vietnamese) is the design spec and its task list at the bottom ("Việc cần làm") is the authoritative backlog.
+The SePay webhook is built (`POST /hooks/sepay-payment`) but has never been exercised against SePay itself — only against hand-made payloads on the local Worker. `SEPAY_WEBHOOK_SECRET` is now in `[secrets] required`, so **`wrangler deploy` fails until it is set on the Worker**. `README.md` (Vietnamese) is the design spec and its task list at the bottom ("Việc cần làm") is the authoritative backlog.
 
 Deployment checks worth repeating after any change to auth or hashing:
 

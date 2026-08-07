@@ -53,7 +53,7 @@ export const webhookRoutes = new Hono<AppEnv>();
  * The envelope already answers `{"success": true, …}`, which is exactly what
  * SePay checks for alongside the status code.
  */
-webhookRoutes.post("/sepay", async (c) => {
+webhookRoutes.post("/sepay-payment", async (c) => {
   const secret = c.env.SEPAY_WEBHOOK_SECRET;
 
   // Unset means the integration is off. Answering 401 here would be a lie —

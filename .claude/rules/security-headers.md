@@ -1,6 +1,8 @@
 # Security headers
 
-Set in **two places, and both are needed** — `run_worker_first = ["/api/*"]` means Cloudflare serves every non-API path straight from the assets store without invoking the Worker, so a Hono middleware can never reach the HTML.
+Set in **two places, and both are needed** — `run_worker_first = ["/api/*", "/hooks/*"]` means Cloudflare serves every other path straight from the assets store without invoking the Worker, so a Hono middleware can never reach the HTML.
+
+That list is also what makes a route reachable at all. `securityHeaders` is mounted on `*`, so it covers `/hooks/*` too — but a path missing from `run_worker_first` never runs a route and answers with `index.html` instead.
 
 - `public/_headers` covers the SPA: CSP, HSTS, `nosniff`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`. Vite copies it into `dist/client/`; Cloudflare reads it as configuration and does not serve it. Startup logs `Parsed N valid header rule` — watch that number after editing.
 - `securityHeaders` in `src/server/headers.ts` covers `/api/*`: `Cache-Control: no-store` (invoices and tenant names must not sit in a cache), `nosniff`, `Referrer-Policy`, and a `default-src 'none'` CSP.

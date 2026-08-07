@@ -12,7 +12,7 @@ Every payment detail is copyable through `CopyableRow` (`src/client/components/`
 
 MoMo is text only, never a QR: MoMo's personal QR payload format is unverified here, and a guessed one could send money to the wrong wallet.
 
-SePay balance-change webhook at `POST /api/webhook/sepay`. It parses the invoice code out of the transfer memo (`parseMaHoaDon`, case-insensitive, normalised to upper case), looks it up with `getInvoiceByCode`, inserts a `payments` row, and then calls `capNhatTrangThai`.
+SePay balance-change webhook at `POST /hooks/sepay-payment`. It sits outside `/api` because no client calls it and it is not part of the app's API surface — which means `run_worker_first` in `wrangler.toml` must list `/hooks/*`, or Cloudflare serves `index.html` from the assets store and the Worker never runs. A webhook that answers 200 with an HTML page looks delivered and loses every payment. It parses the invoice code out of the transfer memo (`parseMaHoaDon`, case-insensitive, normalised to upper case), looks it up with `getInvoiceByCode`, inserts a `payments` row, and then calls `capNhatTrangThai`.
 
 It **re-derives** the status from `SUM(payments)` rather than setting `PAID` outright — the same path a hand-entered payment takes. A tenant who transfers less than the total has paid something, not everything, and the invoice has to keep saying so.
 

@@ -30,9 +30,13 @@ app.use("*", securityHeaders);
 app.get("/api/health", (c) => ok(c, { ok: true }, "Service is healthy."));
 app.route("/api/auth", authRoutes);
 
-// SePay calls this with a shared token, not a session cookie, so it cannot sit
+// SePay calls this with a signature, not a session cookie, so it cannot sit
 // under `requireQuanLy`. It authenticates itself before touching anything.
-app.route("/api/webhook", webhookRoutes);
+//
+// Outside /api on purpose — it is not part of the app's API surface and no
+// client calls it. `run_worker_first` in wrangler.toml has to list /hooks/*
+// for this to be reachable at all.
+app.route("/hooks", webhookRoutes);
 
 // Tenant accounts: read-only, always scoped to the room in their token.
 // Registered before the management sub-app so /api/me/* is not swallowed by it.
