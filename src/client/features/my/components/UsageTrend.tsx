@@ -1,5 +1,5 @@
 import { LineChart } from "@mantine/charts";
-import { Card, SimpleGrid, Text, Title } from "@mantine/core";
+import { Card, Group, Text, Title } from "@mantine/core";
 
 import type { TenantMonth } from "../../../../shared/types";
 import { periodTick } from "../../../format";
@@ -22,6 +22,15 @@ function daiTruc([min, max]: readonly [number, number]): [number, number] {
   return [Math.max(0, Math.floor(min - dem)), Math.ceil(max + dem)];
 }
 
+/**
+ * One card per metric, stacked rather than side by side. Side by side, the
+ * two split the history column — 0.85fr of the shell — into about 230px each,
+ * which is not enough width for a year of points. Stacked, each gets the full
+ * column.
+ *
+ * The unit sits beside the title because the y-axis ticks are bare numbers;
+ * the tooltip carries it too, but that needs a hover the tenant may never do.
+ */
 function Bieu({
   tieuDe,
   data,
@@ -34,13 +43,16 @@ function Bieu({
   donVi: string;
 }) {
   return (
-    <div>
-      <Text size="xs" c="dimmed" mb={4}>
-        {tieuDe}
-      </Text>
+    <Card>
+      <Group justify="space-between" align="baseline" mb="md">
+        <Title order={5}>{tieuDe}</Title>
+        <Text size="xs" c="dimmed">
+          {donVi}
+        </Text>
+      </Group>
 
       <LineChart
-        h={140}
+        h={150}
         data={data}
         dataKey="period"
         series={[{ name: "value", label: tieuDe, color: mau }]}
@@ -61,7 +73,7 @@ function Bieu({
         tickLine="y"
         gridAxis="y"
       />
-    </div>
+    </Card>
   );
 }
 
@@ -79,6 +91,9 @@ function Bieu({
  * the hundreds of kWh and water in the tens of m³, so a shared axis flattens
  * water to a sliver. A second y-axis instead would scale the two lines
  * differently and invent crossings that mean nothing.
+ *
+ * Returns them as siblings so the parent `Stack` spaces them like every other
+ * card in the column, rather than wrapping them in a card of their own.
  *
  * Needs at least two months *with a reading* — one point is a number, not a
  * trend — so this renders nothing below that, same as the row list beside it
@@ -100,15 +115,9 @@ export function UsageTrend({ months }: { months: TenantMonth[] }) {
   }));
 
   return (
-    <Card>
-      <Title order={5} mb="md">
-        Điện, nước theo tháng
-      </Title>
-
-      <SimpleGrid cols={{ base: 1, xs: 2 }}>
-        <Bieu tieuDe="Điện (kWh)" data={dien} mau="owed.5" donVi="kWh" />
-        <Bieu tieuDe="Nước (m³)" data={nuoc} mau="settled.5" donVi="m³" />
-      </SimpleGrid>
-    </Card>
+    <>
+      <Bieu tieuDe="Điện theo tháng" data={dien} mau="owed.5" donVi="kWh" />
+      <Bieu tieuDe="Nước theo tháng" data={nuoc} mau="settled.5" donVi="m³" />
+    </>
   );
 }
