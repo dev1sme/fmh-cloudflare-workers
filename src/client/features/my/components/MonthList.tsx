@@ -69,12 +69,32 @@ function Dong({ month }: { month: TenantMonth }) {
   );
 }
 
-export function MonthList({ months }: { months: TenantMonth[] }) {
+/**
+ * `noNgoaiKhoang` counts the unpaid months that fall outside the selected
+ * window and were pulled back in anyway. They are annotated rather than left
+ * unexplained, because otherwise picking "3 tháng" and getting five rows looks
+ * like the filter is broken.
+ */
+export function MonthList({
+  months,
+  noNgoaiKhoang,
+}: {
+  months: TenantMonth[];
+  noNgoaiKhoang: number;
+}) {
   return (
     <Stack gap="xs">
-      <Text size="xs" c="dimmed" tt="uppercase" fw={600} style={{ letterSpacing: "0.06em" }}>
-        Các tháng khác
-      </Text>
+      <Group justify="space-between" align="baseline" gap="xs" wrap="wrap">
+        <Text size="xs" c="dimmed" tt="uppercase" fw={600} style={{ letterSpacing: "0.06em" }}>
+          Các tháng khác
+        </Text>
+
+        {noNgoaiKhoang > 0 && (
+          <Text size="xs" c="owed.6">
+            kèm {noNgoaiKhoang} tháng chưa thanh toán ngoài khoảng đã chọn
+          </Text>
+        )}
+      </Group>
 
       <Card padding={0}>
         <Stack gap={0}>
