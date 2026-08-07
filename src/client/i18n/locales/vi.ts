@@ -7,8 +7,13 @@
  * by more than one screen sits in `common`, `invoice`, `payment` or `format`.
  */
 export const vi = {
+  /**
+   * A proper noun, so it is the same string in both languages rather than a
+   * translation. "FMH" used to be in here, but that is the name of a building
+   * — a row in `buildings` — and the app is not tied to any particular one.
+   */
   app: {
-    name: "Nhà trọ FMH",
+    name: "Rentals Hub",
   },
 
   common: {

@@ -15,7 +15,7 @@ type Resources = {
 
 export const en: Resources = {
   app: {
-    name: "FMH Rentals",
+    name: "Rentals Hub",
   },
 
   common: {
