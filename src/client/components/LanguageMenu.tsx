@@ -3,6 +3,7 @@ import { IconCheck, IconLanguage } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
 import { NGON_NGU } from "../i18n";
+import { ThemeMenuItems } from "./ThemeMenu";
 
 /**
  * The two language options, ready to drop inside an existing `Menu.Dropdown`.
@@ -59,6 +60,9 @@ export function LanguageMenu() {
 
       <Menu.Dropdown>
         <LanguageMenuItems />
+
+        <Menu.Divider />
+        <ThemeMenuItems />
       </Menu.Dropdown>
     </Menu>
   );

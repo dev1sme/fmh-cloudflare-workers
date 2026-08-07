@@ -30,6 +30,7 @@ import { Link, Outlet, useLocation } from "react-router-dom";
 
 import type { SessionUser } from "../api";
 import { LanguageMenuItems } from "./LanguageMenu";
+import { ThemeMenuItems } from "./ThemeMenu";
 import { PageTransition } from "./PageTransition";
 
 const ICON = { size: 18, stroke: 1.6 };
@@ -168,6 +169,9 @@ export function AppLayout({
               >
                 {t("common.changePassword")}
               </Menu.Item>
+
+              <Menu.Divider />
+              <ThemeMenuItems />
 
               <Menu.Divider />
               <LanguageMenuItems />

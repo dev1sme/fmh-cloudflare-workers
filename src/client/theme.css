@@ -3,19 +3,162 @@
  * numbers readable; nothing is decorative.
  */
 
+/*
+ * Surfaces come as a scale, not a single page colour.
+ *
+ * Everything used to sit at one tone with a 1px rule between, which reads flat
+ * — the card and the page it lay on were the same colour. Four steps (page,
+ * card, raised, input) let a card look like it is on top of the page and an
+ * input look like it is set into the card, without introducing a third accent
+ * to do that job. The accents stay reserved for money.
+ */
 :root {
-  /* Warm page surfaces, replacing Mantine's blue-grey defaults. */
-  --fmh-paper: #faf8f4;
-  --fmh-rule: #e5dfd4;
+  --fmh-paper: #faf7f1;
+  --fmh-card: #ffffff;
+  --fmh-raised: #f2ece1;
+  --fmh-input: #ffffff;
+  --fmh-rule: #e4dcce;
+
+  /* Card lift. Warm-tinted rather than neutral black, so a shadow on a warm
+     page does not turn grey. */
+  --fmh-shadow: 0 1px 2px rgba(74, 59, 38, 0.06), 0 6px 18px rgba(74, 59, 38, 0.05);
+  --fmh-edge: rgba(255, 255, 255, 0.7);
+
+  /* Ambient layer. Weaker on light: the same strength that reads as a glow on
+     a dark page reads as a stain on a pale one. */
+  --fmh-orb-owed: rgba(221, 133, 26, 0.16);
+  --fmh-orb-settled: rgba(86, 150, 98, 0.14);
+  --fmh-aurora: rgba(221, 133, 26, 0.09);
+  --fmh-grain: 0.025;
 }
 
 :root[data-mantine-color-scheme="dark"] {
-  --fmh-paper: #1d1a16;
-  --fmh-rule: #2e2a23;
+  --fmh-paper: #17140f;
+  --fmh-card: #211d18;
+  --fmh-raised: #2a251e;
+  --fmh-input: #1b1814;
+  --fmh-rule: #332e26;
+
+  --fmh-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.3);
+  --fmh-edge: rgba(255, 255, 255, 0.06);
+
+  --fmh-orb-owed: rgba(221, 133, 26, 0.14);
+  --fmh-orb-settled: rgba(86, 150, 98, 0.12);
+  --fmh-aurora: rgba(221, 133, 26, 0.08);
+  --fmh-grain: 0.035;
+}
+
+/*
+ * Matches the pre-JavaScript paint to the operating system, so a visitor with
+ * no stored preference never sees a light flash before the app boots. An
+ * explicit choice is applied earlier still, by the inline script in
+ * `index.html`, which sets the attribute above before first paint.
+ */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-mantine-color-scheme="light"]) {
+    --fmh-paper: #17140f;
+    --fmh-card: #211d18;
+    --fmh-raised: #2a251e;
+    --fmh-input: #1b1814;
+    --fmh-rule: #332e26;
+  }
 }
 
 body {
   background-color: var(--fmh-paper);
+}
+
+/* ---- Ambient background ------------------------------------------------ */
+
+.fmh-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* Everything the app renders stacks above the ambient layer. */
+#root {
+  position: relative;
+  z-index: 1;
+}
+
+/* A band of colour bleeding down from the top edge, behind the header. */
+.fmh-bg-aurora {
+  position: absolute;
+  top: -30vh;
+  left: -10vw;
+  right: -10vw;
+  height: 70vh;
+  background: radial-gradient(ellipse at 50% 100%, var(--fmh-aurora) 0%, transparent 70%);
+  animation: fmh-aurora 15s ease-in-out infinite alternate;
+}
+
+.fmh-bg-orb {
+  position: absolute;
+  width: 46vw;
+  height: 46vw;
+  min-width: 380px;
+  min-height: 380px;
+  border-radius: 50%;
+  filter: blur(90px);
+  will-change: transform;
+}
+
+.fmh-bg-orb-owed {
+  top: 4vh;
+  right: -8vw;
+  background: radial-gradient(circle, var(--fmh-orb-owed) 0%, transparent 68%);
+  animation: fmh-drift-a 15s ease-in-out infinite alternate;
+}
+
+.fmh-bg-orb-settled {
+  bottom: -12vh;
+  left: -10vw;
+  background: radial-gradient(circle, var(--fmh-orb-settled) 0%, transparent 68%);
+  animation: fmh-drift-b 15s ease-in-out infinite alternate;
+}
+
+/*
+ * Film grain. Two soft gradients over a large area band into visible steps on
+ * an 8-bit display; a little noise breaks the bands up. The SVG is inline as a
+ * data URI, which `img-src 'self' data:` already allows.
+ */
+.fmh-bg-grain {
+  position: absolute;
+  inset: 0;
+  opacity: var(--fmh-grain);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+@keyframes fmh-drift-a {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(-7vw, 9vh, 0) scale(1.12);
+  }
+}
+
+@keyframes fmh-drift-b {
+  from {
+    transform: translate3d(0, 0, 0) scale(1.08);
+  }
+  to {
+    transform: translate3d(8vw, -7vh, 0) scale(1);
+  }
+}
+
+@keyframes fmh-aurora {
+  from {
+    opacity: 0.65;
+    transform: translate3d(-4vw, 0, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(4vw, 0, 0);
+  }
 }
 
 /*
@@ -64,12 +207,50 @@ textarea {
   white-space: nowrap;
 }
 
+/*
+ * Surfaces above the ambient layer are opaque on purpose. A column of figures
+ * is read off a solid card, never off a drifting gradient.
+ */
+.mantine-Card-root,
+.mantine-Paper-root,
+.mantine-Modal-content,
+.mantine-Menu-dropdown {
+  background-color: var(--fmh-card);
+  box-shadow: var(--fmh-shadow);
+}
+
+/* A hairline of light along the top edge reads as "this is on top of that",
+   which a border alone does not do. */
+.mantine-Card-root {
+  border-top: 1px solid var(--fmh-edge);
+}
+
+.mantine-AppShell-header,
+.mantine-AppShell-navbar,
+.mantine-AppShell-footer {
+  background-color: color-mix(in srgb, var(--fmh-paper) 82%, transparent);
+  backdrop-filter: blur(12px);
+}
+
+.mantine-Input-input {
+  background-color: var(--fmh-input);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
+  }
+
+  /* Freezing a large slow-moving shape matters more than freezing a 180ms
+     page transition — that scale of movement is what triggers motion
+     sickness. `none` rather than a short duration, so it holds its opening
+     position instead of snapping to the end of the drift. */
+  .fmh-bg-aurora,
+  .fmh-bg-orb {
+    animation: none !important;
   }
 }
 

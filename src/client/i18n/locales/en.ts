@@ -40,6 +40,13 @@ export const en: Resources = {
     empty: "—",
   },
 
+  theme: {
+    label: "Appearance",
+    light: "Light",
+    dark: "Dark",
+    system: "Follow system",
+  },
+
   nav: {
     dashboard: "Overview",
     rooms: "Rooms",

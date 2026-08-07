@@ -33,6 +33,13 @@ export const vi = {
     empty: "—",
   },
 
+  theme: {
+    label: "Giao diện",
+    light: "Sáng",
+    dark: "Tối",
+    system: "Theo hệ thống",
+  },
+
   nav: {
     dashboard: "Tổng quan",
     rooms: "Phòng",

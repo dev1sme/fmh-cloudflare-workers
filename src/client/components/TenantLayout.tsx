@@ -5,6 +5,7 @@ import { Link, Outlet } from "react-router-dom";
 
 import type { SessionUser } from "../api";
 import { LanguageMenuItems } from "./LanguageMenu";
+import { ThemeMenuItems } from "./ThemeMenu";
 import { PageTransition } from "./PageTransition";
 
 /**
@@ -63,6 +64,9 @@ export function TenantLayout({
                 >
                   {t("common.changePassword")}
                 </Menu.Item>
+
+                <Menu.Divider />
+                <ThemeMenuItems />
 
                 <Menu.Divider />
                 <LanguageMenuItems />

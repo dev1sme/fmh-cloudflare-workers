@@ -4,6 +4,32 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Quản Lý Nhà Trọ</title>
+    <script>
+      // Applies a stored colour-scheme choice before the first paint. Without
+      // it, someone who picked Dark on a machine set to Light sees a white
+      // flash on every load, because Mantine can only read localStorage once
+      // the bundle has run. Kept in sync with Mantine's own storage key.
+      //
+      // This is inline, so `script-src 'self'` alone would block it. The CSP
+      // in public/_headers carries a sha256 of exactly these bytes instead of
+      // 'unsafe-inline' — change a character here and the hash must be
+      // regenerated, or the script is silently blocked and the flash returns.
+      (function () {
+        try {
+          var stored = localStorage.getItem("mantine-color-scheme-value");
+          var scheme =
+            stored === "light" || stored === "dark"
+              ? stored
+              : window.matchMedia("(prefers-color-scheme: dark)").matches
+                ? "dark"
+                : "light";
+          document.documentElement.setAttribute("data-mantine-color-scheme", scheme);
+        } catch (e) {
+          /* Private mode can throw on localStorage; the CSS media query still
+             matches the operating system. */
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

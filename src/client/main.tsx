@@ -28,11 +28,13 @@ import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 
 import { App } from "./App";
+import { BackgroundFX } from "./components/BackgroundFX";
 import { theme } from "./theme";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <MantineProvider theme={theme} defaultColorScheme="auto">
+      <BackgroundFX />
       <Notifications position="top-right" />
       <BrowserRouter>
         <App />
