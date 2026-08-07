@@ -2,17 +2,11 @@ import { BarChart } from "@mantine/charts";
 import { Card, Text, Title } from "@mantine/core";
 
 import type { DashboardHistoryPoint } from "../../../../shared/types";
-import { tien, tienRutGon } from "../../../format";
-
-/** "2026-08" -> "08/26", short enough for an axis tick. */
-function nhan(period: string): string {
-  const [year, month] = period.split("-");
-  return `${month}/${year?.slice(2)}`;
-}
+import { periodTick, tien, tienRutGon } from "../../../format";
 
 export function RevenueChart({ history }: { history: DashboardHistoryPoint[] }) {
   const data = history.map((point) => ({
-    period: nhan(point.period),
+    period: periodTick(point.period),
     "Phải thu": point.billed,
     "Đã thu": point.collected,
   }));

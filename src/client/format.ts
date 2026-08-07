@@ -27,6 +27,12 @@ export function periodLabel(period: string): string {
   return `Tháng ${month}/${year}`;
 }
 
+/** "2026-08" -> "08/26", short enough for a chart axis tick. */
+export function periodTick(period: string): string {
+  const [year, month] = period.split("-");
+  return `${month}/${year?.slice(2)}`;
+}
+
 /** "2026-08-04" -> "04/08/2026" */
 export function ngay(value: string | null): string {
   if (!value) return "—";

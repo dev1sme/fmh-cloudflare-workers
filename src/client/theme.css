@@ -110,3 +110,21 @@ textarea {
 .fmh-row-link:active {
   background-color: var(--mantine-color-default-hover);
 }
+
+/*
+ * Tenant home: the current bill and its history stack in one column up to
+ * laptop width, then split so a wide screen shows both instead of one narrow
+ * column stretched across empty margins.
+ */
+.fmh-tenant-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--mantine-spacing-lg);
+  align-items: start;
+}
+
+@media (min-width: 64em) {
+  .fmh-tenant-grid {
+    grid-template-columns: 1.15fr 0.85fr;
+  }
+}

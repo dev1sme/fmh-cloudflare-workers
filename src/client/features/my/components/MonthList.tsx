@@ -4,28 +4,38 @@ import { Link } from "react-router-dom";
 
 import type { TenantMonth } from "../../../../shared/types";
 import { CollectionBar } from "../../../components/CollectionBar";
-import { periodLabel, tien } from "../../../format";
-
-const SO = new Intl.NumberFormat("vi-VN");
+import { ngay, periodLabel, tien } from "../../../format";
 
 /**
- * Earlier months, one line each.
+ * Every month besides the one featured above, one line each.
+ *
+ * Not strictly "earlier": the newest recorded period can end up here too, if
+ * it has no invoice yet while an older period is still unpaid and gets
+ * featured instead. Hence "khác" rather than "trước" in the heading below.
  *
  * A list rather than a table: on a phone a seven-column table scrolls
  * sideways, and a tenant reading their own history wants the month and the
  * amount, not a grid to compare rooms with.
  *
+ * The secondary line shows the meter readings as they were taken (`old →
+ * new`), not just the difference — that is what can actually be checked
+ * against the dial on the wall. The date drops its year: the period above
+ * already carries it, and the row is tight enough that repeating it is
+ * wasted width.
+ *
  * A month with no invoice yet is not a link — there is nothing to open.
  */
 function Dong({ month }: { month: TenantMonth }) {
+  const coChiSo = month.electricity_used !== null;
+
   const noiDung = (
     <Group justify="space-between" wrap="nowrap" gap="md">
       <div style={{ minWidth: 0 }}>
         <Text fw={600}>{periodLabel(month.period)}</Text>
         <Text size="xs" c="dimmed">
-          {month.electricity_used === null
-            ? "chưa có chỉ số"
-            : `${SO.format(month.electricity_used)} kWh · ${SO.format(month.water_used ?? 0)} m³`}
+          {coChiSo
+            ? `${month.electricity_start} → ${month.electricity_end} kWh · ${month.water_start} → ${month.water_end} m³ · ghi ${ngay(month.recorded_on).slice(0, 5)}`
+            : "chưa có chỉ số"}
         </Text>
       </div>
 
@@ -63,7 +73,7 @@ export function MonthList({ months }: { months: TenantMonth[] }) {
   return (
     <Stack gap="xs">
       <Text size="xs" c="dimmed" tt="uppercase" fw={600} style={{ letterSpacing: "0.06em" }}>
-        Các tháng trước
+        Các tháng khác
       </Text>
 
       <Card padding={0}>

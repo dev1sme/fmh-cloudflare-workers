@@ -16,11 +16,14 @@ export function MyInvoiceDetailPage() {
   const { hoaDon, loading, error } = useInvoicesCuaToiChiTiet(code);
 
   return (
-    <Stack>
+    // Capped independently of the shell's wide container: this is a single
+    // receipt, not the two-column home screen, and a 1200px-wide line item
+    // is harder to read than a narrow one.
+    <Stack maw={560} mx="auto">
       <Group justify="space-between">
         <Title order={3}>{hoaDon ? hoaDon.code : "Hóa đơn"}</Title>
-        <Button variant="subtle" component={Link} to="/my-invoices">
-          ← Danh sách
+        <Button variant="subtle" component={Link} to="/">
+          ← Về trang chủ
         </Button>
       </Group>
 

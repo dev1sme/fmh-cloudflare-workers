@@ -1,4 +1,5 @@
 import { Box, Group, Text, Tooltip } from "@mantine/core";
+import { IconCheck } from "@tabler/icons-react";
 
 import type { InvoiceStatus } from "../../shared/types";
 import { tien } from "../format";
@@ -64,9 +65,13 @@ export function CollectionBar({
             }}
           />
         </Box>
-        <Text size="xs" c={done ? "settled.6" : "owed.6"} fw={600} style={{ whiteSpace: "nowrap" }}>
-          {done ? "đủ" : `${Math.round(ratio * 100)}%`}
-        </Text>
+        {done ? (
+          <IconCheck size={15} stroke={2.5} color="var(--mantine-color-settled-6)" />
+        ) : (
+          <Text size="xs" c="owed.6" fw={600} style={{ whiteSpace: "nowrap" }}>
+            {Math.round(ratio * 100)}%
+          </Text>
+        )}
       </Group>
     </Tooltip>
   );

@@ -8,16 +8,6 @@ export function useDashboardCuaToi() {
   return { soLieu: data, loading, error };
 }
 
-export function useRoomsCuaToi() {
-  const { data, loading, error } = useResource(() => me.room(), []);
-  return { phong: data?.room ?? null, loading, error };
-}
-
-export function useInvoicesCuaToi() {
-  const { data, loading, error } = useResource(() => me.invoices(), []);
-  return { hoaDon: data?.invoices ?? [], loading, error };
-}
-
 /** `code` may be empty while the newest period has no invoice yet. */
 export function useInvoicesCuaToiChiTiet(code: string) {
   const { data, loading, error } = useResource(
@@ -25,9 +15,4 @@ export function useInvoicesCuaToiChiTiet(code: string) {
     [code],
   );
   return { hoaDon: data?.invoice ?? null, loading, error };
-}
-
-export function useReadingsCuaToi() {
-  const { data, loading, error } = useResource(() => me.readings(), []);
-  return { chiSo: data?.readings ?? [], loading, error };
 }

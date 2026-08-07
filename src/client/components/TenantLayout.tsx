@@ -30,7 +30,7 @@ export function TenantLayout({
         py="sm"
         style={{ borderBottom: "1px solid var(--fmh-rule)" }}
       >
-        <Container size="sm" px="md">
+        <Container size="lg" px="md">
           <Group justify="space-between" wrap="nowrap">
             {/* The room name lives on the page, which has the data for it. */}
             <Group gap="sm" wrap="nowrap">
@@ -74,7 +74,7 @@ export function TenantLayout({
       </Box>
 
       <Box component="main" style={{ flex: 1 }} py="lg">
-        <Container size="sm" px="md">
+        <Container size="lg" px="md">
           <PageTransition>
             <Outlet />
           </PageTransition>

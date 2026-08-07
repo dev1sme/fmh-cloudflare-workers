@@ -146,6 +146,11 @@ export async function getTenantDashboard(
          )
          SELECT p.period,
                 i.code,
+                rd.electricity_start,
+                rd.electricity_end,
+                rd.water_start,
+                rd.water_end,
+                rd.recorded_on,
                 rd.electricity_end - rd.electricity_start AS electricity_used,
                 rd.water_end - rd.water_start             AS water_used,
                 i.total,
@@ -166,6 +171,11 @@ export async function getTenantDashboard(
   type MonthRow = {
     period: string;
     code: string | null;
+    electricity_start: number | null;
+    electricity_end: number | null;
+    water_start: number | null;
+    water_end: number | null;
+    recorded_on: string | null;
     electricity_used: number | null;
     water_used: number | null;
     total: number | null;
