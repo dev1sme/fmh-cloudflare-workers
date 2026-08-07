@@ -1,5 +1,4 @@
 import i18n from "i18next";
-import LanguageDetector from "i18next-browser-languagedetector";
 import { initReactI18next } from "react-i18next";
 
 import { en } from "./locales/en";
@@ -13,43 +12,69 @@ export const NGON_NGU = [
 
 export const LUU_TAI = "fmh-lang";
 
-void i18n
-  .use(LanguageDetector)
-  .use(initReactI18next)
-  .init({
-    resources: { vi: { translation: vi }, en: { translation: en } },
+const HO_TRO = ["vi", "en"] as const;
+type NgonNgu = (typeof HO_TRO)[number];
 
-    // Vietnamese is the source language, so an English key that has not been
-    // written yet renders Vietnamese instead of the raw key. That is what lets
-    // the manager screens stay untranslated without looking broken.
-    fallbackLng: "vi",
-    supportedLngs: ["vi", "en"],
-    // A browser reporting `vi-VN` or `en-GB` resolves to `vi` / `en` rather
-    // than falling through to the fallback.
-    nonExplicitSupportedLngs: true,
-
-    // React escapes interpolated values already; letting i18next escape too
-    // turns a tenant's name with an apostrophe into `&#39;`.
-    interpolation: { escapeValue: false },
-
-    detection: {
-      order: ["localStorage", "navigator"],
-      lookupLocalStorage: LUU_TAI,
-      caches: ["localStorage"],
-    },
-  });
-
-/**
- * Keep `<html lang>` in step with the choice. Screen readers pick their
- * pronunciation from it, and Vietnamese read with an English voice is not
- * understandable.
- */
-function datNgonNguHtml(lng: string): void {
-  document.documentElement.lang = lng.startsWith("en") ? "en" : "vi";
+function hopLe(value: string | null | undefined): NgonNgu | null {
+  const goc = value?.slice(0, 2).toLowerCase();
+  return HO_TRO.find((item) => item === goc) ?? null;
 }
 
-datNgonNguHtml(i18n.resolvedLanguage ?? "vi");
-i18n.on("languageChanged", datNgonNguHtml);
+/**
+ * Stored choice first, browser preference second, Vietnamese last.
+ *
+ * Read and written here rather than through `i18next-browser-languagedetector`.
+ * The detector was persisting under its own default key while reading the one
+ * configured here, so a language picked from the menu survived until the next
+ * full page load and then reverted. Ten lines of explicit storage removes both
+ * the bug and the dependency, and the fallback chain is now readable in one
+ * place.
+ */
+function ngonNguBanDau(): NgonNgu {
+  try {
+    const daLuu = hopLe(localStorage.getItem(LUU_TAI));
+    if (daLuu) return daLuu;
+  } catch {
+    // Storage can throw in a locked-down browser; the browser preference and
+    // the fallback below still give a usable answer.
+  }
+
+  return hopLe(navigator.language) ?? "vi";
+}
+
+void i18n.use(initReactI18next).init({
+  resources: { vi: { translation: vi }, en: { translation: en } },
+  lng: ngonNguBanDau(),
+
+  // Vietnamese is the source language, so an English key that has not been
+  // written yet renders Vietnamese instead of the raw key.
+  fallbackLng: "vi",
+  supportedLngs: [...HO_TRO],
+
+  // React escapes interpolated values already; letting i18next escape too
+  // turns a tenant's name with an apostrophe into `&#39;`.
+  interpolation: { escapeValue: false },
+});
+
+/**
+ * Persist the choice, and keep `<html lang>` in step with it. Screen readers
+ * pick their pronunciation from that attribute, and Vietnamese read with an
+ * English voice is not understandable.
+ */
+function ghiNhoNgonNgu(lng: string): void {
+  const chon = hopLe(lng) ?? "vi";
+  document.documentElement.lang = chon;
+
+  try {
+    localStorage.setItem(LUU_TAI, chon);
+  } catch {
+    // Not being able to remember the choice is a smaller problem than
+    // throwing out of a language change.
+  }
+}
+
+document.documentElement.lang = i18n.resolvedLanguage ?? "vi";
+i18n.on("languageChanged", ghiNhoNgonNgu);
 
 /** True when the active language is English, for the locale-aware formatters. */
 export function laTiengAnh(): boolean {
