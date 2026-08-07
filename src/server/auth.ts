@@ -84,12 +84,32 @@ async function deriveBits(
 
 /**
  * Compares two secrets without letting the time taken reveal how much of the
- * guess was right. Exported for the SePay webhook, which authenticates with a
- * shared token and must not leak it a byte at a time.
+ * guess was right. Exported for the SePay webhook, which compares signatures
+ * and must not leak one a byte at a time.
  */
 export function soSanhBiMat(a: string, b: string): boolean {
   const enc = new TextEncoder();
   return timingSafeEqual(enc.encode(a), enc.encode(b));
+}
+
+/**
+ * HMAC-SHA256 as lowercase hex, the shape SePay signs its webhooks with.
+ *
+ * Web Crypto rather than Node's `crypto`, same as everything else here — the
+ * Worker runtime has no Node crypto module.
+ */
+export async function hmacSha256Hex(secret: string, message: string): Promise<string> {
+  const enc = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    "raw",
+    enc.encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+
+  const signature = await crypto.subtle.sign("HMAC", key, enc.encode(message));
+  return [...new Uint8Array(signature)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
 function timingSafeEqual(a: Uint8Array, b: Uint8Array): boolean {

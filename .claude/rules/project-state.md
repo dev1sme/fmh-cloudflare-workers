@@ -10,11 +10,11 @@ That distinction is the whole reason this line reads the way it does. It once sa
 
 `wrangler d1 migrations apply --remote` failed once with `code 7403` ("account is not authorized") and then succeeded on an immediate retry with no change in between. Retry before believing it.
 
-`JWT_SECRET` is set as a Worker secret, `SEPAY_WEBHOOK_TOKEN` is not yet, and one manager account exists in production (the owner renamed it and set their own password — do not assume it is still called `quanly`). Production data is otherwise just migration 0001's seed (building `FMH`, rooms `FMH-P01`/`FMH-P02`, two placeholder tenants) — the real building, room and tenant data has to be entered through the UI.
+`JWT_SECRET` is set as a Worker secret, `SEPAY_WEBHOOK_SECRET` is not yet, and one manager account exists in production (the owner renamed it and set their own password — do not assume it is still called `quanly`). Production data is otherwise just migration 0001's seed (building `FMH`, rooms `FMH-P01`/`FMH-P02`, two placeholder tenants) — the real building, room and tenant data has to be entered through the UI.
 
 The local D1 holds throwaway accounts (`quanly`, `phong01`, `phong02`, passwords `<name>-test-123`) plus test readings, invoices and a second building; none of that exists in production.
 
-The SePay webhook is built (`POST /api/webhook/sepay`) but has never been exercised against SePay itself — only against hand-made payloads on the local Worker. `SEPAY_WEBHOOK_TOKEN` is now in `[secrets] required`, so **`wrangler deploy` fails until it is set on the Worker**. `README.md` (Vietnamese) is the design spec and its task list at the bottom ("Việc cần làm") is the authoritative backlog.
+The SePay webhook is built (`POST /api/webhook/sepay`) but has never been exercised against SePay itself — only against hand-made payloads on the local Worker. `SEPAY_WEBHOOK_SECRET` is now in `[secrets] required`, so **`wrangler deploy` fails until it is set on the Worker**. `README.md` (Vietnamese) is the design spec and its task list at the bottom ("Việc cần làm") is the authoritative backlog.
 
 Deployment checks worth repeating after any change to auth or hashing:
 

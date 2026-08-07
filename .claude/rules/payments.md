@@ -16,7 +16,13 @@ SePay balance-change webhook at `POST /api/webhook/sepay`. It parses the invoice
 
 It **re-derives** the status from `SUM(payments)` rather than setting `PAID` outright — the same path a hand-entered payment takes. A tenant who transfers less than the total has paid something, not everything, and the invoice has to keep saying so.
 
-Authentication is `Authorization: Apikey <SEPAY_WEBHOOK_TOKEN>`, compared with `soSanhBiMat` (constant-time) rather than `===`. With the secret unset the route answers 503 instead of 401: no token would ever work, and an unconfigured deployment must not accept anonymous writes to `payments`.
+Authentication is **HMAC-SHA256**, the method SePay recommends, not the API-key header. SePay sends `X-SePay-Signature: sha256=<hex>` and `X-SePay-Timestamp: <unix seconds>`, and signs the string `` `${timestamp}.${rawBody}` `` with the **Secret Key** from its dashboard (`SEPAY_WEBHOOK_SECRET`).
+
+**Verify against the raw body, before parsing it.** `c.req.text()` first, `JSON.parse` after. Signing covers the exact bytes SePay sent; parsing and re-serialising reorders keys and drops whitespace, so a signature checked against a round-tripped body never matches.
+
+A delivery whose timestamp is more than 300 seconds from now is refused before the signature is even checked. A signature stays valid forever, so without that window a request captured off the wire could be replayed indefinitely. SePay signs each retry afresh, so this does not fight the retry logic.
+
+The signature comparison uses `soSanhBiMat` (constant-time), not `===`. With the secret unset the route answers 503 rather than 401: no signature would ever verify, and an unconfigured deployment must not accept anonymous writes to `payments`.
 
 **Read the status codes as instructions to SePay, not as a verdict.** SePay retries anything that is not 2xx with `{"success": true}` inside 30 seconds. So everything a retry cannot fix answers **200 and stops** — money going out rather than in, a memo with no code, an unknown invoice, a cancelled invoice, a delivery already recorded. Only bad credentials (401), unparseable JSON (400) and genuine faults (500) are refused.
 

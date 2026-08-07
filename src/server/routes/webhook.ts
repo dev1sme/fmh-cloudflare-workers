@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 
-import { soSanhBiMat } from "../auth";
+import { hmacSha256Hex, soSanhBiMat } from "../auth";
 import { getInvoiceByCode } from "../db/invoices";
 import { createPayment } from "../db/payments";
 import { sinhMa } from "../domain/code";
@@ -54,29 +54,39 @@ export const webhookRoutes = new Hono<AppEnv>();
  * SePay checks for alongside the status code.
  */
 webhookRoutes.post("/sepay", async (c) => {
-  const expected = c.env.SEPAY_WEBHOOK_TOKEN;
+  const secret = c.env.SEPAY_WEBHOOK_SECRET;
 
   // Unset means the integration is off. Answering 401 here would be a lie —
-  // no token would ever work — and 503 keeps an unconfigured deployment from
-  // silently accepting anonymous writes to the payments table.
-  if (!expected) {
+  // no signature would ever verify — and 503 keeps an unconfigured deployment
+  // from silently accepting anonymous writes to the payments table.
+  if (!secret) {
     return failure(c, "WEBHOOK_NOT_CONFIGURED", "Webhook is not configured.", 503);
   }
 
-  // SePay sends `Authorization: Apikey <token>`. The prefix is compared
-  // normally — it is not a secret — and only the token itself goes through the
-  // constant-time compare.
-  const header = c.req.header("Authorization") ?? "";
-  const [scheme, ...rest] = header.split(" ");
-  const supplied = rest.join(" ");
+  const signature = c.req.header("X-SePay-Signature") ?? "";
+  const timestamp = c.req.header("X-SePay-Timestamp") ?? "";
 
-  if (scheme?.toLowerCase() !== "apikey" || !soSanhBiMat(supplied, expected)) {
-    return failure(c, "UNAUTHORIZED", "Invalid webhook credentials.", 401);
+  // Rejects a replayed delivery: a request captured off the wire stops being
+  // usable five minutes later, even though its signature stays valid forever.
+  // SePay signs each retry afresh, so this does not fight the retry logic.
+  const seconds = Number(timestamp);
+  if (!Number.isFinite(seconds) || Math.abs(Date.now() / 1000 - seconds) > 300) {
+    return failure(c, "STALE_SIGNATURE", "Signature timestamp is missing or stale.", 401);
+  }
+
+  // The body must be read as text and verified before it is parsed. Signing
+  // covers the exact bytes SePay sent; parsing and re-serialising would
+  // reorder keys and drop whitespace, and the signature would never match.
+  const raw = await c.req.text();
+  const expected = `sha256=${await hmacSha256Hex(secret, `${timestamp}.${raw}`)}`;
+
+  if (!soSanhBiMat(signature, expected)) {
+    return failure(c, "UNAUTHORIZED", "Invalid webhook signature.", 401);
   }
 
   let event: SePayEvent;
   try {
-    event = await c.req.json<SePayEvent>();
+    event = JSON.parse(raw) as SePayEvent;
   } catch {
     return failure(c, "INVALID_DATA", "Body is not valid JSON.", 400);
   }

@@ -88,7 +88,7 @@ readings  (id, code, room_id, period /YYYY-MM/, electricity_start, electricity_e
            water_start, water_end, recorded_on)
 invoices  (id, code, room_id, period, rent_amount, electricity_amount, water_amount,
            other_fees, electricity_rate, water_rate, total, status, created_at)
-payments  (id, code, invoice_id, amount, paid_on, method, note)
+payments  (id, code, invoice_id, amount, paid_on, method, note, external_id)
 users     (id, code, username, password_hash, role, room_id)
 ```
 
@@ -97,6 +97,7 @@ Ràng buộc đáng nhớ:
 - `UNIQUE(building_id, room_name)` — tên phòng chỉ cần duy nhất trong một nhà, không cần duy nhất toàn hệ thống.
 - `UNIQUE(room_id) WHERE moved_out IS NULL` — mỗi phòng chỉ một người **đứng tên** đang thuê; người cũ vẫn giữ lại để tra cứu. Ở ghép nhiều người thì đếm vào `occupants`, không tách dòng.
 - `UNIQUE(room_id, period)` trên cả `readings` lẫn `invoices` — nhập chỉ số hai lần không sinh hai hóa đơn cho cùng một tháng.
+- `UNIQUE(external_id) WHERE external_id IS NOT NULL` trên `payments` — id giao dịch SePay. Đây là thứ chặn webhook gửi trùng, kể cả hai lần retry đến cùng lúc.
 - **Mọi bảng có thể xuất hiện trên URL đều có cột `code`**: `invoices` (`HD…`), `rooms` (`RM…`), `tenants` (`TN…`), `users` (`AC…`), `readings` (`RD…`), `payments` (`PM…`). Code sinh ngẫu nhiên, không suy ra từ `id`. Tiền tố chính là thứ chặn việc dùng mã phòng ở chỗ cần mã người thuê.
 
 Enum, đều có CHECK constraint nên đổi giá trị là phải viết migration:
@@ -175,7 +176,7 @@ migrations_dir = "./migrations"
 Biến bí mật (đặt bằng `wrangler secret put`, không để trong code):
 
 - `JWT_SECRET` — khóa ký/kiểm token đăng nhập.
-- `SEPAY_WEBHOOK_TOKEN` — (tùy chọn) token xác thực webhook SePay.
+- `SEPAY_WEBHOOK_SECRET` — **Secret Key** lấy trong phần webhook của SePay. Dùng để kiểm chữ ký HMAC-SHA256 mà SePay gửi kèm mỗi lần gọi.
 
 Header bảo mật đặt ở **hai nơi và cần cả hai**: `public/_headers` cho phần SPA, `src/server/headers.ts` cho `/api/*`. Vì `run_worker_first = ["/api/*"]`, mọi đường dẫn không phải API được phục vụ thẳng từ kho asset mà không gọi Worker, nên middleware Hono không bao giờ chạm tới trang HTML.
 
@@ -242,7 +243,11 @@ Ngày giữ `dd/mm/yyyy` ở **cả hai** ngôn ngữ. Dùng `en-US` sẽ khiế
 
   Mọi dòng thông tin chuyển khoản đều có nút copy riêng. Số tiền **copy ra số nguyên** (`2415000`) trong khi hiển thị `2.415.000 đ` — dán chuỗi đã format vào app ngân hàng thì chuyển sai số hoặc bị từ chối.
 
-- **Tự động (tùy chọn):** đăng ký SePay để nhận webhook biến động số dư. Route `/api/webhook/sepay` bóc mã hóa đơn từ nội dung chuyển khoản, cập nhật `invoices.status = 'PAID'` và ghi vào `payments`. Gói miễn phí của SePay đủ cho quy mô này.
+- **Tự động (tùy chọn):** đăng ký SePay để nhận webhook biến động số dư. Route `/api/webhook/sepay` bóc mã hóa đơn từ nội dung chuyển khoản, ghi vào `payments` rồi **suy lại** trạng thái từ tổng đã thu — chuyển thiếu thì hóa đơn vẫn là `UNPAID`. Gói miễn phí của SePay đủ cho quy mô này.
+
+  Xác thực bằng **HMAC-SHA256**: SePay gửi `X-SePay-Signature` và `X-SePay-Timestamp`, ký chuỗi `{timestamp}.{raw_body}` bằng Secret Key. Chữ ký được kiểm trên **raw body trước khi parse** — parse rồi tạo chuỗi lại là đổi thứ tự khoá và khoảng trắng, chữ ký sẽ không bao giờ khớp. Chênh lệch thời gian quá 300 giây thì từ chối, để một request bị bắt lại trên đường không dùng lại được mãi.
+
+  SePay gửi lại mọi lần không trả `200` kèm `{"success": true}` trong 30 giây, nên `payments.external_id` giữ id giao dịch với unique index — gửi trùng thì bị chặn ở tầng database, không phải ở tầng kiểm tra.
 
 ## Deploy
 
