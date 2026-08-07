@@ -15,6 +15,7 @@ import { bayGio, homNay } from "../domain/period";
 import { estimateInvoice, sinhMaHoaDon, tongTien } from "../domain/invoice";
 import { CODE_PREFIX, sinhMa } from "../domain/code";
 import { failure, notFound, ok } from "../envelope";
+import { baoDaPhatHanhHoaDon } from "../domain/zalo";
 import { capNhatTrangThai } from "./payments";
 import type { AppEnv } from "../types";
 import type {
@@ -100,6 +101,10 @@ invoiceRoutes.post("/generate", async (c) => {
   }
 
   const created = await createInvoices(c.env.DB, inputs);
+
+  // After the write, and fire-and-forget: an invoice run must not fail because
+  // Zalo is unreachable.
+  baoDaPhatHanhHoaDon(c, period, created.length);
 
   return ok(
     c,

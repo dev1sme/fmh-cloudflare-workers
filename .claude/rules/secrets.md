@@ -1,6 +1,12 @@
 # Secrets
 
-Set via `wrangler secret put`, never committed: `JWT_SECRET`, and `SEPAY_WEBHOOK_SECRET` — the **Secret Key** from SePay's webhook settings, which signs the HMAC the webhook route verifies.
+Set via `wrangler secret put`, never committed:
+
+- `JWT_SECRET`
+- `SEPAY_WEBHOOK_SECRET` — the **Secret Key** from SePay's webhook settings, which signs the HMAC the webhook route verifies.
+- `ZALO_BOT_TOKEN`, `ZALO_GROUP_CHAT_ID`, `ZALO_MANAGER_CHAT_ID` — the bot token from the *Zalo Bot Manager* OA, plus the two destinations. The chat ids are not really secrets, but they are stored the same way rather than as `[vars]`, which would put the owner's personal Zalo id in git.
+
+Leaving any of the three Zalo values empty turns notifications off; the code checks for a value rather than assuming one.
 
 `wrangler.toml` declares `[secrets] required = ["JWT_SECRET", "SEPAY_WEBHOOK_SECRET"]`, so `wrangler deploy` fails if a secret is missing on the Worker instead of shipping a build that 500s on every login.
 

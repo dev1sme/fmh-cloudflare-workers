@@ -19,7 +19,7 @@ routes = [{ pattern = "rentals.dev1sme.cloud", custom_domain = true }]
 # local Worker — a name missing here is simply absent from `c.env` in dev, with
 # no warning. Add every new secret.
 [secrets]
-required = ["JWT_SECRET", "SEPAY_WEBHOOK_SECRET"]
+required = ["JWT_SECRET", "SEPAY_WEBHOOK_SECRET", "ZALO_BOT_TOKEN", "ZALO_GROUP_CHAT_ID", "ZALO_MANAGER_CHAT_ID"]
 
 [assets]
 not_found_handling = "single-page-application"

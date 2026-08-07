@@ -2,10 +2,12 @@ import { Hono } from "hono";
 
 import { hmacSha256Hex, soSanhBiMat } from "../auth";
 import { getInvoiceByCode } from "../db/invoices";
-import { createPayment } from "../db/payments";
+import { createPayment, sumPayments } from "../db/payments";
+import { getRoom } from "../db/rooms";
 import { sinhMa } from "../domain/code";
 import { CODE_PREFIX } from "../domain/code";
 import { parseMaHoaDon } from "../domain/invoice";
+import { baoDaNhanTien } from "../domain/zalo";
 import { failure, ok } from "../envelope";
 import type { AppEnv } from "../types";
 import { capNhatTrangThai } from "./payments";
@@ -148,6 +150,24 @@ webhookRoutes.post("/sepay-payment", async (c) => {
   // tenant who transfers less than the total has paid something, not
   // everything, and the invoice has to keep saying so.
   const updated = await capNhatTrangThai(c.env.DB, invoice.id);
+
+  // Manager only, and with the figures — the group deliberately never sees
+  // who paid what. Queued rather than awaited: SePay gives up after 30
+  // seconds and retries, so waiting on Zalo here risks a duplicate delivery.
+  // `Invoice` carries neither the room name nor a running balance, so both are
+  // fetched here rather than assumed. Two small reads: waiting on D1 does not
+  // count against the Worker's CPU budget.
+  const [room, daThu] = await Promise.all([
+    getRoom(c.env.DB, invoice.room_id),
+    sumPayments(c.env.DB, invoice.id),
+  ]);
+
+  baoDaNhanTien(c, {
+    roomName: room?.room_name ?? `#${invoice.room_id}`,
+    invoiceCode: invoice.code,
+    soTien: Math.round(amount),
+    conLai: Math.max(0, (updated?.total ?? invoice.total) - daThu),
+  });
 
   return ok(
     c,

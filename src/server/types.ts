@@ -19,7 +19,12 @@ export type AppEnv = {
    * route has to notice that rather than compare against `undefined` and let
    * an unauthenticated caller write to `payments`.
    */
-  Bindings: Env & { SEPAY_WEBHOOK_SECRET?: string };
+  Bindings: Env & {
+    SEPAY_WEBHOOK_SECRET?: string;
+    ZALO_BOT_TOKEN?: string;
+    ZALO_GROUP_CHAT_ID?: string;
+    ZALO_MANAGER_CHAT_ID?: string;
+  };
   Variables: {
     user: SessionUser;
   };
