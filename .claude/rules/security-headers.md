@@ -9,6 +9,6 @@ The middleware sets its headers **before** `await next()`. Hono keeps them as pr
 
 `style-src` needs `'unsafe-inline'`: Mantine injects a `<style>` element for its CSS variables at runtime. `script-src` does not — the Vite build emits no inline scripts. `src/client/components/VietQR.tsx` uses `dangerouslySetInnerHTML`, but the SVG comes from `@paulmillr/qr` as `<path>` data, not from interpolated text.
 
-HSTS is `max-age=31536000; includeSubDomains`, deliberately **without** `preload`. A browser that loads the site once refuses plain HTTP to `fmh.dev1sme.cloud` for a year afterwards, so shortening or removing the header does not take effect immediately.
+HSTS is `max-age=31536000; includeSubDomains`, deliberately **without** `preload`. A browser that loads the site once refuses plain HTTP to that exact hostname for a year afterwards, so shortening or removing the header does not take effect immediately. The pin is per-host, so the move to `rentals.dev1sme.cloud` started a fresh year on the new name and left the old pin in place on the old one.
 
 `_headers` only applies to a real build — `npm run dev` does not serve it. Verify with `npm run build && ./node_modules/.bin/vite preview`, then check both an asset response and an API response.

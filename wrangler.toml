@@ -5,8 +5,13 @@ compatibility_date = "2026-08-04"
 compatibility_flags = ["nodejs_compat"]
 
 # Custom domain. Wrangler creates the DNS record in the dev1sme.cloud zone on
-# deploy; the *.workers.dev URL keeps working alongside it.
-routes = [{ pattern = "fmh.dev1sme.cloud", custom_domain = true }]
+# deploy. Declaring `routes` disables the *.workers.dev URL — that is
+# deliberate; set `workers_dev = true` if a fallback URL is ever wanted.
+#
+# Renamed from fmh.dev1sme.cloud: FMH is a building, not the product. The old
+# hostname is gone rather than kept alongside, so anyone still on a saved link
+# gets a hard failure instead of a quietly stale bookmark.
+routes = [{ pattern = "rentals.dev1sme.cloud", custom_domain = true }]
 
 # Deploy fails loudly if these are not set on the Worker (`wrangler secret put`).
 [secrets]

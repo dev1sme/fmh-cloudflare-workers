@@ -39,9 +39,11 @@ export function LoginForm({
         )}
 
         <Stack gap="sm">
+          {/* No placeholder. It showed a real username pattern to anyone who
+              loaded the page, which is a hint nobody signing in here needs —
+              they were handed their account by the landlord. */}
           <TextInput
             label={t("login.username")}
-            placeholder="phong01"
             leftSection={<IconUser size={16} stroke={1.7} />}
             value={username}
             onChange={(e) => setUsername(e.currentTarget.value)}

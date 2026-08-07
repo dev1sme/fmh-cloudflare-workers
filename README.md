@@ -196,12 +196,12 @@ npx wrangler deploy      # đưa Worker + static assets lên Cloudflare
 Domain khai báo ngay trong `wrangler.toml`, không cần vào dashboard:
 
 ```toml
-routes = [{ pattern = "fmh.dev1sme.cloud", custom_domain = true }]
+routes = [{ pattern = "rentals.dev1sme.cloud", custom_domain = true }]
 ```
 
 `wrangler deploy` tự tạo DNS record trong zone và cấp HTTPS. Lưu ý: khi đã có `routes`, Cloudflare **tắt** URL `*.workers.dev`; muốn giữ thì thêm `workers_dev = true`.
 
-Bản đang chạy: **https://fmh.dev1sme.cloud**
+Bản đang chạy: **https://rentals.dev1sme.cloud**
 
 ## Ghi chú về chi phí
 
