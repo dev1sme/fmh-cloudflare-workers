@@ -2,6 +2,11 @@ import type {
   Account,
   ApiFailure,
   ApiResponse,
+  Bot,
+  BotPlatform,
+  BotTarget,
+  BotTargetKind,
+  BotWithTargets,
   Building,
   Dashboard,
   GeneratePreview,
@@ -109,6 +114,46 @@ export const accounts = {
 export const dashboard = {
   /** Omit `period` for the current month. */
   get: (period?: string) => request<Dashboard>(`/api/dashboard${query({ period })}`),
+};
+
+export type BotInput = {
+  name: string;
+  /** Write-only. No response from any bot route ever contains a token. */
+  token: string;
+  platform?: BotPlatform;
+};
+
+export type BotTargetInput = {
+  kind: BotTargetKind;
+  chat_id: string;
+  label: string;
+  /** Null or omitted means every building. */
+  building_id?: number | null;
+};
+
+/**
+ * Notification bots. `Bot` carries `has_token`, never the token itself — it is
+ * write-only, the same rule accounts follow for passwords.
+ */
+export const bots = {
+  list: () => request<{ bots: BotWithTargets[] }>("/api/bots"),
+  create: (input: BotInput) => send<{ bot: Bot }>("POST", "/api/bots", input),
+  update: (code: string, patch: { name?: string; active?: boolean }) =>
+    send<{ bot: Bot }>("PATCH", `/api/bots/${code}`, patch),
+  setToken: (code: string, token: string) =>
+    send<{ bot: Bot }>("POST", `/api/bots/${code}/token`, { token }),
+  remove: (code: string) => send<{ ok: true }>("DELETE", `/api/bots/${code}`),
+  addTarget: (code: string, input: BotTargetInput) =>
+    send<{ target: BotTarget }>("POST", `/api/bots/${code}/targets`, input),
+};
+
+export const botTargets = {
+  update: (code: string, patch: Partial<Omit<BotTargetInput, "kind">> & { active?: boolean }) =>
+    send<{ target: BotTarget }>("PATCH", `/api/bot-targets/${code}`, patch),
+  remove: (code: string) => send<{ ok: true }>("DELETE", `/api/bot-targets/${code}`),
+  /** Sends a real message and waits — this is the only notification call that
+   *  reports its outcome rather than queueing and logging. */
+  test: (code: string) => send<{ ok: true }>("POST", `/api/bot-targets/${code}/test`),
 };
 
 export const buildings = {
