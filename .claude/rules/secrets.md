@@ -10,7 +10,7 @@ Set via `wrangler secret put`, never committed:
 
 The three `ZALO_*` variables are **gone**. The bot token, the tenants' group and the manager's chat are rows in `bots` / `bot_targets` now, managed from Cài đặt: env vars could hold one bot and two chat ids, not N of each. The chat ids that used to sit in `.dev.vars.example` moved into the production D1 with them, so nothing about a Zalo destination is in git any more.
 
-`wrangler.toml` declares `[secrets] required = [...]`, so `wrangler deploy` fails if a secret is missing on the Worker instead of shipping a build that 500s on every login.
+`wrangler.toml` declares `[secrets] required = [...]`. A missing name produces `▲ WARNING Missing required secrets: …` during `vite build` — that much is observed. Whether `wrangler deploy` then **refuses** was never actually tested; this file used to assert it does. Treat the list as a loud reminder, not a gate, until someone deploys with a name missing and reports which it was.
 
 **That list also decides which secrets reach `c.env` in local dev.** The schema describes `required` as affecting type generation and startup warnings, but the Vite plugin uses it to choose what to copy out of `.dev.vars` into `dist/nha_tro/`; a secret missing from the list is simply `undefined` at runtime, with no warning anywhere. A webhook route was debugged for a while against a 503 that turned out to be exactly this. Add every new secret name here.
 
