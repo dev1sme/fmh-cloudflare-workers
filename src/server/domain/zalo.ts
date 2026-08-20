@@ -85,7 +85,10 @@ export function vanBanHoaDonMoi(period: string, tenNhaTro?: string): string {
     `{big}**${tieuDe}**{/big}\n\n` +
     `Mọi người vào app xem chi tiết và quét mã QR để thanh toán:\n\n` +
     `${APP_URL}\n\n` +
-    `**Lưu ý:** Nếu mọi người thanh toán bằng tiền mặt hoặc chuyển vào số tài khoản khác ` +
+    // Only the label is coloured, not the sentence. A whole red paragraph in a
+    // routine monthly notice reads as an alarm and stops being read by the
+    // third month; the label alone is enough to make the eye stop.
+    `{red}**Lưu ý:**{/red} Nếu mọi người thanh toán bằng tiền mặt hoặc chuyển vào số tài khoản khác ` +
     `(không phải dùng mã QR) vui lòng nhắn trực tiếp lên group để được kiểm tra và cập nhật.`
   );
 }
