@@ -65,15 +65,28 @@ function tien(n: number): string {
  * codes are random so they cannot be guessed from each other, and the VietQR
  * payload is built in-house so no third party learns who owes what. A group
  * message listing every room's total would undo all of that in one line.
+ *
+ * The room count is deliberately absent too, and the building name carries what
+ * is left of the distinction. One run bills each building separately, so a
+ * global group target receives one message per building — without the name they
+ * would be byte-identical and read as a duplicate rather than as two notices.
+ *
+ * The closing note exists because a transfer that does not go through the QR
+ * carries no invoice code in its memo, so the SePay webhook cannot match it to
+ * an invoice and the payment silently never lands. Asking for a heads-up in the
+ * group is cheaper than reconciling the bank statement by hand.
  */
-export function vanBanHoaDonMoi(period: string, soLuong: number, tenNhaTro?: string): string {
-  const dong = tenNhaTro ? `Đã phát hành cho **${soLuong} phòng** — ${thoat(tenNhaTro)}.` : `Đã phát hành cho **${soLuong} phòng**.`;
+export function vanBanHoaDonMoi(period: string, tenNhaTro?: string): string {
+  const tieuDe = tenNhaTro
+    ? `📄 Hóa đơn ${nhanKy(period)} — ${thoat(tenNhaTro)}`
+    : `📄 Hóa đơn ${nhanKy(period)}`;
 
   return (
-    `{big}**📄 Hóa đơn ${nhanKy(period)}**{/big}\n\n` +
-    `${dong}\n` +
+    `{big}**${tieuDe}**{/big}\n\n` +
     `Mọi người vào app xem chi tiết và quét mã QR để thanh toán:\n\n` +
-    APP_URL
+    `${APP_URL}\n\n` +
+    `**Lưu ý:** Nếu mọi người thanh toán bằng tiền mặt hoặc chuyển vào số tài khoản khác ` +
+    `(không phải dùng mã QR) vui lòng nhắn trực tiếp lên group để được kiểm tra và cập nhật.`
   );
 }
 

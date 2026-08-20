@@ -118,17 +118,12 @@ export function baoDaPhatHanhHoaDon(
   c: Context<AppEnv>,
   input: { buildingId: number; buildingName?: string; period: string; soLuong: number },
 ): void {
+  // `soLuong` no longer appears in the message, but it still decides whether
+  // there is anything to announce — a building that had nothing created gets no
+  // notice at all.
   if (input.soLuong <= 0) return;
 
-  nen(
-    c,
-    phatTan(
-      c,
-      "GROUP",
-      input.buildingId,
-      vanBanHoaDonMoi(input.period, input.soLuong, input.buildingName),
-    ),
-  );
+  nen(c, phatTan(c, "GROUP", input.buildingId, vanBanHoaDonMoi(input.period, input.buildingName)));
 }
 
 /** Managers only, and with the figures. */
