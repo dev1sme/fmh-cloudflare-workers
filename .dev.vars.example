@@ -5,20 +5,18 @@ JWT_SECRET="doi-thanh-chuoi-ngau-nhien-dai"
 # route verifies; without it /hooks/sepay-payment answers 503 and records nothing.
 SEPAY_WEBHOOK_SECRET="doi-thanh-secret-key-cua-sepay"
 
-# Zalo bot notifications. Leave any of the three empty to turn them off.
+# Encrypts the notification bot tokens stored in `bots.token` (AES-GCM).
 #
-# The token comes from the "Zalo Bot Manager" OA and is NEVER written here —
-# this file is committed and the repository is public. Keep it in `.dev.vars`
-# (gitignored) and on the Worker via `wrangler secret put`.
+# Exactly 32 base64-encoded bytes:
 #
-# The two chat ids below are the live ones, recorded on purpose so they do not
-# have to be rediscovered. They are identifiers, not credentials: without the
-# bot token nobody can send to them. Re-derive them at any time by calling
-# getUpdates after messaging the bot and @-mentioning it in the group.
+#   openssl rand -base64 32
 #
-#   bot         Bot Júp Việc (id 4137284325147592749)
-#   group       tenants' shared group
-#   manager     the owner's own chat with the bot
-ZALO_BOT_TOKEN=""
-ZALO_GROUP_CHAT_ID="zgr-b1532963c80e2150781f"
-ZALO_MANAGER_CHAT_ID="a996c024b96850360979"
+# Unset means the bot routes answer 503 rather than storing a token they could
+# never decrypt. Changing it does NOT re-encrypt existing rows — every bot
+# token has to be re-entered in Cài đặt afterwards, so treat it as permanent.
+#
+# The bots themselves, the tenants' groups and the manager's chat are rows in
+# `bots` / `bot_targets`, managed from Cài đặt. They used to be the three
+# ZALO_* variables that stood here; env vars could hold one bot and two chat
+# ids, not N of each.
+BOT_ENCRYPTION_KEY=""

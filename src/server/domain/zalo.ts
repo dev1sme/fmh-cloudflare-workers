@@ -1,53 +1,23 @@
-import type { Context } from "hono";
-
-import type { AppEnv } from "../types";
+/**
+ * How to talk to a Zalo bot, and how the messages read.
+ *
+ * Deliberately knows nothing about which bots exist or who to send to — that is
+ * `src/server/notify.ts`, which reads the `bots` / `bot_targets` rows and fans
+ * out. Keeping the split means the message wording can be changed and read
+ * without a database in the picture.
+ */
 
 const API = "https://bot-api.zaloplatforms.com";
 
 /** The public URL tenants are pointed at. Only used inside message text. */
 const APP_URL = "https://rentals.dev1sme.cloud";
 
-type Nguoi = "group" | "quanLy";
-
 /**
- * Notifications through a Zalo bot.
- *
- * Two destinations, and the difference is deliberate. The **group** holds the
- * tenants, so what goes there says an invoice exists and nothing else — no
- * room, no amount. Everything in this app avoids telling one tenant what
- * another owes: invoice codes are random so they cannot be guessed from each
- * other, and the VietQR payload is built in-house so no third party learns who
- * owes what. A group message listing every room's total would undo that in one
- * line. The **manager** gets the figures, privately.
- *
- * Sending is best-effort and must never break the thing that triggered it. An
- * invoice run that fails because Zalo is down has done real damage; a missing
- * notification has not.
+ * Sends one message. Throws on failure so the caller can decide — a fan-out
+ * collects failures per destination rather than letting one dead chat stop the
+ * rest, while the manager's "send test" surfaces the reason.
  */
-function diaChi(c: Context<AppEnv>, nguoi: Nguoi): string | undefined {
-  const id = nguoi === "group" ? c.env.ZALO_GROUP_CHAT_ID : c.env.ZALO_MANAGER_CHAT_ID;
-  return id?.trim() ? id.trim() : undefined;
-}
-
-/**
- * Escapes the characters Zalo's markdown parser would otherwise consume.
- *
- * Only ever applied to values that come from the database — a room name is
- * typed by the manager and could contain an underscore or an asterisk, which
- * would silently swallow the rest of the line into italics.
- */
-function thoat(value: string): string {
-  return value.replace(/([*_~`#>{}\\])/g, "\\$1");
-}
-
-async function gui(c: Context<AppEnv>, nguoi: Nguoi, text: string): Promise<void> {
-  const token = c.env.ZALO_BOT_TOKEN?.trim();
-  const chatId = diaChi(c, nguoi);
-
-  // An empty value is how the integration is turned off — no token, no chat id,
-  // no message, no error.
-  if (!token || !chatId) return;
-
+export async function guiZalo(token: string, chatId: string, text: string): Promise<void> {
   const res = await fetch(`${API}/bot${token}/sendMessage`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -67,19 +37,14 @@ async function gui(c: Context<AppEnv>, nguoi: Nguoi, text: string): Promise<void
 }
 
 /**
- * Runs a send without letting it affect the request that triggered it.
+ * Escapes the characters Zalo's markdown parser would otherwise consume.
  *
- * `waitUntil` lets the response go back immediately and finishes the send
- * afterwards — which matters most for the SePay webhook, where the caller
- * gives up after 30 seconds and retries anything it does not get an answer to.
- * Waiting on Zalo there would risk a duplicate delivery to save nothing.
+ * Only ever applied to values that come from the database — a room name is
+ * typed by the manager and could contain an underscore or an asterisk, which
+ * would silently swallow the rest of the line into italics.
  */
-function nen(c: Context<AppEnv>, viec: Promise<void>): void {
-  const nuot = viec.catch((err: unknown) => {
-    console.error("Zalo notification failed", err);
-  });
-
-  c.executionCtx.waitUntil(nuot);
+function thoat(value: string): string {
+  return value.replace(/([*_~`#>{}\\])/g, "\\$1");
 }
 
 /** "2026-08" -> "tháng 08/2026". The client has its own locale-aware version;
@@ -89,46 +54,61 @@ function nhanKy(period: string): string {
   return `tháng ${thang}/${nam}`;
 }
 
-/** Tenants' group: an invoice run happened. No room names, no amounts. */
-export function baoDaPhatHanhHoaDon(c: Context<AppEnv>, period: string, soLuong: number): void {
-  if (soLuong <= 0) return;
+function tien(n: number): string {
+  return `${n.toLocaleString("vi-VN")} đ`;
+}
 
-  nen(
-    c,
-    gui(
-      c,
-      "group",
-      `{big}**📄 Hóa đơn ${nhanKy(period)}**{/big}\n\n` +
-        `Đã phát hành cho **${soLuong} phòng**.\n` +
-        `Mọi người vào app xem chi tiết và quét mã QR để thanh toán:\n\n` +
-        APP_URL,
-    ),
+/**
+ * For a `GROUP` target: an invoice run happened. No room names, no amounts.
+ *
+ * Everything in this app avoids telling one tenant what another owes — invoice
+ * codes are random so they cannot be guessed from each other, and the VietQR
+ * payload is built in-house so no third party learns who owes what. A group
+ * message listing every room's total would undo all of that in one line.
+ */
+export function vanBanHoaDonMoi(period: string, soLuong: number, tenNhaTro?: string): string {
+  const dong = tenNhaTro ? `Đã phát hành cho **${soLuong} phòng** — ${thoat(tenNhaTro)}.` : `Đã phát hành cho **${soLuong} phòng**.`;
+
+  return (
+    `{big}**📄 Hóa đơn ${nhanKy(period)}**{/big}\n\n` +
+    `${dong}\n` +
+    `Mọi người vào app xem chi tiết và quét mã QR để thanh toán:\n\n` +
+    APP_URL
   );
 }
 
-/** Manager only: money arrived, with the figures. */
-export function baoDaNhanTien(
-  c: Context<AppEnv>,
-  input: { roomName: string; invoiceCode: string; soTien: number; conLai: number },
-): void {
-  const tien = (n: number) => `${n.toLocaleString("vi-VN")} đ`;
-
+/** For a `MANAGER` target: money arrived, with the figures. */
+export function vanBanDaNhanTien(input: {
+  roomName: string;
+  invoiceCode: string;
+  soTien: number;
+  conLai: number;
+}): string {
   // Green for settled, amber for still owed — the same two signals the app's
   // own palette carries, so the message reads the way the screen does.
   const mau = input.conLai > 0 ? "orange" : "green";
-  const ketLuan =
-    input.conLai > 0 ? `Còn lại: **${tien(input.conLai)}**` : "✓ Đã thu đủ";
+  const ketLuan = input.conLai > 0 ? `Còn lại: **${tien(input.conLai)}**` : "✓ Đã thu đủ";
 
-  nen(
-    c,
-    gui(
-      c,
-      "quanLy",
-      `{${mau}}**💰 Đã nhận thanh toán**{/${mau}}\n\n` +
-        `Phòng: **${thoat(input.roomName)}**\n` +
-        `Số tiền: **${tien(input.soTien)}**\n` +
-        `Hóa đơn: \`${thoat(input.invoiceCode)}\`\n\n` +
-        `{${mau}}${ketLuan}{/${mau}}`,
-    ),
+  return (
+    `{${mau}}**💰 Đã nhận thanh toán**{/${mau}}\n\n` +
+    `Phòng: **${thoat(input.roomName)}**\n` +
+    `Số tiền: **${tien(input.soTien)}**\n` +
+    `Hóa đơn: \`${thoat(input.invoiceCode)}\`\n\n` +
+    `{${mau}}${ketLuan}{/${mau}}`
+  );
+}
+
+/**
+ * What the manager's "send test" button delivers.
+ *
+ * Says which target it landed on, because the whole point of the test is to
+ * confirm a chat id points where the label claims — a generic "test" message
+ * arriving in the wrong chat looks like a success.
+ */
+export function vanBanThu(label: string, kind: string): string {
+  return (
+    `{big}**🔔 Tin nhắn thử**{/big}\n\n` +
+    `Đích: **${thoat(label)}** (${kind})\n` +
+    `Nếu bạn đọc được tin này thì cấu hình bot đã đúng.`
   );
 }

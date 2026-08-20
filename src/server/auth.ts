@@ -3,6 +3,7 @@ import { createMiddleware } from "hono/factory";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import { SignJWT, jwtVerify } from "jose";
 
+import { decodeBase64, encodeBase64 } from "./domain/crypto";
 import { failure } from "./envelope";
 import type { AppEnv, Role, SessionUser } from "./types";
 
@@ -117,23 +118,6 @@ function timingSafeEqual(a: Uint8Array, b: Uint8Array): boolean {
   let diff = 0;
   for (let i = 0; i < a.length; i++) diff |= a[i]! ^ b[i]!;
   return diff === 0;
-}
-
-function encodeBase64(bytes: Uint8Array): string {
-  let binary = "";
-  for (const byte of bytes) binary += String.fromCharCode(byte);
-  return btoa(binary);
-}
-
-function decodeBase64(value: string): Uint8Array | null {
-  try {
-    const binary = atob(value);
-    const bytes = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-    return bytes;
-  } catch {
-    return null;
-  }
 }
 
 function secretKey(env: Env): Uint8Array {

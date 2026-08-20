@@ -21,9 +21,13 @@ export type AppEnv = {
    */
   Bindings: Env & {
     SEPAY_WEBHOOK_SECRET?: string;
-    ZALO_BOT_TOKEN?: string;
-    ZALO_GROUP_CHAT_ID?: string;
-    ZALO_MANAGER_CHAT_ID?: string;
+    /**
+     * 32 base64-encoded bytes, encrypting the bot tokens in `bots.token`.
+     * Optional for the same reason as above — a Worker deployed before it was
+     * set still serves requests, and notification routes have to answer 503
+     * rather than write a row whose token can never be decrypted.
+     */
+    BOT_ENCRYPTION_KEY?: string;
   };
   Variables: {
     user: SessionUser;

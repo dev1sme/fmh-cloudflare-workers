@@ -9,6 +9,7 @@ import { currentPeriod } from "./domain/period";
 import { optionalPeriod } from "./validate";
 import { accountRoutes } from "./routes/accounts";
 import { authRoutes } from "./routes/auth";
+import { botRoutes, botTargetRoutes } from "./routes/bots";
 import { buildingRoutes } from "./routes/buildings";
 import { invoiceRoutes } from "./routes/invoices";
 import { meRoutes } from "./routes/me";
@@ -64,6 +65,12 @@ admin.route("/tenants", tenantRoutes);
 admin.route("/readings", readingRoutes);
 admin.route("/invoices", invoiceRoutes);
 admin.route("/payments", paymentRoutes);
+// Notification bots and their destinations. Two mounts because a target is
+// addressed by its own code, not nested under the bot's — `PATCH
+// /bot-targets/TG…` beats threading the bot code through a path that already
+// identifies the row uniquely.
+admin.route("/bots", botRoutes);
+admin.route("/bot-targets", botTargetRoutes);
 app.route("/api", admin);
 
 app.notFound((c) => notFound(c, "Endpoint not found."));

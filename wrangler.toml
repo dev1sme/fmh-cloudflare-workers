@@ -18,8 +18,12 @@ routes = [{ pattern = "rentals.dev1sme.cloud", custom_domain = true }]
 # This list also decides which secrets from `.dev.vars` get wired into the
 # local Worker — a name missing here is simply absent from `c.env` in dev, with
 # no warning. Add every new secret.
+#
+# The three ZALO_* names are gone from here: bots and their destinations are
+# rows in `bots` / `bot_targets` now, so there is no fixed number of them to
+# name. BOT_ENCRYPTION_KEY is what those rows' tokens are encrypted under.
 [secrets]
-required = ["JWT_SECRET", "SEPAY_WEBHOOK_SECRET", "ZALO_BOT_TOKEN", "ZALO_GROUP_CHAT_ID", "ZALO_MANAGER_CHAT_ID"]
+required = ["JWT_SECRET", "SEPAY_WEBHOOK_SECRET", "BOT_ENCRYPTION_KEY"]
 
 [assets]
 not_found_handling = "single-page-application"

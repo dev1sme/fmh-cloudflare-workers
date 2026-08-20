@@ -337,3 +337,49 @@ export type TenantDashboard = {
   /** Across every period, cancelled invoices excluded. */
   outstanding_total: number;
 };
+
+/**
+ * Notification bots, `GET /api/bots`.
+ *
+ * The token is never part of this shape. It is returned exactly once, in the
+ * response to the call that set it, the same rule `auth.md` applies to
+ * passwords — a forgotten token is replaced, not recovered.
+ */
+export type Bot = {
+  id: number;
+  /** Public code used in URLs instead of `id` — see the invoice note above. */
+  code: string;
+  name: string;
+  platform: BotPlatform;
+  /** Whether a token is on file. The token itself is never sent to a client. */
+  has_token: boolean;
+  active: boolean;
+  created_at: string;
+};
+
+export type BotPlatform = "ZALO";
+
+/**
+ * Where a bot sends. `kind` decides the *content*, not just the destination:
+ * `GROUP` gets the message with no room name and no amount, `MANAGER` gets the
+ * figures. Pointing a `MANAGER` target at a shared group would show every
+ * tenant what the others owe.
+ */
+export type BotTargetKind = "GROUP" | "MANAGER";
+
+export type BotTarget = {
+  id: number;
+  /** Public code used in URLs instead of `id` — see the invoice note above. */
+  code: string;
+  bot_id: number;
+  kind: BotTargetKind;
+  chat_id: string;
+  label: string;
+  /** Null means every building. */
+  building_id: number | null;
+  active: boolean;
+};
+
+export type BotWithTargets = Bot & {
+  targets: BotTarget[];
+};

@@ -7,7 +7,7 @@ import { getRoom } from "../db/rooms";
 import { sinhMa } from "../domain/code";
 import { CODE_PREFIX } from "../domain/code";
 import { parseMaHoaDon } from "../domain/invoice";
-import { baoDaNhanTien } from "../domain/zalo";
+import { baoDaNhanTien } from "../notify";
 import { failure, ok } from "../envelope";
 import type { AppEnv } from "../types";
 import { capNhatTrangThai } from "./payments";
@@ -151,8 +151,8 @@ webhookRoutes.post("/sepay-payment", async (c) => {
   // everything, and the invoice has to keep saying so.
   const updated = await capNhatTrangThai(c.env.DB, invoice.id);
 
-  // Manager only, and with the figures — the group deliberately never sees
-  // who paid what. Queued rather than awaited: SePay gives up after 30
+  // Manager targets only, and with the figures — a group deliberately never
+  // sees who paid what. Queued rather than awaited: SePay gives up after 30
   // seconds and retries, so waiting on Zalo here risks a duplicate delivery.
   // `Invoice` carries neither the room name nor a running balance, so both are
   // fetched here rather than assumed. Two small reads: waiting on D1 does not
@@ -163,6 +163,10 @@ webhookRoutes.post("/sepay-payment", async (c) => {
   ]);
 
   baoDaNhanTien(c, {
+    // The room is what ties a payment to a building, and a manager target can
+    // be scoped to one. Null when the room lookup missed, which routes the
+    // message to the targets that cover every building rather than nowhere.
+    buildingId: room?.building_id ?? null,
     roomName: room?.room_name ?? `#${invoice.room_id}`,
     invoiceCode: invoice.code,
     soTien: Math.round(amount),

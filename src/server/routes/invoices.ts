@@ -15,7 +15,7 @@ import { bayGio, homNay } from "../domain/period";
 import { estimateInvoice, sinhMaHoaDon, tongTien } from "../domain/invoice";
 import { CODE_PREFIX, sinhMa } from "../domain/code";
 import { failure, notFound, ok } from "../envelope";
-import { baoDaPhatHanhHoaDon } from "../domain/zalo";
+import { baoDaPhatHanhHoaDon } from "../notify";
 import { capNhatTrangThai } from "./payments";
 import type { AppEnv } from "../types";
 import type {
@@ -104,7 +104,19 @@ invoiceRoutes.post("/generate", async (c) => {
 
   // After the write, and fire-and-forget: an invoice run must not fail because
   // Zalo is unreachable.
-  baoDaPhatHanhHoaDon(c, period, created.length);
+  //
+  // One message per building, not one for the run. A group target can be scoped
+  // to a building, and a combined count would tell one building's tenants how
+  // many rooms were billed in the other. Tallied from `created` rather than from
+  // `inputs`, so a room that did not make it into the batch is not announced.
+  for (const [buildingId, nhaTro] of demTheoNhaTro(candidates, created).entries()) {
+    baoDaPhatHanhHoaDon(c, {
+      buildingId,
+      buildingName: nhaTro.name,
+      period,
+      soLuong: nhaTro.count,
+    });
+  }
 
   return ok(
     c,
@@ -153,6 +165,34 @@ function parseRoomIds(value: unknown): number[] | undefined {
   if (value.length === 0) fail("EMPTY_ROOM_IDS");
 
   return value.map((item) => requireId(item, "room_ids"));
+}
+
+/**
+ * How many invoices a run actually created, per building.
+ *
+ * The candidates carry the building; the created rows carry the room. Joining
+ * them here rather than re-querying keeps the notification off the request's
+ * critical path — this runs after the write is already done.
+ */
+function demTheoNhaTro(
+  candidates: GenerationCandidate[],
+  created: { room_id: number }[],
+): Map<number, { name: string; count: number }> {
+  const theoPhong = new Map(
+    candidates.map((k) => [k.room_id, { id: k.building_id, name: k.building_name }]),
+  );
+
+  const dem = new Map<number, { name: string; count: number }>();
+  for (const invoice of created) {
+    const nhaTro = theoPhong.get(invoice.room_id);
+    if (!nhaTro) continue;
+
+    const hien = dem.get(nhaTro.id);
+    if (hien) hien.count += 1;
+    else dem.set(nhaTro.id, { name: nhaTro.name, count: 1 });
+  }
+
+  return dem;
 }
 
 // Paths carry the invoice `code`, not the row id — see domain/invoice.ts.

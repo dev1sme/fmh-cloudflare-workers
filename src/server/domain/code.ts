@@ -21,6 +21,8 @@ export const CODE_PREFIX = {
   account: "AC",
   reading: "RD",
   payment: "PM",
+  bot: "BT",
+  botTarget: "TG",
 } as const;
 
 export type CodePrefix = (typeof CODE_PREFIX)[keyof typeof CODE_PREFIX];

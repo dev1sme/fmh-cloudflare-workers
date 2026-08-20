@@ -47,6 +47,16 @@ export function optionalInt(value: unknown, field: string): number | undefined {
   return requireInt(value, field);
 }
 
+/**
+ * A real boolean, not `"true"`. The convention forbids string-wrapped booleans
+ * on the way out, and accepting one on the way in is how they get there.
+ */
+export function optionalBool(value: unknown, field: string): boolean | undefined {
+  if (value === undefined || value === null) return undefined;
+  if (typeof value !== "boolean") fail(`INVALID_${upper(field)}`);
+  return value as boolean;
+}
+
 /** Positive integer used as a foreign key. */
 export function requireId(value: unknown, field: string): number {
   if (typeof value !== "number" || !Number.isInteger(value) || value <= 0) fail(`INVALID_${upper(field)}`);
