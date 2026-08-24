@@ -42,7 +42,7 @@ import { useDashboardCuaToi, useInvoicesCuaToiChiTiet } from "./useMine";
 const MAC_DINH = "6";
 
 export function MyHomePage() {
-  const { soLieu, loading, error } = useDashboardCuaToi();
+  const { soLieu, loading, refreshing, error, reload } = useDashboardCuaToi();
   const [phamVi, setPhamVi] = useState(MAC_DINH);
   const { t } = useTranslation();
 
@@ -74,7 +74,7 @@ export function MyHomePage() {
   const { hoaDon } = useInvoicesCuaToiChiTiet(ganNhat?.code ?? "");
 
   return (
-    <PageState loading={loading} error={error}>
+    <PageState loading={loading} refreshing={refreshing} error={error} onRetry={reload}>
       {soLieu && (
         <Stack gap="lg">
           <Group justify="space-between" align="flex-end" wrap="wrap">

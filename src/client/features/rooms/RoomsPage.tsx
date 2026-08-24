@@ -12,7 +12,7 @@ import { RoomsTable } from "./components/RoomsTable";
 import { useDanhSachPhong, useThaoTacPhong } from "./useRooms";
 
 export function RoomsPage() {
-  const { phong, nha, loading, error, reload } = useDanhSachPhong();
+  const { phong, nha, loading, refreshing, error, reload } = useDanhSachPhong();
   const { themPhong, capNhatPhong, xoaPhong, themNguoiThue, chuyenDi } = useThaoTacPhong(reload);
   const { xacNhan, hopThoai } = useConfirm();
   const { t } = useTranslation();
@@ -57,7 +57,7 @@ export function RoomsPage() {
         </Button>
       </Group>
 
-      <PageState loading={loading} error={error}>
+      <PageState loading={loading} refreshing={refreshing} error={error} onRetry={reload}>
         <RoomsTable
           phong={phong}
           onEdit={(room) => setDangMo({ room })}

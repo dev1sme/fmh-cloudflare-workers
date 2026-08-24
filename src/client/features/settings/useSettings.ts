@@ -4,8 +4,8 @@ import i18n from "../../i18n";
 import { useResource } from "../../hooks/useResource";
 
 export function useDanhSachNha() {
-  const { data, loading, error, reload } = useResource(() => buildingsApi.list());
-  return { nha: data?.buildings ?? [], loading, error, reload };
+  const { data, loading, refreshing, error, reload } = useResource(() => buildingsApi.list());
+  return { nha: data?.buildings ?? [], loading, refreshing, error, reload };
 }
 
 export function useThaoTacNha(reload: () => void) {

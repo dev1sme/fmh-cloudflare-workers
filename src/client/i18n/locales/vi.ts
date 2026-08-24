@@ -24,6 +24,10 @@ export const vi = {
     home: "Về trang chủ",
     error: "Lỗi",
     loadFailed: "Không tải được dữ liệu",
+    loading: "Đang tải",
+    // Khác `reload` bên dưới: cái đó tải lại cả trang khi chunk lỗi, cái này
+    // chỉ gọi lại đúng request vừa thất bại.
+    retry: "Thử lại",
     appUpdated: "Ứng dụng đã có bản mới",
     appUpdatedHint: "Trang đang mở dùng phiên bản cũ nên không tải được phần còn lại.",
     reload: "Tải lại trang",

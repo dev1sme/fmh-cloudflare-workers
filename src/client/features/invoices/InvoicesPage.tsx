@@ -15,7 +15,7 @@ export function InvoicesPage() {
   const [period, setPeriod] = useState(currentPeriod());
   const [moSinh, setMoSinh] = useState(false);
 
-  const { hoaDon, tongTien, loading, error, reload } = useInvoicesTheoKy(period);
+  const { hoaDon, tongTien, loading, refreshing, error, reload } = useInvoicesTheoKy(period);
   const { sinh, dangChay, ketQua, xoaKetQua } = useSinhHoaDon(period, reload);
   const xemTruoc = useXemTruocSinh(period, moSinh);
   const { t } = useTranslation();
@@ -38,7 +38,7 @@ export function InvoicesPage() {
 
       {ketQua && <SkippedAlert skipped={ketQua.skipped} onClose={xoaKetQua} />}
 
-      <PageState loading={loading} error={error}>
+      <PageState loading={loading} refreshing={refreshing} error={error} onRetry={reload}>
         {hoaDon.length === 0 ? (
           <Text c="dimmed">{t("invoices.emptyPeriod", { period: periodLabel(period) })}</Text>
         ) : (
@@ -60,6 +60,7 @@ export function InvoicesPage() {
         rooms={xemTruoc.rooms}
         loading={xemTruoc.loading}
         error={xemTruoc.error}
+        onRetry={xemTruoc.reload}
         dangChay={dangChay}
         onClose={() => setMoSinh(false)}
         onSubmit={xacNhanSinh}

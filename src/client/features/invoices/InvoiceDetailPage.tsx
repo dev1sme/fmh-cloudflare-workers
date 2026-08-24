@@ -19,7 +19,7 @@ export function InvoiceDetailPage() {
   const code = (useParams().code ?? "").toUpperCase();
   const navigate = useNavigate();
 
-  const { hoaDon, loading, error, reload } = useInvoiceDetail(code);
+  const { hoaDon, loading, refreshing, error, reload } = useInvoiceDetail(code);
   const { luuPhiKhac, huy, xoa, ghiNhanThanhToan, xoaThanhToan } = useThaoTacHoaDon(code, reload, () =>
     navigate("/invoices"),
   );
@@ -65,7 +65,7 @@ export function InvoiceDetailPage() {
         </Button>
       </Group>
 
-      <PageState loading={loading} error={error}>
+      <PageState loading={loading} refreshing={refreshing} error={error} onRetry={reload}>
         {hoaDon && (
           <Stack>
             <InvoiceHeader hoaDon={hoaDon} />

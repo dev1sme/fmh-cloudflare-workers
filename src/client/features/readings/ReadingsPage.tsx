@@ -13,7 +13,7 @@ import { useReadingsTheoKy, useThaoTacChiSo } from "./useReadings";
 
 export function ReadingsPage() {
   const [period, setPeriod] = useState(currentPeriod());
-  const { phong, chiSoCuaPhong, loading, error, reload } = useReadingsTheoKy(period);
+  const { phong, chiSoCuaPhong, loading, refreshing, error, reload } = useReadingsTheoKy(period);
   const { goiY, luu, xoa } = useThaoTacChiSo(period, reload);
   const { xacNhan, hopThoai } = useConfirm();
   const { t } = useTranslation();
@@ -39,7 +39,7 @@ export function ReadingsPage() {
         <PeriodPicker value={period} onChange={setPeriod} />
       </Group>
 
-      <PageState loading={loading} error={error}>
+      <PageState loading={loading} refreshing={refreshing} error={error} onRetry={reload}>
         <ReadingsTable
           phong={phong}
           chiSoCuaPhong={chiSoCuaPhong}

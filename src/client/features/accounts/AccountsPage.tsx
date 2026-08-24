@@ -15,7 +15,7 @@ import { ResetPasswordModal } from "./components/ResetPasswordModal";
 import { useDanhSachTaiKhoan, useThaoTacTaiKhoan } from "./useAccounts";
 
 export function AccountsPage({ user }: { user: SessionUser }) {
-  const { taiKhoan, phong, loading, error, reload } = useDanhSachTaiKhoan();
+  const { taiKhoan, phong, loading, refreshing, error, reload } = useDanhSachTaiKhoan();
   const { them, doiTen, datLaiMatKhau, xoa, matKhauMoi, quenMatKhau } = useThaoTacTaiKhoan(reload);
   const { xacNhan, hopThoai } = useConfirm();
   const { t } = useTranslation();
@@ -49,7 +49,7 @@ export function AccountsPage({ user }: { user: SessionUser }) {
         {t("accounts.note")}
       </Text>
 
-      <PageState loading={loading} error={error}>
+      <PageState loading={loading} refreshing={refreshing} error={error} onRetry={reload}>
         <AccountsTable
           taiKhoan={taiKhoan}
           idHienTai={user.id}

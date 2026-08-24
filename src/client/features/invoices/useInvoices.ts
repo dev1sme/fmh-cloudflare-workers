@@ -7,13 +7,17 @@ import i18n from "../../i18n";
 import { useResource } from "../../hooks/useResource";
 
 export function useInvoicesTheoKy(period: string) {
-  const { data, loading, error, reload } = useResource(() => invoicesApi.list({ period }), [period]);
+  const { data, loading, refreshing, error, reload } = useResource(
+    () => invoicesApi.list({ period }),
+    [period],
+  );
   const hoaDon = data?.invoices ?? [];
 
   return {
     hoaDon,
     tongTien: hoaDon.reduce((sum, invoice) => sum + invoice.total, 0),
     loading,
+    refreshing,
     error,
     reload,
   };
@@ -24,7 +28,7 @@ export function useInvoicesTheoKy(period: string) {
  * so closing the modal and changing the period both refetch cleanly.
  */
 export function useXemTruocSinh(period: string, mo: boolean) {
-  const { data, loading, error } = useResource(
+  const { data, loading, error, reload } = useResource(
     () => (mo ? invoicesApi.preview(period) : Promise.resolve(null)),
     [period, mo],
   );
@@ -33,7 +37,7 @@ export function useXemTruocSinh(period: string, mo: boolean) {
   // fresh array on every render would loop.
   const rooms = useMemo(() => data?.rooms ?? [], [data]);
 
-  return { rooms, loading: mo && loading, error };
+  return { rooms, loading: mo && loading, error, reload };
 }
 
 /**

@@ -9,8 +9,8 @@ import i18n from "../../i18n";
 import { useResource } from "../../hooks/useResource";
 
 export function useDanhSachBot() {
-  const { data, loading, error, reload } = useResource(() => botsApi.list());
-  return { bots: data?.bots ?? [], loading, error, reload };
+  const { data, loading, refreshing, error, reload } = useResource(() => botsApi.list());
+  return { bots: data?.bots ?? [], loading, refreshing, error, reload };
 }
 
 /**

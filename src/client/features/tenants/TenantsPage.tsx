@@ -12,7 +12,7 @@ import { TenantsTable } from "./components/TenantsTable";
 import { useDanhSachNguoiThue, useThaoTacNguoiThue } from "./useTenants";
 
 export function TenantsPage() {
-  const { nguoiThue, phong, loading, error, reload } = useDanhSachNguoiThue();
+  const { nguoiThue, phong, loading, refreshing, error, reload } = useDanhSachNguoiThue();
   const { them, capNhat, chuyenDi, huyChuyenDi, xoa } = useThaoTacNguoiThue(reload);
   const { xacNhan, hopThoai } = useConfirm();
   const { t } = useTranslation();
@@ -70,7 +70,7 @@ export function TenantsPage() {
         </Button>
       </Group>
 
-      <PageState loading={loading} error={error}>
+      <PageState loading={loading} refreshing={refreshing} error={error} onRetry={reload}>
         <TenantsTable
           nguoiThue={nguoiThue}
           onEdit={(tenant) => setDangMo({ tenant })}

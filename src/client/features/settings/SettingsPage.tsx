@@ -13,7 +13,7 @@ import { useDanhSachBot, useThaoTacBot } from "./useBots";
 import { useDanhSachNha, useThaoTacNha } from "./useSettings";
 
 export function SettingsPage() {
-  const { nha, loading, error, reload } = useDanhSachNha();
+  const { nha, loading, refreshing, error, reload } = useDanhSachNha();
   const { them, luu, xoa } = useThaoTacNha(reload);
   const bot = useDanhSachBot();
   const thaoTacBot = useThaoTacBot(bot.reload);
@@ -47,7 +47,7 @@ export function SettingsPage() {
         {t("settings.ratesNote")}
       </Text>
 
-      <PageState loading={loading} error={error}>
+      <PageState loading={loading} refreshing={refreshing} error={error} onRetry={reload}>
         <Stack>
           {nha.map((item) => (
             <BuildingForm key={item.id} nha={item} onSave={luu} onDelete={hoiXoa} />
@@ -61,6 +61,8 @@ export function SettingsPage() {
         bots={bot.bots}
         buildings={nha}
         loading={bot.loading}
+        refreshing={bot.refreshing}
+        onRetry={bot.reload}
         error={bot.error}
         onAddBot={thaoTacBot.themBot}
         onToggleBot={(item, active) => void thaoTacBot.luuBot(item.code, { active })}

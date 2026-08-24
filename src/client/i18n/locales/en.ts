@@ -26,6 +26,10 @@ export const en: Resources = {
     home: "Back to home",
     error: "Error",
     loadFailed: "Could not load data",
+    loading: "Loading",
+    // Not the `reload` below: that one reloads the whole page after a chunk
+    // failure, this one re-runs the request that just failed.
+    retry: "Retry",
     appUpdated: "A new version is available",
     appUpdatedHint: "This tab is running an older version and could not load the rest of it.",
     reload: "Reload the page",

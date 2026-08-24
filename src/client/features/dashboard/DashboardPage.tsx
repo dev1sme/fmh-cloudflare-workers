@@ -13,7 +13,7 @@ import { useDashboard } from "./useDashboard";
 
 export function DashboardPage() {
   const [period, setPeriod] = useState(currentPeriod());
-  const { soLieu, loading, error } = useDashboard(period);
+  const { soLieu, loading, refreshing, error, reload } = useDashboard(period);
   const { t } = useTranslation();
 
   return (
@@ -23,7 +23,7 @@ export function DashboardPage() {
         <PeriodPicker value={period} onChange={setPeriod} />
       </Group>
 
-      <PageState loading={loading} error={error}>
+      <PageState loading={loading} refreshing={refreshing} error={error} onRetry={reload}>
         {soLieu && (
           <Stack>
             <RevenueCards revenue={soLieu.revenue} />

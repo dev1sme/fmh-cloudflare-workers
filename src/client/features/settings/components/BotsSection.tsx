@@ -23,7 +23,9 @@ export function BotsSection({
   bots,
   buildings,
   loading,
+  refreshing,
   error,
+  onRetry,
   onAddBot,
   onToggleBot,
   onReplaceToken,
@@ -36,7 +38,9 @@ export function BotsSection({
   bots: BotWithTargets[];
   buildings: Building[];
   loading: boolean;
+  refreshing: boolean;
   error: unknown;
+  onRetry: () => void;
   onAddBot: (input: BotInput) => Promise<boolean>;
   onToggleBot: (bot: BotWithTargets, active: boolean) => void;
   onReplaceToken: (code: string, token: string) => Promise<boolean>;
@@ -88,7 +92,7 @@ export function BotsSection({
         {t("bots.note")}
       </Text>
 
-      <PageState loading={loading} error={error}>
+      <PageState loading={loading} refreshing={refreshing} error={error} onRetry={onRetry}>
         <Stack>
           {bots.length === 0 ? (
             <Text c="dimmed" size="sm">

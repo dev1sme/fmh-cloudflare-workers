@@ -18,8 +18,13 @@ export function useDanhSachTaiKhoan() {
     taiKhoan: taiKhoan.data?.accounts ?? [],
     phong: phong.data?.rooms ?? [],
     loading: taiKhoan.loading || phong.loading,
+    refreshing: taiKhoan.refreshing || phong.refreshing,
     error: taiKhoan.error ?? phong.error,
-    reload: taiKhoan.reload,
+    // Both: `error` can be either request's, so a retry has to cover both.
+    reload: () => {
+      taiKhoan.reload();
+      phong.reload();
+    },
   };
 }
 
