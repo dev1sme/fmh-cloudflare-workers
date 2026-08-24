@@ -69,10 +69,14 @@ export const en: Resources = {
 
   nav: {
     dashboard: "Overview",
+    // Sidebar group headings — not a route name, used nowhere but AppLayout.
+    groupOperations: "Operations",
     rooms: "Rooms",
     tenants: "Tenants",
+    groupBilling: "Billing",
     readings: "Meter readings",
     invoices: "Invoices",
+    groupSystem: "System",
     accounts: "Accounts",
     settings: "Settings",
   },

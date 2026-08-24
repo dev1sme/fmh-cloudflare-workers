@@ -66,10 +66,15 @@ export const vi = {
 
   nav: {
     dashboard: "Tổng quan",
+    // Nhãn nhóm trong sidebar — không phải tên route, không dùng ở đâu khác
+    // ngoài AppLayout.
+    groupOperations: "Vận hành",
     rooms: "Phòng",
     tenants: "Người thuê",
+    groupBilling: "Thu tiền",
     readings: "Chỉ số điện nước",
     invoices: "Hóa đơn",
+    groupSystem: "Hệ thống",
     accounts: "Tài khoản",
     settings: "Cài đặt",
   },

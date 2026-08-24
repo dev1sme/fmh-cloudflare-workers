@@ -8,15 +8,16 @@ import type { ReadingDetail } from "../../../shared/types";
 import { PeriodPicker } from "../../components/PeriodPicker";
 import { EmptyState } from "../../components/EmptyState";
 import { PageState } from "../../components/PageState";
-import { currentPeriod, periodLabel } from "../../format";
+import { periodLabel } from "../../format";
 import { useConfirm } from "../../hooks/useConfirm";
+import { usePeriodParam } from "../../hooks/usePeriodParam";
 import { ReadingModal, type MucTieu } from "./components/ReadingModal";
 import { ReadingCards } from "./components/ReadingCards";
 import { ReadingsTable } from "./components/ReadingsTable";
 import { useReadingsTheoKy, useThaoTacChiSo } from "./useReadings";
 
 export function ReadingsPage() {
-  const [period, setPeriod] = useState(currentPeriod());
+  const [period, setPeriod] = usePeriodParam();
   const { phong, chiSoCuaPhong, loading, refreshing, error, reload } = useReadingsTheoKy(period);
   const { goiY, luu, xoa } = useThaoTacChiSo(period, reload);
   const { xacNhan, hopThoai } = useConfirm();

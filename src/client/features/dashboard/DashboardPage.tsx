@@ -1,10 +1,9 @@
 import { Group, Stack, Title } from "@mantine/core";
-import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { PageState } from "../../components/PageState";
 import { PeriodPicker } from "../../components/PeriodPicker";
-import { currentPeriod } from "../../format";
+import { usePeriodParam } from "../../hooks/usePeriodParam";
 import { DebtsTable } from "./components/DebtsTable";
 import { RevenueCards } from "./components/RevenueCards";
 import { RevenueChart } from "./components/RevenueChart";
@@ -12,7 +11,7 @@ import { RoomsAndUsage } from "./components/RoomsAndUsage";
 import { useDashboard } from "./useDashboard";
 
 export function DashboardPage() {
-  const [period, setPeriod] = useState(currentPeriod());
+  const [period, setPeriod] = usePeriodParam();
   const { soLieu, loading, refreshing, error, reload } = useDashboard(period);
   const { t } = useTranslation();
 
@@ -27,7 +26,7 @@ export function DashboardPage() {
         {soLieu && (
           <Stack>
             <RevenueCards revenue={soLieu.revenue} />
-            <RoomsAndUsage rooms={soLieu.rooms} usage={soLieu.usage} />
+            <RoomsAndUsage period={period} rooms={soLieu.rooms} usage={soLieu.usage} />
             <RevenueChart history={soLieu.history} />
             <DebtsTable debts={soLieu.debts} />
           </Stack>

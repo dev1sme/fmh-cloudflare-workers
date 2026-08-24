@@ -6,7 +6,8 @@ import { useTranslation } from "react-i18next";
 import { EmptyState } from "../../components/EmptyState";
 import { PeriodPicker } from "../../components/PeriodPicker";
 import { PageState } from "../../components/PageState";
-import { currentPeriod, periodLabel } from "../../format";
+import { periodLabel } from "../../format";
+import { usePeriodParam } from "../../hooks/usePeriodParam";
 import { InvoiceCards } from "./components/InvoiceCards";
 import { InvoicesTable } from "./components/InvoicesTable";
 import { GenerateInvoicesModal } from "./components/GenerateInvoicesModal";
@@ -14,7 +15,7 @@ import { SkippedAlert } from "./components/SkippedAlert";
 import { useInvoicesTheoKy, useSinhHoaDon, useXemTruocSinh } from "./useInvoices";
 
 export function InvoicesPage() {
-  const [period, setPeriod] = useState(currentPeriod());
+  const [period, setPeriod] = usePeriodParam();
   const [moSinh, setMoSinh] = useState(false);
 
   const { hoaDon, tongTien, loading, refreshing, error, reload } = useInvoicesTheoKy(period);

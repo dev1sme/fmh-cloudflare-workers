@@ -7,9 +7,11 @@ import { laTiengAnh } from "../../../i18n";
 import { StatCard } from "./StatCard";
 
 export function RoomsAndUsage({
+  period,
   rooms,
   usage,
 }: {
+  period: string;
   rooms: DashboardRooms;
   usage: DashboardUsage;
 }) {
@@ -47,6 +49,7 @@ export function RoomsAndUsage({
             : t("dashboard.allRecorded")
         }
         color={rooms.missing_readings > 0 ? "owed" : "settled"}
+        to={`/readings?period=${period}`}
       />
       <StatCard
         label={t("meter.electricityUsed")}
