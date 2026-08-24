@@ -11,7 +11,7 @@ export async function listPayments(db: D1Database, invoiceId: number): Promise<P
   return results;
 }
 
-export function getPayment(db: D1Database, id: number): Promise<Payment | null> {
+function getPayment(db: D1Database, id: number): Promise<Payment | null> {
   return db.prepare(`${SELECT} WHERE id = ?`).bind(id).first<Payment>();
 }
 

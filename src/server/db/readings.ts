@@ -26,7 +26,7 @@ export async function listReadings(
   return results;
 }
 
-export function getReading(db: D1Database, id: number): Promise<Reading | null> {
+function getReading(db: D1Database, id: number): Promise<Reading | null> {
   return db.prepare(`${SELECT} WHERE id = ?`).bind(id).first<Reading>();
 }
 

@@ -140,7 +140,7 @@ export async function createSessionToken(env: Env, user: SessionUser): Promise<s
     .sign(secretKey(env));
 }
 
-export async function readSessionToken(env: Env, token: string): Promise<SessionUser | null> {
+async function readSessionToken(env: Env, token: string): Promise<SessionUser | null> {
   try {
     const { payload } = await jwtVerify(token, secretKey(env), { algorithms: ["HS256"] });
 

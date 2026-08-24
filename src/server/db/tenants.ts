@@ -28,7 +28,7 @@ export async function listTenants(
   return results;
 }
 
-export function getTenant(db: D1Database, id: number): Promise<Tenant | null> {
+function getTenant(db: D1Database, id: number): Promise<Tenant | null> {
   return db.prepare(`${SELECT} WHERE id = ?`).bind(id).first<Tenant>();
 }
 
