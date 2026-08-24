@@ -14,7 +14,7 @@ Zalo notifications moved from the three `ZALO_*` secrets to the `bots` / `bot_ta
 
 **The `ZALO_*` secrets were never on the Worker at all** — `wrangler secret list` returns exactly `BOT_ENCRYPTION_KEY`, `JWT_SECRET`, `SEPAY_WEBHOOK_SECRET`. So Zalo notifications have never run on production; the feature only ever worked locally, against `.dev.vars`. There is nothing to clean up, and this file previously claimed those secrets were set, which was never checked against the Worker.
 
-**`bots` is still empty on production, so notifications are off there.** Turning them on is: deploy the code, then enter the bot and its destinations through Cài đặt. The live bot token and the two chat ids are in the local `.dev.vars` — that is the only place they exist now.
+**`bots` is still empty on production, so notifications are off there.** Turning them on is: deploy the code, then enter the bot and its destinations through Thông báo. The live bot token and the two chat ids are in the local `.dev.vars` — that is the only place they exist now.
 
 `JWT_SECRET` and `SEPAY_WEBHOOK_SECRET` are both set as Worker secrets. Do not assume the manager account is still called `quanly` — the owner renamed it and set their own password.
 

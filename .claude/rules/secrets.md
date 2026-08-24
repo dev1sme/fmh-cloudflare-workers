@@ -6,9 +6,9 @@ Set via `wrangler secret put`, never committed:
 
 - `JWT_SECRET`
 - `SEPAY_WEBHOOK_SECRET` — the **Secret Key** from SePay's webhook settings, which signs the HMAC the webhook route verifies.
-- `BOT_ENCRYPTION_KEY` — 32 base64-encoded bytes (`openssl rand -base64 32`), encrypting the notification bot tokens in `bots.token`. Unset means the bot routes answer 503 rather than storing a token they could never read back. **Rotating it does not re-encrypt existing rows** — every bot token has to be re-entered in Cài đặt — so treat it as permanent. → `notifications.md`
+- `BOT_ENCRYPTION_KEY` — 32 base64-encoded bytes (`openssl rand -base64 32`), encrypting the notification bot tokens in `bots.token`. Unset means the bot routes answer 503 rather than storing a token they could never read back. **Rotating it does not re-encrypt existing rows** — every bot token has to be re-entered in Thông báo — so treat it as permanent. → `notifications.md`
 
-The three `ZALO_*` variables are **gone**. The bot token, the tenants' group and the manager's chat are rows in `bots` / `bot_targets` now, managed from Cài đặt: env vars could hold one bot and two chat ids, not N of each. The chat ids that used to sit in `.dev.vars.example` moved into the production D1 with them, so nothing about a Zalo destination is in git any more.
+The three `ZALO_*` variables are **gone**. The bot token, the tenants' group and the manager's chat are rows in `bots` / `bot_targets` now, managed from Thông báo: env vars could hold one bot and two chat ids, not N of each. The chat ids that used to sit in `.dev.vars.example` moved into the production D1 with them, so nothing about a Zalo destination is in git any more.
 
 `wrangler.toml` declares `[secrets] required = [...]`. A missing name produces `▲ WARNING Missing required secrets: …` during `vite build` — that much is observed. Whether `wrangler deploy` then **refuses** was never actually tested; this file used to assert it does. Treat the list as a loud reminder, not a gate, until someone deploys with a name missing and reports which it was.
 

@@ -64,15 +64,15 @@ export function BuildingForm({
   return (
     <Card withBorder padding="md">
       <Stack>
-        <TextInput label={t("settings.buildingName")} value={name} onChange={(e) => setName(e.currentTarget.value)} />
+        <TextInput label={t("buildings.buildingName")} value={name} onChange={(e) => setName(e.currentTarget.value)} />
         <TextInput
-          label={t("settings.address")}
+          label={t("buildings.address")}
           value={address}
           onChange={(e) => setAddress(e.currentTarget.value)}
         />
         <Group grow>
           <NumberInput
-            label={t("settings.electricityRate")}
+            label={t("buildings.electricityRate")}
             value={dien}
             onChange={setDien}
             min={0}
@@ -80,7 +80,7 @@ export function BuildingForm({
             {...dauPhanCach()}
           />
           <NumberInput
-            label={t("settings.waterRate")}
+            label={t("buildings.waterRate")}
             value={nuoc}
             onChange={setNuoc}
             min={0}
@@ -97,7 +97,7 @@ export function BuildingForm({
             {t("common.save")}
           </Button>
           <Button variant="subtle" color="red" onClick={() => onDelete(nha)}>
-            {t("settings.deleteBuilding")}
+            {t("buildings.deleteBuilding")}
           </Button>
         </Group>
       </Stack>

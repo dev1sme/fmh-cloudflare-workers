@@ -13,12 +13,12 @@ import { BotModal } from "./BotModal";
 import { TargetModal } from "./TargetModal";
 
 /**
- * The Zalo notification block on the settings screen.
+ * The Zalo notification block — everything `NotificationsPage` renders.
  *
- * A section rather than more code in `SettingsPage`: buildings and bots share a
- * screen but nothing else, and the page was already the size where the next
- * feature would have made it the file everything lives in. Takes callbacks and
- * never touches `api.ts` — the mutations belong to `useBots`.
+ * Kept as its own component rather than inlined into the page: it owns three
+ * modals' worth of local state (add bot, replace token, add target) that a
+ * page component should not be carrying directly. Takes callbacks and never
+ * touches `api.ts` — the mutations belong to `useBots`.
  */
 export function BotsSection({
   bots,

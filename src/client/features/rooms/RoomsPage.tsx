@@ -73,15 +73,15 @@ export function RoomsPage() {
         {phong.length === 0 ? (
           // Two different dead ends, two different answers. With no building
           // there is nothing to do on this screen at all, so the way out points
-          // at Cài đặt; with a building, the room is one click away.
+          // at Nhà; with a building, the room is one click away.
           nha.length === 0 ? (
             <EmptyState
               icon={<IconBuildingCommunity size={24} stroke={1.6} />}
               title={t("rooms.noBuilding")}
               hint={t("rooms.noBuildingHint")}
               action={
-                <Button component={Link} to="/settings" variant="light">
-                  {t("nav.settings")}
+                <Button component={Link} to="/buildings" variant="light">
+                  {t("nav.buildings")}
                 </Button>
               }
             />

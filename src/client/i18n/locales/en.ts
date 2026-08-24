@@ -71,6 +71,7 @@ export const en: Resources = {
     dashboard: "Overview",
     // Sidebar group headings — not a route name, used nowhere but AppLayout.
     groupOperations: "Operations",
+    buildings: "Buildings",
     rooms: "Rooms",
     tenants: "Tenants",
     groupBilling: "Billing",
@@ -78,7 +79,10 @@ export const en: Resources = {
     invoices: "Invoices",
     groupSystem: "System",
     accounts: "Accounts",
-    settings: "Settings",
+    // Was "settings" / "Settings" — renamed because the page now does exactly
+    // one thing: configure Zalo bots. It used to also hold building info
+    // (name, rates, bank account), now split out to buildings above.
+    notifications: "Notifications",
   },
 
   search: {
@@ -155,7 +159,7 @@ export const en: Resources = {
     noBuilding: "No buildings yet.",
     // Why "Add room" is disabled — a room belongs to a building, and buildings
     // are created in Settings.
-    noBuildingHint: "A room belongs to a building. Create one in Settings first, then come back.",
+    noBuildingHint: "A room belongs to a building. Create one under Buildings first, then come back.",
     needBuilding: "Create a building in Settings first.",
     editTitle: "Edit room — {{name}}",
     building: "Building",
@@ -183,7 +187,7 @@ export const en: Resources = {
     deleted: "Room deleted.",
   },
 
-  settings: {
+  buildings: {
     empty: "No buildings yet.",
     emptyHint: "A building holds the electricity and water rates and the account money is paid into. Everything else builds on it.",
     addBuilding: "Add building",

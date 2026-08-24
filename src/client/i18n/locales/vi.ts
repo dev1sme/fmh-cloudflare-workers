@@ -69,6 +69,7 @@ export const vi = {
     // Nhãn nhóm trong sidebar — không phải tên route, không dùng ở đâu khác
     // ngoài AppLayout.
     groupOperations: "Vận hành",
+    buildings: "Nhà",
     rooms: "Phòng",
     tenants: "Người thuê",
     groupBilling: "Thu tiền",
@@ -76,7 +77,10 @@ export const vi = {
     invoices: "Hóa đơn",
     groupSystem: "Hệ thống",
     accounts: "Tài khoản",
-    settings: "Cài đặt",
+    // Trước là "settings" / "Cài đặt" — đổi tên vì trang giờ chỉ còn đúng một
+    // việc: cấu hình bot Zalo. "Cài đặt" từng chứa cả thông tin nhà (tên, đơn
+    // giá, tài khoản ngân hàng), đã tách sang buildings ở trên.
+    notifications: "Thông báo",
   },
 
   search: {
@@ -165,7 +169,7 @@ export const vi = {
     noBuilding: "Chưa có nhà nào.",
     // Lý do nút "Thêm phòng" bị disabled — phòng phải thuộc một nhà, và nhà chỉ
     // tạo được ở Cài đặt.
-    noBuildingHint: "Phòng phải thuộc một nhà. Vào Cài đặt tạo nhà trước, rồi quay lại đây.",
+    noBuildingHint: "Phòng phải thuộc một nhà. Vào Nhà tạo nhà trước, rồi quay lại đây.",
     needBuilding: "Tạo nhà ở Cài đặt trước đã.",
     editTitle: "Sửa phòng — {{name}}",
     building: "Nhà",
@@ -193,7 +197,7 @@ export const vi = {
     deleted: "Đã xoá phòng.",
   },
 
-  settings: {
+  buildings: {
     empty: "Chưa có nhà nào.",
     emptyHint: "Nhà giữ đơn giá điện nước và số tài khoản nhận tiền. Mọi thứ khác dựng trên nó.",
     addBuilding: "Thêm nhà",

@@ -21,9 +21,9 @@ src/client/           React SPA (Mantine + react-router)
   components/         cross-feature UI: AppLayout, InvoiceLines, PaymentsTable,
                       PeriodPicker, PageState, StatusBadge, ConfirmModal,
                       RouteFallback, ChunkErrorBoundary
-  features/<name>/    login, dashboard, rooms, tenants, readings, invoices,
-                      settings, accounts, change-password, not-found,
-                      my (the tenant's own screens)
+  features/<name>/    login, dashboard, buildings, rooms, tenants, readings,
+                      invoices, notifications, accounts, change-password,
+                      not-found, my (the tenant's own screens)
     XxxPage.tsx       composition only
     components/       that feature's UI, one component per file
     useXxx.ts         data loading + mutations, no JSX

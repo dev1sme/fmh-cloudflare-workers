@@ -12,7 +12,7 @@ export function useThaoTacNha(reload: () => void) {
   async function them(input: BuildingInput): Promise<boolean> {
     try {
       await buildingsApi.create(input);
-      baoThanhCong(i18n.t("settings.added"));
+      baoThanhCong(i18n.t("buildings.added"));
       reload();
       return true;
     } catch (err) {
@@ -24,7 +24,7 @@ export function useThaoTacNha(reload: () => void) {
   async function luu(id: number, patch: Partial<BuildingInput>): Promise<boolean> {
     try {
       await buildingsApi.update(id, patch);
-      baoThanhCong(i18n.t("settings.saved"));
+      baoThanhCong(i18n.t("buildings.saved"));
       reload();
       return true;
     } catch (err) {
@@ -37,7 +37,7 @@ export function useThaoTacNha(reload: () => void) {
   async function xoa(id: number): Promise<boolean> {
     try {
       await buildingsApi.remove(id);
-      baoThanhCong(i18n.t("settings.deleted"));
+      baoThanhCong(i18n.t("buildings.deleted"));
       reload();
       return true;
     } catch (err) {

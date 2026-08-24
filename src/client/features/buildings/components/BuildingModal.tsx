@@ -45,23 +45,23 @@ export function BuildingModal({
   }
 
   return (
-    <Modal opened={opened} onClose={onClose} title={t("settings.addBuilding")}>
+    <Modal opened={opened} onClose={onClose} title={t("buildings.addBuilding")}>
       <Stack>
         <TextInput
-          label={t("settings.buildingName")}
+          label={t("buildings.buildingName")}
           placeholder="FMH 2"
           value={name}
           onChange={(e) => setName(e.currentTarget.value)}
           required
         />
         <TextInput
-          label={t("settings.address")}
+          label={t("buildings.address")}
           value={address}
           onChange={(e) => setAddress(e.currentTarget.value)}
         />
         <Group grow>
           <NumberInput
-            label={t("settings.electricityRate")}
+            label={t("buildings.electricityRate")}
             value={dien}
             onChange={setDien}
             min={0}
@@ -69,7 +69,7 @@ export function BuildingModal({
             {...dauPhanCach()}
           />
           <NumberInput
-            label={t("settings.waterRate")}
+            label={t("buildings.waterRate")}
             value={nuoc}
             onChange={setNuoc}
             min={0}
@@ -78,7 +78,7 @@ export function BuildingModal({
           />
         </Group>
         <Button onClick={save} loading={busy}>
-          {t("settings.addBuilding")}
+          {t("buildings.addBuilding")}
         </Button>
       </Stack>
     </Modal>

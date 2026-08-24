@@ -13,7 +13,9 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 import { spotlight } from "@mantine/spotlight";
 import {
+  IconBell,
   IconBolt,
+  IconBuilding,
   IconChevronUp,
   IconBuildingCommunity,
   IconFileInvoice,
@@ -22,7 +24,6 @@ import {
   IconLayoutDashboard,
   IconLogout,
   IconSearch,
-  IconSettings,
   IconUsers,
 } from "@tabler/icons-react";
 import { Suspense } from "react";
@@ -48,6 +49,13 @@ const ICON = { size: 18, stroke: 1.6 };
  * of links with no hint that two of them are the same monthly task. `label:
  * null` on the first group is Tổng quan standing alone as the landing screen,
  * not filed under an operational category.
+ *
+ * "Nhà" (buildings) used to be a section of "Cài đặt" alongside the Zalo bots
+ * — one screen for two things that only shared a page. Buildings are core
+ * billing data (the rate a generated invoice copies from, the account VietQR
+ * pays into), the same tier as a room, so it moved to VẬN HÀNH next to Phòng
+ * and Người thuê; "Cài đặt" kept the name that now describes only what is
+ * left on it, renamed to "Thông báo".
  */
 const NAV_GROUPS = [
   {
@@ -59,6 +67,9 @@ const NAV_GROUPS = [
   {
     label: "nav.groupOperations",
     links: [
+      // Nhà first: a room cannot exist without one (rooms.building_id), and
+      // the empty-room screen sends the manager here for exactly that reason.
+      { to: "/buildings", key: "nav.buildings", icon: <IconBuilding {...ICON} /> },
       { to: "/rooms", key: "nav.rooms", icon: <IconHome {...ICON} /> },
       { to: "/tenants", key: "nav.tenants", icon: <IconUsers {...ICON} /> },
     ],
@@ -74,7 +85,7 @@ const NAV_GROUPS = [
     label: "nav.groupSystem",
     links: [
       { to: "/accounts", key: "nav.accounts", icon: <IconKey {...ICON} /> },
-      { to: "/settings", key: "nav.settings", icon: <IconSettings {...ICON} /> },
+      { to: "/notifications", key: "nav.notifications", icon: <IconBell {...ICON} /> },
     ],
   },
 ] as const;

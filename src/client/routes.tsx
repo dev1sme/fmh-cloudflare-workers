@@ -32,6 +32,9 @@ const QuickSearch = lazy(() =>
 const DashboardPage = lazy(() =>
   import("./features/dashboard/DashboardPage").then((m) => ({ default: m.DashboardPage })),
 );
+const BuildingsPage = lazy(() =>
+  import("./features/buildings/BuildingsPage").then((m) => ({ default: m.BuildingsPage })),
+);
 const RoomsPage = lazy(() =>
   import("./features/rooms/RoomsPage").then((m) => ({ default: m.RoomsPage })),
 );
@@ -50,8 +53,10 @@ const InvoiceDetailPage = lazy(() =>
 const AccountsPage = lazy(() =>
   import("./features/accounts/AccountsPage").then((m) => ({ default: m.AccountsPage })),
 );
-const SettingsPage = lazy(() =>
-  import("./features/settings/SettingsPage").then((m) => ({ default: m.SettingsPage })),
+const NotificationsPage = lazy(() =>
+  import("./features/notifications/NotificationsPage").then((m) => ({
+    default: m.NotificationsPage,
+  })),
 );
 const ChangePasswordPage = lazy(() =>
   import("./features/change-password/ChangePasswordPage").then((m) => ({
@@ -125,13 +130,18 @@ export function AppRoutes({ user, onLogout }: { user: SessionUser; onLogout: () 
           <Route element={<AppLayout user={user} onLogout={onLogout} />}>
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/buildings" element={<BuildingsPage />} />
             <Route path="/rooms" element={<RoomsPage />} />
             <Route path="/tenants" element={<TenantsPage />} />
             <Route path="/readings" element={<ReadingsPage />} />
             <Route path="/invoices" element={<InvoicesPage />} />
             <Route path="/invoices/:code" element={<InvoiceDetailPage />} />
             <Route path="/accounts" element={<AccountsPage user={user} />} />
-            <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/notifications" element={<NotificationsPage />} />
+            {/* "Cài đặt" is what this screen was called before buildings split
+                off into their own page and it kept only the Zalo bots — an old
+                bookmark or muscle memory should still land somewhere, not 404. */}
+            <Route path="/settings" element={<Navigate to="/notifications" replace />} />
             <Route path="/change-password" element={<ChangePasswordPage />} />
             <Route path="*" element={<NotFoundPage home="/dashboard" />} />
           </Route>
