@@ -73,7 +73,9 @@ export function AppLayout({
     <AppShell
       header={{ height: 56 }}
       navbar={{ width: 236, breakpoint: "sm", collapsed: { mobile: !opened } }}
-      footer={{ height: 36 }}
+      // 0 below `sm`: the footer is one line of copyright, and holding 36 px
+      // of a phone viewport open for it costs a row of the table underneath.
+      footer={{ height: { base: 0, sm: 36 } }}
       padding="md"
     >
       <AppShell.Header>
@@ -202,7 +204,7 @@ export function AppLayout({
         </Suspense>
       </AppShell.Main>
 
-      <AppShell.Footer>
+      <AppShell.Footer visibleFrom="sm">
         <Group h="100%" px="md" justify="center" wrap="nowrap">
           <Text size="xs" c="dimmed">
             © {new Date().getFullYear()} dev1sme · Software Engineer
