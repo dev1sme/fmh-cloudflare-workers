@@ -50,6 +50,16 @@ export const en: Resources = {
     empty: "—",
   },
 
+  period: {
+    previous: "Previous period",
+    next: "Next period",
+    previousYear: "Previous year",
+    nextYear: "Next year",
+    // A cell in a 3x4 grid, so it has to be short.
+    monthShort: "M{{month}}",
+    thisMonth: "Back to this month",
+  },
+
   theme: {
     label: "Appearance",
     light: "Light",

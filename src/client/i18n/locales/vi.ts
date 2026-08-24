@@ -47,6 +47,16 @@ export const vi = {
     empty: "—",
   },
 
+  period: {
+    previous: "Kỳ trước",
+    next: "Kỳ sau",
+    previousYear: "Năm trước",
+    nextYear: "Năm sau",
+    // Ô trong lưới 3x4, nên phải ngắn — "Tháng 10" không vừa.
+    monthShort: "T{{month}}",
+    thisMonth: "Về tháng này",
+  },
+
   theme: {
     label: "Giao diện",
     light: "Sáng",
