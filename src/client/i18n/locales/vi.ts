@@ -482,6 +482,12 @@ export const vi = {
     DUPLICATE_DATA: "Dữ liệu bị trùng.",
     RELATED_DATA_EXISTS: "Không xoá được vì còn dữ liệu liên quan.",
     INVALID_DATA: "Dữ liệu không hợp lệ.",
+    // Bốn code này không đặt tên một field người dùng nhìn thấy, nên lối thoát
+    // `invalidField` sẽ in ra "body" / "code" / "room ids" nguyên xi.
+    INVALID_BODY: "Dữ liệu gửi lên không hợp lệ.",
+    INVALID_CODE: "Mã không hợp lệ.",
+    INVALID_PASSWORD: "Mật khẩu không hợp lệ.",
+    INVALID_ROOM_IDS: "Danh sách phòng không hợp lệ.",
     INVALID_PERIOD: "Kỳ phải có dạng YYYY-MM.",
     READING_ALREADY_EXISTS: "Kỳ này đã có chỉ số cho phòng.",
     ELECTRICITY_END_BELOW_START: "Chỉ số điện mới không được nhỏ hơn chỉ số cũ.",

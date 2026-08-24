@@ -469,6 +469,12 @@ export const en: Resources = {
     DUPLICATE_DATA: "That record already exists.",
     RELATED_DATA_EXISTS: "Cannot delete: related records still exist.",
     INVALID_DATA: "Invalid data.",
+    // These four name no field a user ever sees, so the `invalidField` fallback
+    // would print "body" / "code" / "room ids" verbatim.
+    INVALID_BODY: "The request body is not valid.",
+    INVALID_CODE: "That code is not valid.",
+    INVALID_PASSWORD: "That password is not valid.",
+    INVALID_ROOM_IDS: "The room list is not valid.",
     INVALID_PERIOD: "A period must look like YYYY-MM.",
     READING_ALREADY_EXISTS: "This room already has a reading for that month.",
     ELECTRICITY_END_BELOW_START: "The new electricity reading cannot be below the old one.",
