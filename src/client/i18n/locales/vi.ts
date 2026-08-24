@@ -42,6 +42,8 @@ export const vi = {
     close: "Đóng",
     manager: "Quản lý",
     search: "Tìm nhanh",
+    // Nhãn cho nút ⋯ — trước đó nó chỉ có ký tự ⋯, screen reader đọc ra vô nghĩa.
+    more: "Thao tác khác",
     empty: "—",
   },
 

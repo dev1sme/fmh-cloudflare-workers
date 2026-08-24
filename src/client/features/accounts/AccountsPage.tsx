@@ -1,4 +1,4 @@
-import { Button, Group, Stack, Text, Title } from "@mantine/core";
+import { Box, Button, Group, Stack, Text, Title } from "@mantine/core";
 import { IconKey, IconUserPlus } from "@tabler/icons-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -9,6 +9,7 @@ import { EmptyState } from "../../components/EmptyState";
 import { PageState } from "../../components/PageState";
 import { useConfirm } from "../../hooks/useConfirm";
 import { AccountModal } from "./components/AccountModal";
+import { AccountCards } from "./components/AccountCards";
 import { AccountsTable } from "./components/AccountsTable";
 import { PasswordModal } from "./components/PasswordModal";
 import { RenameModal } from "./components/RenameModal";
@@ -66,13 +67,27 @@ export function AccountsPage({ user }: { user: SessionUser }) {
             }
           />
         ) : (
-          <AccountsTable
-            taiKhoan={taiKhoan}
-            idHienTai={user.id}
-            onRename={setDangDoiTen}
-            onResetPassword={setDangReset}
-            onDelete={hoiXoa}
-          />
+          <>
+            {/* Four columns at minWidth 680 — still wider than a phone. */}
+            <Box visibleFrom="sm">
+              <AccountsTable
+                taiKhoan={taiKhoan}
+                idHienTai={user.id}
+                onRename={setDangDoiTen}
+                onResetPassword={setDangReset}
+                onDelete={hoiXoa}
+              />
+            </Box>
+            <Box hiddenFrom="sm">
+              <AccountCards
+                taiKhoan={taiKhoan}
+                idHienTai={user.id}
+                onRename={setDangDoiTen}
+                onResetPassword={setDangReset}
+                onDelete={hoiXoa}
+              />
+            </Box>
+          </>
         )}
       </PageState>
 

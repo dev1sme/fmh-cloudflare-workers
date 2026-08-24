@@ -1,4 +1,4 @@
-import { Button, Group, Stack, Title, Tooltip } from "@mantine/core";
+import { Box, Button, Group, Stack, Title, Tooltip } from "@mantine/core";
 import { IconBuildingCommunity, IconHome, IconPlus } from "@tabler/icons-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -10,6 +10,7 @@ import { useConfirm } from "../../hooks/useConfirm";
 import { Link } from "react-router-dom";
 import { MoveInModal } from "./components/MoveInModal";
 import { RoomModal, type MucTieuPhong } from "./components/RoomModal";
+import { RoomCards } from "./components/RoomCards";
 import { RoomsTable } from "./components/RoomsTable";
 import { useDanhSachPhong, useThaoTacPhong } from "./useRooms";
 
@@ -100,13 +101,28 @@ export function RoomsPage() {
             />
           )
         ) : (
-          <RoomsTable
-            phong={phong}
-            onEdit={(room) => setDangMo({ room })}
-            onMoveIn={setDangThemNguoi}
-            onMoveOut={hoiChuyenDi}
-            onDelete={hoiXoaPhong}
-          />
+          <>
+            {/* Six columns at minWidth 720 do not fit a phone; the cards below
+                `sm` carry the same facts. */}
+            <Box visibleFrom="sm">
+              <RoomsTable
+                phong={phong}
+                onEdit={(room) => setDangMo({ room })}
+                onMoveIn={setDangThemNguoi}
+                onMoveOut={hoiChuyenDi}
+                onDelete={hoiXoaPhong}
+              />
+            </Box>
+            <Box hiddenFrom="sm">
+              <RoomCards
+                phong={phong}
+                onEdit={(room) => setDangMo({ room })}
+                onMoveIn={setDangThemNguoi}
+                onMoveOut={hoiChuyenDi}
+                onDelete={hoiXoaPhong}
+              />
+            </Box>
+          </>
         )}
       </PageState>
 

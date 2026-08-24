@@ -44,6 +44,9 @@ export const en: Resources = {
     close: "Close",
     manager: "Manager",
     search: "Quick search",
+    // Label for the ⋯ button — it was the character alone, which a screen
+    // reader announces as nothing useful.
+    more: "More actions",
     empty: "—",
   },
 

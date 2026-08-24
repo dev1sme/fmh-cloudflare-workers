@@ -1,7 +1,8 @@
-import { Badge, Button, Group, Menu, Stack, Table, Text } from "@mantine/core";
+import { Badge, Table, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 
 import type { Account } from "../../../../shared/types";
+import { AccountActions } from "./AccountActions";
 
 export function AccountsTable({
   taiKhoan,
@@ -51,39 +52,13 @@ export function AccountsTable({
               </Table.Td>
               <Table.Td>{account.room_name ?? t("common.empty")}</Table.Td>
               <Table.Td>
-                <Group gap="xs" justify="flex-end" wrap="nowrap">
-                  <Button size="xs" variant="light" onClick={() => onResetPassword(account)}>
-                    {t("accounts.resetPassword")}
-                  </Button>
-                  <Menu position="bottom-end" withinPortal>
-                    <Menu.Target>
-                      <Button size="xs" variant="subtle" color="gray">
-                        ⋯
-                      </Button>
-                    </Menu.Target>
-                    <Menu.Dropdown>
-                      <Menu.Item onClick={() => onRename(account)}>{t("accounts.rename")}</Menu.Item>
-                      {/* The API refuses this with CANNOT_DELETE_SELF, so the
-                          item has to be disabled — but grey with no reason
-                          reads as a bug. The row already says "the account you
-                          are signed in as"; this says what follows from it. */}
-                      {account.id === idHienTai ? (
-                        <Menu.Item color="red" disabled>
-                          <Stack gap={2}>
-                            <span>{t("accounts.delete")}</span>
-                            <Text size="xs" c="dimmed">
-                              {t("accounts.cannotDeleteSelf")}
-                            </Text>
-                          </Stack>
-                        </Menu.Item>
-                      ) : (
-                        <Menu.Item color="red" onClick={() => onDelete(account)}>
-                          {t("accounts.delete")}
-                        </Menu.Item>
-                      )}
-                    </Menu.Dropdown>
-                  </Menu>
-                </Group>
+                <AccountActions
+                  account={account}
+                  idHienTai={idHienTai}
+                  onRename={onRename}
+                  onResetPassword={onResetPassword}
+                  onDelete={onDelete}
+                />
               </Table.Td>
             </Table.Tr>
           ))}

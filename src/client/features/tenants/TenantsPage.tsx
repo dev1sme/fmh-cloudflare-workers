@@ -1,4 +1,4 @@
-import { Button, Group, Stack, Title } from "@mantine/core";
+import { Box, Button, Group, Stack, Title } from "@mantine/core";
 import { IconUserPlus, IconUsers } from "@tabler/icons-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -9,6 +9,7 @@ import { PageState } from "../../components/PageState";
 import { ngay } from "../../format";
 import { useConfirm } from "../../hooks/useConfirm";
 import { TenantModal, type MucTieuNguoiThue } from "./components/TenantModal";
+import { TenantCards } from "./components/TenantCards";
 import { TenantsTable } from "./components/TenantsTable";
 import { useDanhSachNguoiThue, useThaoTacNguoiThue } from "./useTenants";
 
@@ -87,13 +88,27 @@ export function TenantsPage() {
             }
           />
         ) : (
-          <TenantsTable
-            nguoiThue={nguoiThue}
-            onEdit={(tenant) => setDangMo({ tenant })}
-            onMoveOut={hoiChuyenDi}
-            onUndoMoveOut={hoiHuyChuyenDi}
-            onDelete={hoiXoa}
-          />
+          <>
+            {/* Eight columns at minWidth 820 — the widest table in the app. */}
+            <Box visibleFrom="sm">
+              <TenantsTable
+                nguoiThue={nguoiThue}
+                onEdit={(tenant) => setDangMo({ tenant })}
+                onMoveOut={hoiChuyenDi}
+                onUndoMoveOut={hoiHuyChuyenDi}
+                onDelete={hoiXoa}
+              />
+            </Box>
+            <Box hiddenFrom="sm">
+              <TenantCards
+                nguoiThue={nguoiThue}
+                onEdit={(tenant) => setDangMo({ tenant })}
+                onMoveOut={hoiChuyenDi}
+                onUndoMoveOut={hoiHuyChuyenDi}
+                onDelete={hoiXoa}
+              />
+            </Box>
+          </>
         )}
       </PageState>
 

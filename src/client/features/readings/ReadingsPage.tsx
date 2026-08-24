@@ -1,4 +1,4 @@
-import { Button, Group, Stack, Title } from "@mantine/core";
+import { Box, Button, Group, Stack, Title } from "@mantine/core";
 import { IconHome } from "@tabler/icons-react";
 import { Link } from "react-router-dom";
 import { useState } from "react";
@@ -11,6 +11,7 @@ import { PageState } from "../../components/PageState";
 import { currentPeriod, periodLabel } from "../../format";
 import { useConfirm } from "../../hooks/useConfirm";
 import { ReadingModal, type MucTieu } from "./components/ReadingModal";
+import { ReadingCards } from "./components/ReadingCards";
 import { ReadingsTable } from "./components/ReadingsTable";
 import { useReadingsTheoKy, useThaoTacChiSo } from "./useReadings";
 
@@ -57,12 +58,25 @@ export function ReadingsPage() {
             }
           />
         ) : (
-          <ReadingsTable
-            phong={phong}
-            chiSoCuaPhong={chiSoCuaPhong}
-            onEdit={(room, reading) => setDangNhap({ room, reading })}
-            onDelete={hoiXoa}
-          />
+          <>
+            {/* Seven columns at minWidth 760. */}
+            <Box visibleFrom="sm">
+              <ReadingsTable
+                phong={phong}
+                chiSoCuaPhong={chiSoCuaPhong}
+                onEdit={(room, reading) => setDangNhap({ room, reading })}
+                onDelete={hoiXoa}
+              />
+            </Box>
+            <Box hiddenFrom="sm">
+              <ReadingCards
+                phong={phong}
+                chiSoCuaPhong={chiSoCuaPhong}
+                onEdit={(room, reading) => setDangNhap({ room, reading })}
+                onDelete={hoiXoa}
+              />
+            </Box>
+          </>
         )}
       </PageState>
 
