@@ -29,6 +29,7 @@ import { BrowserRouter } from "react-router-dom";
 
 import { App } from "./App";
 import { BackgroundFX } from "./components/BackgroundFX";
+import { ChunkErrorBoundary } from "./components/ChunkErrorBoundary";
 import { theme } from "./theme";
 
 createRoot(document.getElementById("root")!).render(
@@ -37,7 +38,11 @@ createRoot(document.getElementById("root")!).render(
       <BackgroundFX />
       <Notifications position="top-right" />
       <BrowserRouter>
-        <App />
+        {/* Wraps the whole app, not just the routes: `QuickSearch` is a lazy
+            chunk too and is rendered beside the route table, not inside it. */}
+        <ChunkErrorBoundary>
+          <App />
+        </ChunkErrorBoundary>
       </BrowserRouter>
     </MantineProvider>
   </StrictMode>,

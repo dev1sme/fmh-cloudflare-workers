@@ -25,6 +25,7 @@ import {
   IconSettings,
   IconUsers,
 } from "@tabler/icons-react";
+import { Suspense } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, Outlet, useLocation } from "react-router-dom";
 
@@ -32,6 +33,7 @@ import type { SessionUser } from "../api";
 import { LanguageMenuItems } from "./LanguageMenu";
 import { ThemeMenuItems } from "./ThemeMenu";
 import { PageTransition } from "./PageTransition";
+import { RouteFallback } from "./RouteFallback";
 
 const ICON = { size: 18, stroke: 1.6 };
 
@@ -190,9 +192,14 @@ export function AppLayout({
       </AppShell.Navbar>
 
       <AppShell.Main>
-        <PageTransition>
-          <Outlet />
-        </PageTransition>
+        {/* Outside `PageTransition`, not inside: the rise-and-fade should play
+            on the screen itself, not on a spinner that the screen then replaces
+            without any movement of its own. */}
+        <Suspense fallback={<RouteFallback />}>
+          <PageTransition>
+            <Outlet />
+          </PageTransition>
+        </Suspense>
       </AppShell.Main>
 
       <AppShell.Footer>
