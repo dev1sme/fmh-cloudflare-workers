@@ -1,10 +1,11 @@
 import { Button, Group, Stack, Text, Title } from "@mantine/core";
-import { IconPlus } from "@tabler/icons-react";
+import { IconPlus, IconRobot } from "@tabler/icons-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import type { BotTarget, BotWithTargets, Building } from "../../../../shared/types";
 import type { BotInput, BotTargetInput } from "../../../api";
+import { EmptyState } from "../../../components/EmptyState";
 import { PageState } from "../../../components/PageState";
 import { useConfirm } from "../../../hooks/useConfirm";
 import { BotCard } from "./BotCard";
@@ -12,18 +13,20 @@ import { BotModal } from "./BotModal";
 import { TargetModal } from "./TargetModal";
 
 /**
- * The Zalo notification block on the settings screen.
+ * The Zalo notification block — everything `NotificationsPage` renders.
  *
- * A section rather than more code in `SettingsPage`: buildings and bots share a
- * screen but nothing else, and the page was already the size where the next
- * feature would have made it the file everything lives in. Takes callbacks and
- * never touches `api.ts` — the mutations belong to `useBots`.
+ * Kept as its own component rather than inlined into the page: it owns three
+ * modals' worth of local state (add bot, replace token, add target) that a
+ * page component should not be carrying directly. Takes callbacks and never
+ * touches `api.ts` — the mutations belong to `useBots`.
  */
 export function BotsSection({
   bots,
   buildings,
   loading,
+  refreshing,
   error,
+  onRetry,
   onAddBot,
   onToggleBot,
   onReplaceToken,
@@ -36,7 +39,9 @@ export function BotsSection({
   bots: BotWithTargets[];
   buildings: Building[];
   loading: boolean;
+  refreshing: boolean;
   error: unknown;
+  onRetry: () => void;
   onAddBot: (input: BotInput) => Promise<boolean>;
   onToggleBot: (bot: BotWithTargets, active: boolean) => void;
   onReplaceToken: (code: string, token: string) => Promise<boolean>;
@@ -88,12 +93,14 @@ export function BotsSection({
         {t("bots.note")}
       </Text>
 
-      <PageState loading={loading} error={error}>
+      <PageState loading={loading} refreshing={refreshing} error={error} onRetry={onRetry}>
         <Stack>
           {bots.length === 0 ? (
-            <Text c="dimmed" size="sm">
-              {t("bots.empty")}
-            </Text>
+            <EmptyState
+              icon={<IconRobot size={24} stroke={1.6} />}
+              title={t("bots.empty")}
+              hint={t("bots.emptyHint")}
+            />
           ) : (
             bots.map((bot) => (
               <BotCard

@@ -11,8 +11,11 @@ export type ThanhToanMoi = {
 };
 
 export function useInvoiceDetail(code: string) {
-  const { data, loading, error, reload } = useResource(() => invoicesApi.get(code), [code]);
-  return { hoaDon: data?.invoice ?? null, loading, error, reload };
+  const { data, loading, refreshing, error, reload } = useResource(
+    () => invoicesApi.get(code),
+    [code],
+  );
+  return { hoaDon: data?.invoice ?? null, loading, refreshing, error, reload };
 }
 
 /**

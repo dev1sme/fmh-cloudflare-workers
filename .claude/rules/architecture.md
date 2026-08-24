@@ -19,16 +19,17 @@ src/client/           React SPA (Mantine + react-router)
   format.ts           tiền / ngày / kỳ formatting
   hooks/              useResource (fetch + reload), useConfirm (dialog)
   components/         cross-feature UI: AppLayout, InvoiceLines, PaymentsTable,
-                      PeriodPicker, PageState, StatusBadge, ConfirmModal
-  features/<name>/    login, dashboard, rooms, tenants, readings, invoices,
-                      settings, accounts, change-password, not-found,
-                      my (the tenant's own screens)
+                      PeriodPicker, PageState, StatusBadge, ConfirmModal,
+                      RouteFallback, ChunkErrorBoundary
+  features/<name>/    login, dashboard, buildings, rooms, tenants, readings,
+                      invoices, notifications, accounts, change-password,
+                      not-found, my (the tenant's own screens)
     XxxPage.tsx       composition only
     components/       that feature's UI, one component per file
     useXxx.ts         data loading + mutations, no JSX
 src/server/           Hono API on the Worker
   index.ts            Worker entry: route table, error mapping
-  auth.ts             password verify, JWT sign/verify, the three middlewares
+  auth.ts             password verify, JWT sign/verify, the two role middlewares
   envelope.ts         ok / failure / notFound — the only place c.json is called
   headers.ts          security headers for /api/*
   validate.ts         hand-rolled request validation
@@ -56,6 +57,18 @@ The point is that adding an animation or reworking one table touches one file. W
 A hook passed into a child's `useEffect` must be memoised — `useReadings`' `goiY` is wrapped in `useCallback` for exactly that reason, and dropping it produces an infinite render loop in `ReadingModal`. The same applies to any array a child seeds state from: `useXemTruocSinh` memoises `rooms` with `useMemo` so `GenerateInvoicesModal`'s selection effect does not loop.
 
 The SPA has no client-side auth guard beyond the route table: `App.tsx` asks `GET /api/auth/me` once, then `routes.tsx` renders the manager routes or the tenant routes. That is navigation convenience, not security — the API enforces the roles.
+
+## Code splitting
+
+**Every screen behind the login is a `React.lazy` chunk.** The route table is where the two roles already diverge, so it is the only honest split boundary the app has; statically imported, a tenant opening one invoice on a phone downloaded the whole manager panel. The entry bundle went from 1,302 kB (394 kB gzipped) to 541 kB (171 kB), and Recharts became a 393 kB chunk that only `/dashboard` fetches.
+
+What stays eager, and why: `LoginPage` (the first screen a signed-out visitor sees), `NotFoundPage` (small, and a 404 should not cost a round trip), and **both shells**. Making `AppLayout` or `TenantLayout` lazy costs a waterfall — React cannot start the page's import until the layout has resolved and rendered its `<Outlet />` — and saves almost nothing, because their weight is Mantine, which both roles load anyway.
+
+The `<Suspense>` lives **inside each layout**, around `<Outlet />` and outside `PageTransition`. Inside the layout so a chunk still downloading leaves the sidebar and header in place; outside `PageTransition` so the 180 ms rise plays on the screen itself rather than on a spinner that then swaps out without moving.
+
+`ChunkErrorBoundary` in `main.tsx` handles the one failure mode splitting introduces: a tab open across a deploy asks for a chunk hash that no longer exists, Cloudflare's SPA fallback answers `index.html`, and the import fails on the MIME type. With no boundary React unmounts everything and leaves a white screen. It reloads once — which is the entire fix — and only offers a button if a second failure lands within ten seconds, since that means reloading is not what is wrong. Anything that is **not** a chunk error is re-thrown from its `render`: it is not a general error boundary and must not turn a real bug into "reload the page".
+
+No CSP change was needed — dynamically imported chunks are same-origin scripts already covered by `script-src 'self'`.
 
 ## Two shells, not one
 
@@ -101,4 +114,4 @@ Motion is `motion` (Framer Motion), used in exactly one place: `PageTransition`,
 
 Stack: TypeScript, React + Vite, Mantine (UI), `@tabler/icons-react`, `motion`, `@mantine/spotlight`, `@mantine/charts` + Recharts (the dashboard bar chart only), Hono, Cloudflare D1 (SQLite), `jose` for JWT.
 
-Recharts costs about 400 kB raw / 120 kB gzipped and is the reason the client bundle is over 1 MB. It earns that only if the dashboard chart is worth it; if a second opinion ever says no, dropping `RevenueChart` removes the dependency entirely.
+Recharts costs about 400 kB raw / 113 kB gzipped and is the single largest thing the build produces. Since the route split it is its own chunk, fetched only when the manager opens `/dashboard` — a tenant never downloads it. It earns that only if the dashboard chart is worth it; if a second opinion ever says no, dropping `RevenueChart` removes the dependency entirely.

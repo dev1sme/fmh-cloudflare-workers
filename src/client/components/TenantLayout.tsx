@@ -1,5 +1,6 @@
 import { Avatar, Box, Container, Group, Menu, Text, UnstyledButton } from "@mantine/core";
 import { IconBuildingCommunity, IconChevronDown, IconKey, IconLogout } from "@tabler/icons-react";
+import { Suspense } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, Outlet } from "react-router-dom";
 
@@ -7,6 +8,7 @@ import type { SessionUser } from "../api";
 import { LanguageMenuItems } from "./LanguageMenu";
 import { ThemeMenuItems } from "./ThemeMenu";
 import { PageTransition } from "./PageTransition";
+import { RouteFallback } from "./RouteFallback";
 
 /**
  * Shell for a tenant, separate from the manager's on purpose.
@@ -87,9 +89,13 @@ export function TenantLayout({
 
       <Box component="main" style={{ flex: 1 }} py="lg">
         <Container size="lg" px="md">
-          <PageTransition>
-            <Outlet />
-          </PageTransition>
+          {/* Outside `PageTransition` for the same reason as the manager's
+              shell: the animation belongs to the screen, not to the wait. */}
+          <Suspense fallback={<RouteFallback />}>
+            <PageTransition>
+              <Outlet />
+            </PageTransition>
+          </Suspense>
         </Container>
       </Box>
 

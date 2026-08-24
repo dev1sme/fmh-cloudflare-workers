@@ -50,7 +50,7 @@ export function getAccountByCode(db: D1Database, code: string): Promise<AccountR
     .first<AccountRow>();
 }
 
-export function getAccount(db: D1Database, id: number): Promise<AccountRow | null> {
+function getAccount(db: D1Database, id: number): Promise<AccountRow | null> {
   return db
     .prepare(
       `SELECT u.id, u.code, u.username, u.role, u.room_id, r.room_name

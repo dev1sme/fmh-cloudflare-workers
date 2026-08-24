@@ -25,6 +25,7 @@ export function GenerateInvoicesModal({
   rooms,
   loading,
   error,
+  onRetry,
   dangChay,
   onClose,
   onSubmit,
@@ -34,6 +35,7 @@ export function GenerateInvoicesModal({
   rooms: PreviewRoom[];
   loading: boolean;
   error: unknown;
+  onRetry: () => void;
   dangChay: boolean;
   onClose: () => void;
   onSubmit: (roomIds: number[]) => void;
@@ -79,7 +81,7 @@ export function GenerateInvoicesModal({
       title={t("invoices.generateTitle", { period: periodLabel(period) })}
       size="lg"
     >
-      <PageState loading={loading} error={error}>
+      <PageState loading={loading} error={error} onRetry={onRetry}>
         {rooms.length === 0 ? (
           <Text c="dimmed">{t("invoices.noRooms")}</Text>
         ) : (

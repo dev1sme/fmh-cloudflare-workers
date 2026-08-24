@@ -26,6 +26,13 @@ export const en: Resources = {
     home: "Back to home",
     error: "Error",
     loadFailed: "Could not load data",
+    loading: "Loading",
+    // Not the `reload` below: that one reloads the whole page after a chunk
+    // failure, this one re-runs the request that just failed.
+    retry: "Retry",
+    appUpdated: "A new version is available",
+    appUpdatedHint: "This tab is running an older version and could not load the rest of it.",
+    reload: "Reload the page",
     copy: "Copy {{what}}",
     copied: "Copied",
     delete: "Delete",
@@ -37,7 +44,20 @@ export const en: Resources = {
     close: "Close",
     manager: "Manager",
     search: "Quick search",
+    // Label for the ⋯ button — it was the character alone, which a screen
+    // reader announces as nothing useful.
+    more: "More actions",
     empty: "—",
+  },
+
+  period: {
+    previous: "Previous period",
+    next: "Next period",
+    previousYear: "Previous year",
+    nextYear: "Next year",
+    // A cell in a 3x4 grid, so it has to be short.
+    monthShort: "M{{month}}",
+    thisMonth: "Back to this month",
   },
 
   theme: {
@@ -49,12 +69,20 @@ export const en: Resources = {
 
   nav: {
     dashboard: "Overview",
+    // Sidebar group headings — not a route name, used nowhere but AppLayout.
+    groupOperations: "Operations",
+    buildings: "Buildings",
     rooms: "Rooms",
     tenants: "Tenants",
+    groupBilling: "Billing",
     readings: "Meter readings",
     invoices: "Invoices",
+    groupSystem: "System",
     accounts: "Accounts",
-    settings: "Settings",
+    // Was "settings" / "Settings" — renamed because the page now does exactly
+    // one thing: configure Zalo bots. It used to also hold building info
+    // (name, rates, bank account), now split out to buildings above.
+    notifications: "Notifications",
   },
 
   search: {
@@ -126,6 +154,13 @@ export const en: Resources = {
 
   rooms: {
     add: "Add room",
+    empty: "No rooms yet.",
+    emptyHint: "Add the first room to start recording meters and issuing invoices.",
+    noBuilding: "No buildings yet.",
+    // Why "Add room" is disabled — a room belongs to a building, and buildings
+    // are created in Settings.
+    noBuildingHint: "A room belongs to a building. Create one under Buildings first, then come back.",
+    needBuilding: "Create a building in Settings first.",
     editTitle: "Edit room — {{name}}",
     building: "Building",
     name: "Room name",
@@ -152,7 +187,9 @@ export const en: Resources = {
     deleted: "Room deleted.",
   },
 
-  settings: {
+  buildings: {
+    empty: "No buildings yet.",
+    emptyHint: "A building holds the electricity and water rates and the account money is paid into. Everything else builds on it.",
     addBuilding: "Add building",
     ratesNote:
       "These rates apply to invoices generated from now on. An invoice already issued keeps the rate it was issued at.",
@@ -187,6 +224,9 @@ export const en: Resources = {
     add: "Add account",
     note: "One account per room, so tenants can see their invoices. Passwords are stored hashed — shown once when created or reset, never retrievable.",
     colUsername: "Username",
+    empty: "No accounts yet.",
+    emptyHint: "One account per room lets a tenant look up their own invoices.",
+    cannotDeleteSelf: "You cannot delete the account you are signed in as.",
     colRole: "Role",
     currentAccount: "the account you are signed in as",
     tenantRole: "Tenant",
@@ -226,6 +266,7 @@ export const en: Resources = {
   invoices: {
     generateFor: "Bill {{period}}",
     emptyPeriod: "No invoices for {{period}} yet.",
+    emptyPeriodHint: "Record the electricity and water meters for this period, then generate.",
     colCode: "Code",
     colTotal: "Total",
     details: "Details",
@@ -271,6 +312,8 @@ export const en: Resources = {
   },
 
   readings: {
+    emptyRooms: "No rooms to record meters for.",
+    emptyRoomsHint: "Readings are recorded per room, so a room has to exist first.",
     deleteTitle: "Delete reading",
     confirmDelete:
       "Delete the {{period}} reading for {{room}}? That period cannot be billed again until it is re-entered.",
@@ -306,6 +349,7 @@ export const en: Resources = {
     renting: "Renting",
     movedOut: "Moved out",
     empty: "No tenants yet.",
+    emptyHint: "Move someone in from the Rooms screen — a tenancy belongs to a room.",
     recordMoveOut: "Record move-out",
     undoMoveOut: "Undo move-out",
     deleteRecord: "Delete record",
@@ -412,6 +456,7 @@ export const en: Resources = {
     title: "Zalo notifications",
     note: "Bots announce invoice runs to the tenants' group and incoming payments to the manager. Add as many bots and destinations as you need — no redeploy.",
     empty: "No bots yet. Notifications are off.",
+    emptyHint: "Add a Zalo bot to be told when invoices go out and when money arrives.",
     add: "Add bot",
     name: "Bot name",
     token: "Bot token",
@@ -466,6 +511,12 @@ export const en: Resources = {
     DUPLICATE_DATA: "That record already exists.",
     RELATED_DATA_EXISTS: "Cannot delete: related records still exist.",
     INVALID_DATA: "Invalid data.",
+    // These four name no field a user ever sees, so the `invalidField` fallback
+    // would print "body" / "code" / "room ids" verbatim.
+    INVALID_BODY: "The request body is not valid.",
+    INVALID_CODE: "That code is not valid.",
+    INVALID_PASSWORD: "That password is not valid.",
+    INVALID_ROOM_IDS: "The room list is not valid.",
     INVALID_PERIOD: "A period must look like YYYY-MM.",
     READING_ALREADY_EXISTS: "This room already has a reading for that month.",
     ELECTRICITY_END_BELOW_START: "The new electricity reading cannot be below the old one.",

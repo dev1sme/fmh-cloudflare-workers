@@ -46,7 +46,7 @@ export type InvoiceAmounts = Pick<
  * time) and stored on the invoice — a later tariff change must never alter an
  * invoice that has already been issued.
  */
-export function tinhHoaDon(input: {
+function tinhHoaDon(input: {
   reading: Pick<Reading, "electricity_start" | "electricity_end" | "water_start" | "water_end">;
   rent: number;
   electricity_rate: number;

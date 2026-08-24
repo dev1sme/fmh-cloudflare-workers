@@ -24,6 +24,13 @@ export const vi = {
     home: "Về trang chủ",
     error: "Lỗi",
     loadFailed: "Không tải được dữ liệu",
+    loading: "Đang tải",
+    // Khác `reload` bên dưới: cái đó tải lại cả trang khi chunk lỗi, cái này
+    // chỉ gọi lại đúng request vừa thất bại.
+    retry: "Thử lại",
+    appUpdated: "Ứng dụng đã có bản mới",
+    appUpdatedHint: "Trang đang mở dùng phiên bản cũ nên không tải được phần còn lại.",
+    reload: "Tải lại trang",
     copy: "Copy {{what}}",
     copied: "Đã copy",
     delete: "Xoá",
@@ -35,7 +42,19 @@ export const vi = {
     close: "Đóng",
     manager: "Quản lý",
     search: "Tìm nhanh",
+    // Nhãn cho nút ⋯ — trước đó nó chỉ có ký tự ⋯, screen reader đọc ra vô nghĩa.
+    more: "Thao tác khác",
     empty: "—",
+  },
+
+  period: {
+    previous: "Kỳ trước",
+    next: "Kỳ sau",
+    previousYear: "Năm trước",
+    nextYear: "Năm sau",
+    // Ô trong lưới 3x4, nên phải ngắn — "Tháng 10" không vừa.
+    monthShort: "T{{month}}",
+    thisMonth: "Về tháng này",
   },
 
   theme: {
@@ -47,12 +66,21 @@ export const vi = {
 
   nav: {
     dashboard: "Tổng quan",
+    // Nhãn nhóm trong sidebar — không phải tên route, không dùng ở đâu khác
+    // ngoài AppLayout.
+    groupOperations: "Vận hành",
+    buildings: "Nhà",
     rooms: "Phòng",
     tenants: "Người thuê",
+    groupBilling: "Thu tiền",
     readings: "Chỉ số điện nước",
     invoices: "Hóa đơn",
+    groupSystem: "Hệ thống",
     accounts: "Tài khoản",
-    settings: "Cài đặt",
+    // Trước là "settings" / "Cài đặt" — đổi tên vì trang giờ chỉ còn đúng một
+    // việc: cấu hình bot Zalo. "Cài đặt" từng chứa cả thông tin nhà (tên, đơn
+    // giá, tài khoản ngân hàng), đã tách sang buildings ở trên.
+    notifications: "Thông báo",
   },
 
   search: {
@@ -136,6 +164,13 @@ export const vi = {
 
   rooms: {
     add: "Thêm phòng",
+    empty: "Chưa có phòng nào.",
+    emptyHint: "Thêm phòng đầu tiên để bắt đầu ghi chỉ số và phát hành hóa đơn.",
+    noBuilding: "Chưa có nhà nào.",
+    // Lý do nút "Thêm phòng" bị disabled — phòng phải thuộc một nhà, và nhà chỉ
+    // tạo được ở Cài đặt.
+    noBuildingHint: "Phòng phải thuộc một nhà. Vào Nhà tạo nhà trước, rồi quay lại đây.",
+    needBuilding: "Tạo nhà ở Cài đặt trước đã.",
     editTitle: "Sửa phòng — {{name}}",
     building: "Nhà",
     name: "Tên phòng",
@@ -162,7 +197,9 @@ export const vi = {
     deleted: "Đã xoá phòng.",
   },
 
-  settings: {
+  buildings: {
+    empty: "Chưa có nhà nào.",
+    emptyHint: "Nhà giữ đơn giá điện nước và số tài khoản nhận tiền. Mọi thứ khác dựng trên nó.",
     addBuilding: "Thêm nhà",
     ratesNote:
       "Đơn giá ở đây chỉ áp dụng cho hóa đơn sinh từ giờ trở đi. Hóa đơn đã phát hành giữ nguyên đơn giá lúc phát hành.",
@@ -197,6 +234,9 @@ export const vi = {
     add: "Thêm tài khoản",
     note: "Mỗi phòng một tài khoản để người thuê xem hóa đơn. Mật khẩu lưu dạng đã băm — chỉ hiện một lần lúc tạo hoặc đặt lại, không tra cứu lại được.",
     colUsername: "Tên đăng nhập",
+    empty: "Chưa có tài khoản nào.",
+    emptyHint: "Mỗi phòng một tài khoản để người thuê tự xem hóa đơn của mình.",
+    cannotDeleteSelf: "Không xoá được tài khoản đang đăng nhập.",
     colRole: "Vai trò",
     currentAccount: "tài khoản đang đăng nhập",
     tenantRole: "Người thuê",
@@ -237,6 +277,7 @@ export const vi = {
   invoices: {
     generateFor: "Sinh hóa đơn {{period}}",
     emptyPeriod: "Chưa có hóa đơn nào cho {{period}}.",
+    emptyPeriodHint: "Ghi chỉ số điện nước cho kỳ này rồi bấm phát hành.",
     colCode: "Mã",
     colTotal: "Tổng",
     details: "Chi tiết",
@@ -279,6 +320,8 @@ export const vi = {
   },
 
   readings: {
+    emptyRooms: "Chưa có phòng nào để ghi chỉ số.",
+    emptyRoomsHint: "Chỉ số ghi theo từng phòng, nên phải có phòng trước.",
     deleteTitle: "Xoá chỉ số",
     confirmDelete:
       "Xoá chỉ số {{room}} {{period}}? Hóa đơn của kỳ này sẽ không sinh lại được cho tới khi nhập lại.",
@@ -314,6 +357,7 @@ export const vi = {
     renting: "Đang thuê",
     movedOut: "Đã chuyển đi",
     empty: "Chưa có người thuê nào.",
+    emptyHint: "Nhận người vào ở từ trang Phòng — mỗi lượt thuê gắn với một phòng.",
     recordMoveOut: "Ghi nhận chuyển đi",
     undoMoveOut: "Huỷ chuyển đi",
     deleteRecord: "Xoá bản ghi",
@@ -425,6 +469,7 @@ export const vi = {
     title: "Thông báo Zalo",
     note: "Bot gửi thông báo hóa đơn vào group người thuê và thông báo tiền vào cho quản lý. Thêm bao nhiêu bot và bao nhiêu đích cũng được — không cần deploy lại.",
     empty: "Chưa có bot nào. Thông báo đang tắt.",
+    emptyHint: "Thêm bot Zalo để được nhắc khi phát hành hóa đơn và khi tiền vào.",
     add: "Thêm bot",
     name: "Tên bot",
     token: "Token bot",
@@ -479,6 +524,12 @@ export const vi = {
     DUPLICATE_DATA: "Dữ liệu bị trùng.",
     RELATED_DATA_EXISTS: "Không xoá được vì còn dữ liệu liên quan.",
     INVALID_DATA: "Dữ liệu không hợp lệ.",
+    // Bốn code này không đặt tên một field người dùng nhìn thấy, nên lối thoát
+    // `invalidField` sẽ in ra "body" / "code" / "room ids" nguyên xi.
+    INVALID_BODY: "Dữ liệu gửi lên không hợp lệ.",
+    INVALID_CODE: "Mã không hợp lệ.",
+    INVALID_PASSWORD: "Mật khẩu không hợp lệ.",
+    INVALID_ROOM_IDS: "Danh sách phòng không hợp lệ.",
     INVALID_PERIOD: "Kỳ phải có dạng YYYY-MM.",
     READING_ALREADY_EXISTS: "Kỳ này đã có chỉ số cho phòng.",
     ELECTRICITY_END_BELOW_START: "Chỉ số điện mới không được nhỏ hơn chỉ số cũ.",

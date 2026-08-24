@@ -4,7 +4,7 @@
 
 Ứng dụng nội bộ, quy mô nhỏ — một tài khoản quản lý, mỗi phòng một tài khoản chỉ để xem. Toàn bộ chạy trên nền serverless của Cloudflare và nằm gọn trong hạn mức miễn phí.
 
-Tên app không gắn với nhà nào cụ thể: `FMH` là tên một toà nhà, tức một dòng trong bảng `buildings`, không phải tên sản phẩm. Quản lý tự thêm nhà trong màn **Cài đặt**.
+Tên app không gắn với nhà nào cụ thể: `FMH` là tên một toà nhà, tức một dòng trong bảng `buildings`, không phải tên sản phẩm. Quản lý tự thêm nhà trong màn **Nhà**.
 
 ## Tính năng
 
@@ -237,7 +237,7 @@ Ngày giữ `dd/mm/yyyy` ở **cả hai** ngôn ngữ. Dùng `en-US` sẽ khiế
 
 - **Mặc định:** sinh mã VietQR cho mỗi hóa đơn (số tiền + nội dung chứa mã hóa đơn, ví dụ `HD3C8EA506`). Người thuê quét và chuyển khoản; quản trị đánh dấu đã thu.
 
-  Cấu hình tài khoản nhận tiền trong **Cài đặt** của từng nhà: ngân hàng (mã BIN NAPAS), số tài khoản, tên chủ tài khoản. Chưa cấu hình thì hóa đơn chỉ hiện nội dung chuyển khoản dạng chữ, không có QR.
+  Cấu hình tài khoản nhận tiền trong **Nhà** của từng nhà: ngân hàng (mã BIN NAPAS), số tài khoản, tên chủ tài khoản. Chưa cấu hình thì hóa đơn chỉ hiện nội dung chuyển khoản dạng chữ, không có QR.
 
   Payload QR do ứng dụng tự sinh theo chuẩn EMVCo/NAPAS rồi vẽ thành SVG ngay trên trình duyệt — không gọi `img.vietqr.io` hay dịch vụ ảnh QR nào. Lý do: không để bên thứ ba biết ai nợ bao nhiêu, và dịch vụ đó sập thì hóa đơn vẫn dùng được. Số tiền mã hoá trong QR là **số còn lại**, nên hóa đơn trả một phần sẽ quét ra đúng phần thiếu.
 

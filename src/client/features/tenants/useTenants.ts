@@ -18,8 +18,13 @@ export function useDanhSachNguoiThue() {
     nguoiThue: nguoiThue.data?.tenants ?? [],
     phong: phong.data?.rooms ?? [],
     loading: nguoiThue.loading || phong.loading,
+    refreshing: nguoiThue.refreshing || phong.refreshing,
     error: nguoiThue.error ?? phong.error,
-    reload: nguoiThue.reload,
+    // Both: `error` can be either request's, so a retry has to cover both.
+    reload: () => {
+      nguoiThue.reload();
+      phong.reload();
+    },
   };
 }
 

@@ -88,6 +88,24 @@ grep -rhoE '(failure\(c, "|fail\(")[a-zA-Z_]+"' src/server/ \
   | sed -E 's/.*"([a-zA-Z_]+)"/\1/' | sort -u | grep -vE '^[A-Z][A-Z0-9_]*$'
 ```
 
+Format đúng chưa đủ — code còn phải **đọc được bằng tiếng Việt**. `thongBaoLoi` tra `errors.<CODE>` trước, không có thì rơi xuống lối thoát sinh câu từ tên field (`INVALID_RENT` → "Giá trị không hợp lệ: giá phòng"). Lối thoát đó chỉ đẹp khi code **đặt tên đúng một field người dùng nhìn thấy**, và `fields.<field>` có mặt. `INVALID_BODY` từng in ra "Giá trị không hợp lệ: body." vì cả hai điều kiện đều sai.
+
+Tìm code thiếu message:
+
+```bash
+grep -rhoE '"[A-Z][A-Z0-9]*(_[A-Z0-9]+)+"' src/server/ | tr -d '"' | sort -u \
+  | while read -r c; do grep -q "^    ${c}:" src/client/i18n/locales/vi.ts || echo "$c"; done
+```
+
+Danh sách trả về không phải lỗi hết. Bỏ qua bốn nhóm:
+
+- **Enum value**, không phải error code: `BANK_TRANSFER`, `MISSING_READING`, `ALREADY_INVOICED`.
+- **Chỉ webhook phát ra**: `STALE_SIGNATURE`, `NOT_INCOMING`, `NO_INVOICE_CODE`, … SePay đọc chúng, SPA không bao giờ thấy — thêm key là rác. Phần lớn còn nằm trong `reason` của một `ok()` 200 nên không phải error code ngay từ đầu.
+- **`reason` nội bộ**, bị bọc lại trước khi ra tới client: `TOKEN_UNREADABLE` trong `notify.ts` đi vào `message` tiếng Anh của `TEST_MESSAGE_FAILED`, và chính code đó mới là cái client tra.
+- **Khớp `MISSING_`/`INVALID_`/`TOO_LONG_` và có `fields.<field>`**: `INVALID_AMOUNT` ra "Giá trị không hợp lệ: số tiền" là đúng ý, không cần key riêng.
+
+Còn lại mới là thiếu thật.
+
 ### 1.3 Format của thuộc tính
 
 - Integer phải trả kiểu số thật, không được bọc trong dấu `""` hoặc `''`

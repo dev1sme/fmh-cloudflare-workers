@@ -14,7 +14,7 @@ import { useInvoicesCuaToiChiTiet } from "./useMine";
 
 export function MyInvoiceDetailPage() {
   const code = (useParams().code ?? "").toUpperCase();
-  const { hoaDon, loading, error } = useInvoicesCuaToiChiTiet(code);
+  const { hoaDon, loading, refreshing, error } = useInvoicesCuaToiChiTiet(code);
   const { t } = useTranslation();
 
   return (
@@ -29,7 +29,7 @@ export function MyInvoiceDetailPage() {
         </Button>
       </Group>
 
-      <PageState loading={loading} error={error}>
+      <PageState loading={loading} refreshing={refreshing} error={error}>
         {hoaDon && (
           <Stack>
             <Group>

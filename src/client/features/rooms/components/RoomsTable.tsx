@@ -1,8 +1,9 @@
-import { Button, Group, Menu, Table, Text } from "@mantine/core";
+import { Table, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 
 import type { RoomDetail } from "../../../../shared/types";
 import { ngay, tien } from "../../../format";
+import { RoomActions } from "./RoomActions";
 
 export function RoomsTable({
   phong,
@@ -62,37 +63,13 @@ export function RoomsTable({
                 {room.tenant ? ngay(room.tenant.moved_in) : t("common.empty")}
               </Table.Td>
               <Table.Td>
-                <Group gap="xs" justify="flex-end" wrap="nowrap">
-                  <Button size="xs" variant="light" onClick={() => onEdit(room)}>
-                    {t("common.edit")}
-                  </Button>
-                  {room.tenant ? (
-                    <Button
-                      size="xs"
-                      variant="subtle"
-                      color="orange"
-                      onClick={() => onMoveOut(room)}
-                    >
-                      {t("rooms.moveOut")}
-                    </Button>
-                  ) : (
-                    <Button size="xs" variant="subtle" onClick={() => onMoveIn(room)}>
-                      {t("rooms.moveIn")}
-                    </Button>
-                  )}
-                  <Menu position="bottom-end" withinPortal>
-                    <Menu.Target>
-                      <Button size="xs" variant="subtle" color="gray">
-                        ⋯
-                      </Button>
-                    </Menu.Target>
-                    <Menu.Dropdown>
-                      <Menu.Item color="red" onClick={() => onDelete(room)}>
-                        {t("rooms.delete")}
-                      </Menu.Item>
-                    </Menu.Dropdown>
-                  </Menu>
-                </Group>
+                <RoomActions
+                  room={room}
+                  onEdit={onEdit}
+                  onMoveIn={onMoveIn}
+                  onMoveOut={onMoveOut}
+                  onDelete={onDelete}
+                />
               </Table.Td>
             </Table.Tr>
           ))}

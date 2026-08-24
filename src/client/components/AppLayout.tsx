@@ -13,7 +13,9 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 import { spotlight } from "@mantine/spotlight";
 import {
+  IconBell,
   IconBolt,
+  IconBuilding,
   IconChevronUp,
   IconBuildingCommunity,
   IconFileInvoice,
@@ -22,16 +24,17 @@ import {
   IconLayoutDashboard,
   IconLogout,
   IconSearch,
-  IconSettings,
   IconUsers,
 } from "@tabler/icons-react";
+import { Suspense } from "react";
 import { useTranslation } from "react-i18next";
-import { Link, Outlet, useLocation } from "react-router-dom";
+import { Link, Outlet, useLocation, useSearchParams } from "react-router-dom";
 
 import type { SessionUser } from "../api";
 import { LanguageMenuItems } from "./LanguageMenu";
 import { ThemeMenuItems } from "./ThemeMenu";
 import { PageTransition } from "./PageTransition";
+import { RouteFallback } from "./RouteFallback";
 
 const ICON = { size: 18, stroke: 1.6 };
 
@@ -40,16 +43,61 @@ const ICON = { size: 18, stroke: 1.6 };
  * `TenantLayout` instead. It used to carry a second link list for tenants;
  * that became unreachable when the tenant screens collapsed into one page, so
  * it is gone rather than translated.
+ *
+ * Grouped rather than one flat list of seven: added one at a time as features
+ * shipped, the sidebar had grown into exactly the shape that reads as a wall
+ * of links with no hint that two of them are the same monthly task. `label:
+ * null` on the first group is Tổng quan standing alone as the landing screen,
+ * not filed under an operational category.
+ *
+ * "Nhà" (buildings) used to be a section of "Cài đặt" alongside the Zalo bots
+ * — one screen for two things that only shared a page. Buildings are core
+ * billing data (the rate a generated invoice copies from, the account VietQR
+ * pays into), the same tier as a room, so it moved to VẬN HÀNH next to Phòng
+ * and Người thuê; "Cài đặt" kept the name that now describes only what is
+ * left on it, renamed to "Thông báo".
  */
-const LINKS = [
-  { to: "/dashboard", key: "nav.dashboard", icon: <IconLayoutDashboard {...ICON} /> },
-  { to: "/rooms", key: "nav.rooms", icon: <IconHome {...ICON} /> },
-  { to: "/tenants", key: "nav.tenants", icon: <IconUsers {...ICON} /> },
-  { to: "/readings", key: "nav.readings", icon: <IconBolt {...ICON} /> },
-  { to: "/invoices", key: "nav.invoices", icon: <IconFileInvoice {...ICON} /> },
-  { to: "/accounts", key: "nav.accounts", icon: <IconKey {...ICON} /> },
-  { to: "/settings", key: "nav.settings", icon: <IconSettings {...ICON} /> },
+const NAV_GROUPS = [
+  {
+    label: null,
+    links: [
+      { to: "/dashboard", key: "nav.dashboard", icon: <IconLayoutDashboard {...ICON} /> },
+    ],
+  },
+  {
+    label: "nav.groupOperations",
+    links: [
+      // Nhà first: a room cannot exist without one (rooms.building_id), and
+      // the empty-room screen sends the manager here for exactly that reason.
+      { to: "/buildings", key: "nav.buildings", icon: <IconBuilding {...ICON} /> },
+      { to: "/rooms", key: "nav.rooms", icon: <IconHome {...ICON} /> },
+      { to: "/tenants", key: "nav.tenants", icon: <IconUsers {...ICON} /> },
+    ],
+  },
+  {
+    label: "nav.groupBilling",
+    links: [
+      { to: "/readings", key: "nav.readings", icon: <IconBolt {...ICON} /> },
+      { to: "/invoices", key: "nav.invoices", icon: <IconFileInvoice {...ICON} /> },
+    ],
+  },
+  {
+    label: "nav.groupSystem",
+    links: [
+      { to: "/accounts", key: "nav.accounts", icon: <IconKey {...ICON} /> },
+      { to: "/notifications", key: "nav.notifications", icon: <IconBell {...ICON} /> },
+    ],
+  },
 ] as const;
+
+/**
+ * Tổng quan, Chỉ số điện nước and Hóa đơn all read the same `?period=` param
+ * (`usePeriodParam`). Without this, clicking from one to another through the
+ * sidebar dropped it — reading last month's meters, then clicking "Hóa đơn" to
+ * generate from them, landed back on the current month, because the invoices
+ * screen had no idea what period the readings screen was just showing.
+ */
+const CARRIES_PERIOD = new Set(["/dashboard", "/readings", "/invoices"]);
 
 /** Two initials from a username, e.g. `phong01` -> `PH`. */
 function chuCaiDau(username: string): string {
@@ -65,13 +113,19 @@ export function AppLayout({
 }) {
   const [opened, { toggle, close }] = useDisclosure();
   const { pathname } = useLocation();
+  const [searchParams] = useSearchParams();
   const { t } = useTranslation();
+
+  const period = searchParams.get("period");
+  const hrefFor = (to: string) => (period && CARRIES_PERIOD.has(to) ? `${to}?period=${period}` : to);
 
   return (
     <AppShell
       header={{ height: 56 }}
       navbar={{ width: 236, breakpoint: "sm", collapsed: { mobile: !opened } }}
-      footer={{ height: 36 }}
+      // 0 below `sm`: the footer is one line of copyright, and holding 36 px
+      // of a phone viewport open for it costs a row of the table underneath.
+      footer={{ height: { base: 0, sm: 36 } }}
       padding="md"
     >
       <AppShell.Header>
@@ -112,20 +166,38 @@ export function AppLayout({
         {/* Navigation grows; the account block is pinned to the bottom so the
             identity and the way out sit together, away from the screen's work. */}
         <AppShell.Section grow>
-          {LINKS.map((link) => (
-            <NavLink
-              key={link.to}
-              component={Link}
-              to={link.to}
-              label={t(link.key)}
-              leftSection={link.icon}
-              // Match on a path segment, not a raw prefix: plain startsWith
-              // lights "Hóa đơn" up on /my-invoices, a different screen.
-              active={
-                pathname === link.to || pathname.startsWith(`${link.to}/`)
-              }
-              onClick={close}
-            />
+          {NAV_GROUPS.map((group, i) => (
+            <div key={group.label ?? `group-${i}`}>
+              {group.label && (
+                <Text
+                  size="xs"
+                  c="dimmed"
+                  tt="uppercase"
+                  fw={600}
+                  mt={i > 0 ? "sm" : 0}
+                  mb={4}
+                  px="xs"
+                  style={{ letterSpacing: "0.06em" }}
+                >
+                  {t(group.label)}
+                </Text>
+              )}
+              {group.links.map((link) => (
+                <NavLink
+                  key={link.to}
+                  component={Link}
+                  to={hrefFor(link.to)}
+                  label={t(link.key)}
+                  leftSection={link.icon}
+                  // Match on a path segment, not a raw prefix: plain startsWith
+                  // lights "Hóa đơn" up on /my-invoices, a different screen.
+                  active={
+                    pathname === link.to || pathname.startsWith(`${link.to}/`)
+                  }
+                  onClick={close}
+                />
+              ))}
+            </div>
           ))}
         </AppShell.Section>
 
@@ -190,12 +262,17 @@ export function AppLayout({
       </AppShell.Navbar>
 
       <AppShell.Main>
-        <PageTransition>
-          <Outlet />
-        </PageTransition>
+        {/* Outside `PageTransition`, not inside: the rise-and-fade should play
+            on the screen itself, not on a spinner that the screen then replaces
+            without any movement of its own. */}
+        <Suspense fallback={<RouteFallback />}>
+          <PageTransition>
+            <Outlet />
+          </PageTransition>
+        </Suspense>
       </AppShell.Main>
 
-      <AppShell.Footer>
+      <AppShell.Footer visibleFrom="sm">
         <Group h="100%" px="md" justify="center" wrap="nowrap">
           <Text size="xs" c="dimmed">
             © {new Date().getFullYear()} dev1sme · Software Engineer

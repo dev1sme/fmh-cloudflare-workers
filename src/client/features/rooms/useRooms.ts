@@ -18,8 +18,15 @@ export function useDanhSachPhong() {
     // Needed to pick a building when adding a room.
     nha: nha.data?.buildings ?? [],
     loading: phong.loading || nha.loading,
+    refreshing: phong.refreshing || nha.refreshing,
     error: phong.error ?? nha.error,
-    reload: phong.reload,
+    // Both, not just the rooms. `error` surfaces whichever request failed, so a
+    // retry that re-ran only one of them would leave the buildings error on
+    // screen with a button that does nothing about it.
+    reload: () => {
+      phong.reload();
+      nha.reload();
+    },
   };
 }
 

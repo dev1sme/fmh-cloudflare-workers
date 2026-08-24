@@ -4,7 +4,6 @@ import { requirePhong, requireQuanLy } from "./auth";
 import { chiTietValidation, failure, notFound, ok } from "./envelope";
 import { securityHeaders } from "./headers";
 import { getDashboard } from "./db/dashboard";
-import { countRooms } from "./db/rooms";
 import { currentPeriod } from "./domain/period";
 import { optionalPeriod } from "./validate";
 import { accountRoutes } from "./routes/accounts";
@@ -23,11 +22,31 @@ import { ValidationError } from "./validate";
 
 const app = new Hono<AppEnv>();
 
+/**
+ * Wraps a resource router in the manager guard **at its own mount point**.
+ *
+ * The shape this replaces was one sub-app carrying `use("*", requireQuanLy)`
+ * and mounted on `/api`. It worked, but only because of registration order:
+ * `/api/health`, `/api/auth/*` and `/api/me/*` stayed reachable purely by being
+ * registered above it, and a public route added below would have started
+ * answering 401 with nothing in the file to point at. Ordering was load-bearing
+ * for authorisation, which is not a property to leave lying around.
+ *
+ * Each mount now carries its own guard over its own prefix, so no path falls
+ * under a wildcard meant for a different one and the order of these lines no
+ * longer decides who can call what.
+ */
+function quanLyOnly(routes: Hono<AppEnv>): Hono<AppEnv> {
+  const guarded = new Hono<AppEnv>();
+  guarded.use("*", requireQuanLy);
+  guarded.route("/", routes);
+  return guarded;
+}
+
 // First in the chain so it covers public routes, errors and 404s alike.
 app.use("*", securityHeaders);
 
-// Public. Registration order is what makes this work in Hono — anything
-// mounted here must come above the sub-apps that require a session.
+// Public.
 app.get("/api/health", (c) => ok(c, { ok: true }, "Service is healthy."));
 app.route("/api/auth", authRoutes);
 
@@ -40,38 +59,34 @@ app.route("/api/auth", authRoutes);
 app.route("/hooks", webhookRoutes);
 
 // Tenant accounts: read-only, always scoped to the room in their token.
-// Registered before the management sub-app so /api/me/* is not swallowed by it.
 const me = new Hono<AppEnv>();
 me.use("*", requirePhong);
 me.route("/", meRoutes);
 app.route("/api/me", me);
 
-// Management: everything that writes to rooms, readings or money.
-const admin = new Hono<AppEnv>();
-admin.use("*", requireQuanLy);
-admin.get("/summary", async (c) =>
-  ok(c, { user: c.get("user"), rooms: await countRooms(c.env.DB) }, "Summary retrieved."),
-);
+// Management: everything that writes to rooms, readings or money. The rollup is
+// a single handler, so it takes the middleware inline rather than a sub-app of
+// one route.
 
 /** Revenue, debt, occupancy and usage for one period. Defaults to this month. */
-admin.get("/dashboard", async (c) => {
+app.get("/api/dashboard", requireQuanLy, async (c) => {
   const period = optionalPeriod(c.req.query("period")) ?? currentPeriod();
   return ok(c, await getDashboard(c.env.DB, period), "Dashboard retrieved.");
 });
-admin.route("/accounts", accountRoutes);
-admin.route("/buildings", buildingRoutes);
-admin.route("/rooms", roomRoutes);
-admin.route("/tenants", tenantRoutes);
-admin.route("/readings", readingRoutes);
-admin.route("/invoices", invoiceRoutes);
-admin.route("/payments", paymentRoutes);
+
+app.route("/api/accounts", quanLyOnly(accountRoutes));
+app.route("/api/buildings", quanLyOnly(buildingRoutes));
+app.route("/api/rooms", quanLyOnly(roomRoutes));
+app.route("/api/tenants", quanLyOnly(tenantRoutes));
+app.route("/api/readings", quanLyOnly(readingRoutes));
+app.route("/api/invoices", quanLyOnly(invoiceRoutes));
+app.route("/api/payments", quanLyOnly(paymentRoutes));
 // Notification bots and their destinations. Two mounts because a target is
 // addressed by its own code, not nested under the bot's — `PATCH
 // /bot-targets/TG…` beats threading the bot code through a path that already
 // identifies the row uniquely.
-admin.route("/bots", botRoutes);
-admin.route("/bot-targets", botTargetRoutes);
-app.route("/api", admin);
+app.route("/api/bots", quanLyOnly(botRoutes));
+app.route("/api/bot-targets", quanLyOnly(botTargetRoutes));
 
 app.notFound((c) => notFound(c, "Endpoint not found."));
 

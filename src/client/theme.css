@@ -390,3 +390,49 @@ textarea {
     grid-template-columns: 1.15fr 0.85fr;
   }
 }
+
+/*
+ * Refresh indicator for `PageState`: the same query running again while its
+ * previous result stays readable. A bar at the very top of the viewport rather
+ * than an overlay over the content — the content is a moment stale, not wrong,
+ * and dimming it would hide the invoice the manager is recording a payment
+ * against.
+ *
+ * Fixed to the viewport, above the AppShell header, so it does not depend on
+ * where in the tree the reloading screen happens to sit.
+ */
+.fmh-refreshing {
+  position: fixed;
+  inset-block-start: 0;
+  inset-inline: 0;
+  height: 2px;
+  z-index: 400;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--mantine-color-settled-6),
+    transparent
+  );
+  animation: fmh-refreshing 900ms ease-in-out infinite;
+}
+
+@keyframes fmh-refreshing {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/*
+ * A 2 ms round trip should not strobe. Reduced motion keeps the bar as a
+ * static line: still says "working", without the sweep.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .fmh-refreshing {
+    animation: none;
+    background: var(--mantine-color-settled-6);
+    opacity: 0.7;
+  }
+}

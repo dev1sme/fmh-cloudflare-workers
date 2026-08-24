@@ -6,7 +6,7 @@ Zalo bot messages on two events: an invoice run happened, and money arrived. Not
 
 It was `ZALO_BOT_TOKEN` / `ZALO_GROUP_CHAT_ID` / `ZALO_MANAGER_CHAT_ID` until migration 0009. Env vars hold one bot and two chats fine; they do not hold N. Every extra destination meant a new secret name, a new field on `AppEnv`, a new entry in `wrangler.toml`'s `[secrets] required`, and a deploy — and a name missing from that list is `undefined` at runtime with no warning anywhere, which is a failure mode this project has already paid for once.
 
-So: `bots` (who sends) and `bot_targets` (where to). Managed from **Cài đặt**, no deploy.
+So: `bots` (who sends) and `bot_targets` (where to). Managed from **Thông báo**, no deploy.
 
 ## The content split is the point
 
@@ -31,7 +31,7 @@ The token is **write-only across the whole API**. It goes in on `POST /api/bots`
 
 With the key unset, the bot routes answer **503 `ENCRYPTION_NOT_CONFIGURED`** rather than storing a token they could never decrypt — the same shape the SePay webhook uses for a missing signing secret. `BOT_ENCRYPTION_KEY` must stay in `wrangler.toml`'s `required` list or it is silently absent from `c.env` in local dev.
 
-**Rotating the key does not re-encrypt existing rows.** Every bot token has to be re-entered in Cài đặt afterwards. A token that will not decrypt logs and skips that bot rather than failing the invoice run.
+**Rotating the key does not re-encrypt existing rows.** Every bot token has to be re-entered in Thông báo afterwards. A token that will not decrypt logs and skips that bot rather than failing the invoice run.
 
 ## Sending must never break what triggered it
 

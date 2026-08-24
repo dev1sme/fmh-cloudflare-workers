@@ -1,8 +1,9 @@
-import { Badge, Button, Group, Menu, Table, Text } from "@mantine/core";
+import { Badge, Table } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 
 import type { TenantDetail } from "../../../../shared/types";
 import { ngay } from "../../../format";
+import { TenantActions } from "./TenantActions";
 
 export function TenantsTable({
   nguoiThue,
@@ -52,32 +53,13 @@ export function TenantsTable({
                   </Badge>
                 </Table.Td>
                 <Table.Td>
-                  <Group gap="xs" justify="flex-end" wrap="nowrap">
-                    <Button size="xs" variant="light" onClick={() => onEdit(tenant)}>
-                      {t("common.edit")}
-                    </Button>
-                    <Menu position="bottom-end" withinPortal>
-                      <Menu.Target>
-                        <Button size="xs" variant="subtle" color="gray">
-                          ⋯
-                        </Button>
-                      </Menu.Target>
-                      <Menu.Dropdown>
-                        {dangThue ? (
-                          <Menu.Item color="orange" onClick={() => onMoveOut(tenant)}>
-                            {t("tenants.recordMoveOut")}
-                          </Menu.Item>
-                        ) : (
-                          <Menu.Item onClick={() => onUndoMoveOut(tenant)}>
-                            {t("tenants.undoMoveOut")}
-                          </Menu.Item>
-                        )}
-                        <Menu.Item color="red" onClick={() => onDelete(tenant)}>
-                          {t("tenants.deleteRecord")}
-                        </Menu.Item>
-                      </Menu.Dropdown>
-                    </Menu>
-                  </Group>
+                  <TenantActions
+                    tenant={tenant}
+                    onEdit={onEdit}
+                    onMoveOut={onMoveOut}
+                    onUndoMoveOut={onUndoMoveOut}
+                    onDelete={onDelete}
+                  />
                 </Table.Td>
               </Table.Tr>
             );
@@ -85,11 +67,6 @@ export function TenantsTable({
         </Table.Tbody>
       </Table>
 
-      {nguoiThue.length === 0 && (
-        <Text c="dimmed" py="md">
-          {t("tenants.empty")}
-        </Text>
-      )}
     </Table.ScrollContainer>
   );
 }

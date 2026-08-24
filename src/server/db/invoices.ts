@@ -55,17 +55,6 @@ export function getInvoice(db: D1Database, id: number): Promise<Invoice | null> 
   return db.prepare(`SELECT ${COLUMNS} FROM invoices WHERE id = ?`).bind(id).first<Invoice>();
 }
 
-export function getInvoiceByRoomKy(
-  db: D1Database,
-  roomId: number,
-  period: string,
-): Promise<Invoice | null> {
-  return db
-    .prepare(`SELECT ${COLUMNS} FROM invoices WHERE room_id = ? AND period = ?`)
-    .bind(roomId, period)
-    .first<Invoice>();
-}
-
 export function getInvoiceByCode(db: D1Database, code: string): Promise<Invoice | null> {
   return db.prepare(`SELECT ${COLUMNS} FROM invoices WHERE code = ?`).bind(code).first<Invoice>();
 }

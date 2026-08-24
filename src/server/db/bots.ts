@@ -132,14 +132,6 @@ export async function deleteBot(db: D1Database, code: string): Promise<void> {
   await db.prepare(`DELETE FROM bots WHERE code = ?`).bind(code).run();
 }
 
-export async function listTargets(db: D1Database, botId: number): Promise<BotTarget[]> {
-  const { results } = await db
-    .prepare(`SELECT ${TARGET_COLUMNS} FROM bot_targets WHERE bot_id = ? ORDER BY kind, label`)
-    .bind(botId)
-    .all<TargetRow>();
-  return results.map(doiTarget);
-}
-
 export async function getTargetByCode(db: D1Database, code: string): Promise<BotTarget | null> {
   const row = await db
     .prepare(`SELECT ${TARGET_COLUMNS} FROM bot_targets WHERE code = ?`)

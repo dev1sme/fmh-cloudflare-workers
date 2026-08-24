@@ -1,8 +1,9 @@
-import { Badge, Button, Group, Table } from "@mantine/core";
+import { Badge, Table } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 
 import type { ReadingDetail, RoomDetail } from "../../../../shared/types";
 import { ngay } from "../../../format";
+import { ReadingActions } from "./ReadingActions";
 
 export function ReadingsTable({
   phong,
@@ -52,21 +53,12 @@ export function ReadingsTable({
                 <Table.Td>{reading ? `${reading.water_used} m³` : t("common.empty")}</Table.Td>
                 <Table.Td>{reading ? ngay(reading.recorded_on) : t("common.empty")}</Table.Td>
                 <Table.Td>
-                  <Group justify="flex-end" gap="xs" wrap="nowrap">
-                    <Button size="xs" variant="light" onClick={() => onEdit(room, reading)}>
-                      {reading ? t("common.edit") : t("readings.enter")}
-                    </Button>
-                    {reading && (
-                      <Button
-                        size="xs"
-                        variant="subtle"
-                        color="red"
-                        onClick={() => onDelete(reading)}
-                      >
-                        {t("common.delete")}
-                      </Button>
-                    )}
-                  </Group>
+                  <ReadingActions
+                    room={room}
+                    reading={reading}
+                    onEdit={onEdit}
+                    onDelete={onDelete}
+                  />
                 </Table.Td>
               </Table.Tr>
             );

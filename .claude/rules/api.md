@@ -21,7 +21,7 @@ Everything below `/api` except `/api/health` and `/api/auth/*` requires a sessio
 
 ## Surface
 
-Management (`requireQuanLy`): full CRUD on `/buildings`, `/rooms`, `/tenants`, `/readings`, `/invoices`, plus `DELETE /payments/:id`, `GET /summary` and `GET /dashboard`.
+Management (`requireQuanLy`): full CRUD on `/buildings`, `/rooms`, `/tenants`, `/readings`, `/invoices`, plus `DELETE /payments/:id` and `GET /dashboard`.
 
 Notification bots (`/api/bots`, `/api/bot-targets`, manager only): `GET /bots` lists every bot with its destinations, `POST /bots` creates one, `PATCH /bots/:code` renames or disables, `POST /bots/:code/token` replaces the token, `DELETE /bots/:code` removes it (409 while it still has destinations), `POST /bots/:code/targets` adds a destination. Destinations are addressed by their own code: `PATCH` / `DELETE /bot-targets/:code`, and `POST /bot-targets/:code/test` sends a real message and **waits**, which is the only notification call that reports its outcome instead of queueing. Two things not negotiable here: **the token never appears in a response** (`Bot` carries `has_token`) and **`kind` is not patchable**, because it decides whether that chat is sent amounts. → `notifications.md`
 
@@ -37,7 +37,7 @@ Ids remain in request bodies and responses (`room_id` on a tenant, `building_id`
 
 Two things the manager dashboard must keep doing: `CANCELLED` invoices are excluded from every money figure — a cancelled invoice was never owed — and all six statements go out in one `db.batch()`, because a serial chain of awaits spends most of the Worker's ~10 ms CPU budget waiting.
 
-The app is not hard-wired to two buildings and four rooms: the manager adds a building from **Cài đặt** (each with its own `electricity_rate` / `water_rate`) and rooms from **Phòng**. Deleting is FK-restricted — a building with rooms, or a room with readings/invoices/tenants, returns 409 `RELATED_DATA_EXISTS` rather than cascading. Room names are unique per building, not globally. A room cannot be moved to another building and a tenancy cannot be moved to another room; both would rewrite priced history, so the UI disables those selects when editing.
+The app is not hard-wired to two buildings and four rooms: the manager adds a building from **Nhà** (each with its own `electricity_rate` / `water_rate`) and rooms from **Phòng**. Deleting is FK-restricted — a building with rooms, or a room with readings/invoices/tenants, returns 409 `RELATED_DATA_EXISTS` rather than cascading. Room names are unique per building, not globally. A room cannot be moved to another building and a tenancy cannot be moved to another room; both would rewrite priced history, so the UI disables those selects when editing.
 
 Accounts (`/api/accounts`, manager only): `GET` lists them, `POST` creates one (password optional — omitted means the server generates a 20-character one), `PATCH` renames, `POST /:id/reset-password` resets **without asking for the current password**, `DELETE` removes. Two guards keep the app reachable: you cannot delete the account you are logged in as (`CANNOT_DELETE_SELF`), and you cannot delete the last manager (`LAST_MANAGER_REQUIRED`). One account per room is enforced by the partial unique index.
 

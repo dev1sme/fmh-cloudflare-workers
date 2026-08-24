@@ -27,8 +27,13 @@ export function useReadingsTheoKy(period: string) {
     phong: phong.data?.rooms ?? [],
     chiSoCuaPhong: (roomId: number) => theoPhong.get(roomId) ?? null,
     loading: phong.loading || chiSo.loading,
+    refreshing: phong.refreshing || chiSo.refreshing,
     error: phong.error ?? chiSo.error,
-    reload: chiSo.reload,
+    // Both: `error` can be either request's, so a retry has to cover both.
+    reload: () => {
+      phong.reload();
+      chiSo.reload();
+    },
   };
 }
 

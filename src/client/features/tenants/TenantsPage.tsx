@@ -1,18 +1,20 @@
-import { Button, Group, Stack, Title } from "@mantine/core";
-import { IconUserPlus } from "@tabler/icons-react";
+import { Box, Button, Group, Stack, Title } from "@mantine/core";
+import { IconUserPlus, IconUsers } from "@tabler/icons-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import type { TenantDetail } from "../../../shared/types";
+import { EmptyState } from "../../components/EmptyState";
 import { PageState } from "../../components/PageState";
 import { ngay } from "../../format";
 import { useConfirm } from "../../hooks/useConfirm";
 import { TenantModal, type MucTieuNguoiThue } from "./components/TenantModal";
+import { TenantCards } from "./components/TenantCards";
 import { TenantsTable } from "./components/TenantsTable";
 import { useDanhSachNguoiThue, useThaoTacNguoiThue } from "./useTenants";
 
 export function TenantsPage() {
-  const { nguoiThue, phong, loading, error, reload } = useDanhSachNguoiThue();
+  const { nguoiThue, phong, loading, refreshing, error, reload } = useDanhSachNguoiThue();
   const { them, capNhat, chuyenDi, huyChuyenDi, xoa } = useThaoTacNguoiThue(reload);
   const { xacNhan, hopThoai } = useConfirm();
   const { t } = useTranslation();
@@ -70,14 +72,44 @@ export function TenantsPage() {
         </Button>
       </Group>
 
-      <PageState loading={loading} error={error}>
-        <TenantsTable
-          nguoiThue={nguoiThue}
-          onEdit={(tenant) => setDangMo({ tenant })}
-          onMoveOut={hoiChuyenDi}
-          onUndoMoveOut={hoiHuyChuyenDi}
-          onDelete={hoiXoa}
-        />
+      <PageState loading={loading} refreshing={refreshing} error={error} onRetry={reload}>
+        {nguoiThue.length === 0 ? (
+          <EmptyState
+            icon={<IconUsers size={24} stroke={1.6} />}
+            title={t("tenants.empty")}
+            hint={t("tenants.emptyHint")}
+            action={
+              <Button
+                onClick={() => setDangMo({ tenant: null })}
+                leftSection={<IconUserPlus size={16} stroke={1.8} />}
+              >
+                {t("tenants.add")}
+              </Button>
+            }
+          />
+        ) : (
+          <>
+            {/* Eight columns at minWidth 820 — the widest table in the app. */}
+            <Box visibleFrom="sm">
+              <TenantsTable
+                nguoiThue={nguoiThue}
+                onEdit={(tenant) => setDangMo({ tenant })}
+                onMoveOut={hoiChuyenDi}
+                onUndoMoveOut={hoiHuyChuyenDi}
+                onDelete={hoiXoa}
+              />
+            </Box>
+            <Box hiddenFrom="sm">
+              <TenantCards
+                nguoiThue={nguoiThue}
+                onEdit={(tenant) => setDangMo({ tenant })}
+                onMoveOut={hoiChuyenDi}
+                onUndoMoveOut={hoiHuyChuyenDi}
+                onDelete={hoiXoa}
+              />
+            </Box>
+          </>
+        )}
       </PageState>
 
       <TenantModal
