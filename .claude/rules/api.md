@@ -21,7 +21,7 @@ Everything below `/api` except `/api/health` and `/api/auth/*` requires a sessio
 
 ## Surface
 
-Management (`requireQuanLy`): full CRUD on `/buildings`, `/rooms`, `/tenants`, `/readings`, `/invoices`, plus `DELETE /payments/:id`, `GET /summary` and `GET /dashboard`.
+Management (`requireQuanLy`): full CRUD on `/buildings`, `/rooms`, `/tenants`, `/readings`, `/invoices`, plus `DELETE /payments/:id` and `GET /dashboard`.
 
 Notification bots (`/api/bots`, `/api/bot-targets`, manager only): `GET /bots` lists every bot with its destinations, `POST /bots` creates one, `PATCH /bots/:code` renames or disables, `POST /bots/:code/token` replaces the token, `DELETE /bots/:code` removes it (409 while it still has destinations), `POST /bots/:code/targets` adds a destination. Destinations are addressed by their own code: `PATCH` / `DELETE /bot-targets/:code`, and `POST /bot-targets/:code/test` sends a real message and **waits**, which is the only notification call that reports its outcome instead of queueing. Two things not negotiable here: **the token never appears in a response** (`Bot` carries `has_token`) and **`kind` is not patchable**, because it decides whether that chat is sent amounts. → `notifications.md`
 

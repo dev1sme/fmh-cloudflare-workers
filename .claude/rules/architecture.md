@@ -29,7 +29,7 @@ src/client/           React SPA (Mantine + react-router)
     useXxx.ts         data loading + mutations, no JSX
 src/server/           Hono API on the Worker
   index.ts            Worker entry: route table, error mapping
-  auth.ts             password verify, JWT sign/verify, the three middlewares
+  auth.ts             password verify, JWT sign/verify, the two role middlewares
   envelope.ts         ok / failure / notFound — the only place c.json is called
   headers.ts          security headers for /api/*
   validate.ts         hand-rolled request validation

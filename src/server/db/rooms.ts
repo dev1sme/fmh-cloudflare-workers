@@ -118,8 +118,3 @@ export async function updateRoom(
 export async function deleteRoom(db: D1Database, id: number): Promise<void> {
   await db.prepare("DELETE FROM rooms WHERE id = ?").bind(id).run();
 }
-
-export async function countRooms(db: D1Database): Promise<number> {
-  const row = await db.prepare("SELECT COUNT(*) AS n FROM rooms").first<{ n: number }>();
-  return row?.n ?? 0;
-}

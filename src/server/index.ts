@@ -4,7 +4,6 @@ import { requirePhong, requireQuanLy } from "./auth";
 import { chiTietValidation, failure, notFound, ok } from "./envelope";
 import { securityHeaders } from "./headers";
 import { getDashboard } from "./db/dashboard";
-import { countRooms } from "./db/rooms";
 import { currentPeriod } from "./domain/period";
 import { optionalPeriod } from "./validate";
 import { accountRoutes } from "./routes/accounts";
@@ -65,12 +64,9 @@ me.use("*", requirePhong);
 me.route("/", meRoutes);
 app.route("/api/me", me);
 
-// Management: everything that writes to rooms, readings or money. The two
-// rollups are single handlers, so they take the middleware inline rather than
-// a sub-app of one route.
-app.get("/api/summary", requireQuanLy, async (c) =>
-  ok(c, { user: c.get("user"), rooms: await countRooms(c.env.DB) }, "Summary retrieved."),
-);
+// Management: everything that writes to rooms, readings or money. The rollup is
+// a single handler, so it takes the middleware inline rather than a sub-app of
+// one route.
 
 /** Revenue, debt, occupancy and usage for one period. Defaults to this month. */
 app.get("/api/dashboard", requireQuanLy, async (c) => {

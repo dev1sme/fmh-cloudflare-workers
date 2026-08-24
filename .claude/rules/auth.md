@@ -4,11 +4,12 @@ No auth framework. Stateless — there is no session table, and there should not
 
 **Three accounts, two roles.** `users.role` is `MANAGER` (one account — the owner, full management) or `TENANT` (one account per room, read-only). A tenant account is bound to a **room**, not to a person, via `users.room_id`: when a tenant moves out, the password changes and the account stays. The schema enforces both halves — `MANAGER` must have a NULL `room_id`, `TENANT` must have one, and a partial unique index allows at most one account per room.
 
-Three middlewares in `auth.ts`:
+Two middlewares in `auth.ts`, one per role:
 
-- `requireAuth` — any valid session.
 - `requireQuanLy` — management endpoints; 403 for tenants.
 - `requirePhong` — `/api/me/*`; requires a `room_id` on the token, so the manager gets 403 there.
+
+There is no role-agnostic `requireAuth`. There was one, and nothing ever mounted it: every authenticated route in this app belongs to exactly one role, so a guard that only checks "signed in" is a guard nobody can correctly use. Both middlewares check the session themselves rather than composing it — five duplicated lines, against a helper that invites a route to be protected by less than it needs. `currentUser` is the shared piece, and it rejects nothing.
 
 The room in `/api/me/*` queries always comes from the token, never the request. `GET /api/me/invoices/:id` re-checks `room_id` and answers 404 (not 403) for another room's invoice, so ids cannot be probed.
 
@@ -53,5 +54,5 @@ Long random passwords carry the security here, not the work factor. That holds o
 - `POST /api/auth/login` verifies against a dummy record when the username does not exist, so a bad username and a bad password take the same time and cannot be distinguished.
 - Verification uses a constant-time byte compare, and Web Crypto (`crypto.subtle`), not Node `crypto`.
 - The session cookie is `session`: `httpOnly`, `secure`, `sameSite=Lax`, 7-day TTL, carrying an HS256 JWT signed with `jose` (`sub` = user id, plus `username` / `role` / `room_id`). The `role` claim was renamed from `vai_tro` in the English rename, so any token issued before that is rejected — everyone had to sign in again once.
-- Route layout in `src/server/index.ts`: **every mount carries its own guard over its own prefix.** `quanLyOnly(...)` wraps each management resource router, `requirePhong` sits on `/api/me`, `requireQuanLy` is passed inline to `/api/summary` and `/api/dashboard`, and `/api/health`, `/api/auth/*` and `/hooks/*` carry none. There is deliberately **no `/api/*` wildcard middleware**. There was one — a single `admin` sub-app mounted on `/api` — and it made registration order load-bearing for authorisation: the public routes were public only because they sat above that line, and a route added below it would have answered 401 with nothing in the file to explain why. Adding a route now means choosing its guard, not choosing its line number. One visible consequence of the split: an unknown `/api/...` answers 404 instead of 401. That is acceptable here — the repository is public, so which endpoints exist was never a secret.
+- Route layout in `src/server/index.ts`: **every mount carries its own guard over its own prefix.** `quanLyOnly(...)` wraps each management resource router, `requirePhong` sits on `/api/me`, `requireQuanLy` is passed inline to `/api/dashboard`, and `/api/health`, `/api/auth/*` and `/hooks/*` carry none. There is deliberately **no `/api/*` wildcard middleware**. There was one — a single `admin` sub-app mounted on `/api` — and it made registration order load-bearing for authorisation: the public routes were public only because they sat above that line, and a route added below it would have answered 401 with nothing in the file to explain why. Adding a route now means choosing its guard, not choosing its line number. One visible consequence of the split: an unknown `/api/...` answers 404 instead of 401. That is acceptable here — the repository is public, so which endpoints exist was never a secret.
 - There is **no login rate limiting**. Adding one would need KV or Durable Objects, which the project deliberately avoids; three fixed accounts with long random passwords is the mitigation.

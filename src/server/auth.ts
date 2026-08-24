@@ -189,15 +189,6 @@ export async function currentUser(c: Context<AppEnv>): Promise<SessionUser | nul
   return readSessionToken(c.env, token);
 }
 
-/** Rejects the request with 401 unless a valid session cookie is present. */
-export const requireAuth = createMiddleware<AppEnv>(async (c, next) => {
-  const user = await currentUser(c);
-  if (!user) return failure(c, "UNAUTHORIZED", "Authentication required.", 401);
-
-  c.set("user", user);
-  await next();
-});
-
 /** Management endpoints: everything that writes to rooms, readings or money. */
 export const requireQuanLy = createMiddleware<AppEnv>(async (c, next) => {
   const user = await currentUser(c);

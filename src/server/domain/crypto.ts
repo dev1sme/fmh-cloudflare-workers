@@ -18,19 +18,16 @@
  * someone else's bank account. That is why this is not stored plainly.
  */
 
-const VERSION = "v1";
-const IV_BYTES = 12;
-const KEY_BYTES = 32;
-
 /**
  * Record format: `v1.<iv_b64>.<ciphertext_b64>`.
  *
  * The version prefix is there so a later key rotation or algorithm change can
- * still read what is already stored, instead of needing every row re-entered.
+ * still read what is already stored, instead of needing every row re-entered —
+ * `giaiMa` refuses anything carrying a version it does not know.
  */
-export function laBanMaHoa(value: string): boolean {
-  return value.startsWith(`${VERSION}.`);
-}
+const VERSION = "v1";
+const IV_BYTES = 12;
+const KEY_BYTES = 32;
 
 /**
  * `null` when the key is not configured, so a route can answer 503 rather than
