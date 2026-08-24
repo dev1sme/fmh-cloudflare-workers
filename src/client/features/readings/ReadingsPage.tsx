@@ -1,9 +1,12 @@
-import { Group, Stack, Title } from "@mantine/core";
+import { Button, Group, Stack, Title } from "@mantine/core";
+import { IconHome } from "@tabler/icons-react";
+import { Link } from "react-router-dom";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import type { ReadingDetail } from "../../../shared/types";
 import { PeriodPicker } from "../../components/PeriodPicker";
+import { EmptyState } from "../../components/EmptyState";
 import { PageState } from "../../components/PageState";
 import { currentPeriod, periodLabel } from "../../format";
 import { useConfirm } from "../../hooks/useConfirm";
@@ -40,12 +43,27 @@ export function ReadingsPage() {
       </Group>
 
       <PageState loading={loading} refreshing={refreshing} error={error} onRetry={reload}>
-        <ReadingsTable
-          phong={phong}
-          chiSoCuaPhong={chiSoCuaPhong}
-          onEdit={(room, reading) => setDangNhap({ room, reading })}
-          onDelete={hoiXoa}
-        />
+        {/* Rows here are rooms, not readings — an empty table means no rooms
+            exist, which is not fixable from this screen. */}
+        {phong.length === 0 ? (
+          <EmptyState
+            icon={<IconHome size={24} stroke={1.6} />}
+            title={t("readings.emptyRooms")}
+            hint={t("readings.emptyRoomsHint")}
+            action={
+              <Button component={Link} to="/rooms" variant="light">
+                {t("nav.rooms")}
+              </Button>
+            }
+          />
+        ) : (
+          <ReadingsTable
+            phong={phong}
+            chiSoCuaPhong={chiSoCuaPhong}
+            onEdit={(room, reading) => setDangNhap({ room, reading })}
+            onDelete={hoiXoa}
+          />
+        )}
       </PageState>
 
       <ReadingModal

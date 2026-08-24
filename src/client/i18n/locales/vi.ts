@@ -143,6 +143,13 @@ export const vi = {
 
   rooms: {
     add: "Thêm phòng",
+    empty: "Chưa có phòng nào.",
+    emptyHint: "Thêm phòng đầu tiên để bắt đầu ghi chỉ số và phát hành hóa đơn.",
+    noBuilding: "Chưa có nhà nào.",
+    // Lý do nút "Thêm phòng" bị disabled — phòng phải thuộc một nhà, và nhà chỉ
+    // tạo được ở Cài đặt.
+    noBuildingHint: "Phòng phải thuộc một nhà. Vào Cài đặt tạo nhà trước, rồi quay lại đây.",
+    needBuilding: "Tạo nhà ở Cài đặt trước đã.",
     editTitle: "Sửa phòng — {{name}}",
     building: "Nhà",
     name: "Tên phòng",
@@ -170,6 +177,8 @@ export const vi = {
   },
 
   settings: {
+    empty: "Chưa có nhà nào.",
+    emptyHint: "Nhà giữ đơn giá điện nước và số tài khoản nhận tiền. Mọi thứ khác dựng trên nó.",
     addBuilding: "Thêm nhà",
     ratesNote:
       "Đơn giá ở đây chỉ áp dụng cho hóa đơn sinh từ giờ trở đi. Hóa đơn đã phát hành giữ nguyên đơn giá lúc phát hành.",
@@ -204,6 +213,9 @@ export const vi = {
     add: "Thêm tài khoản",
     note: "Mỗi phòng một tài khoản để người thuê xem hóa đơn. Mật khẩu lưu dạng đã băm — chỉ hiện một lần lúc tạo hoặc đặt lại, không tra cứu lại được.",
     colUsername: "Tên đăng nhập",
+    empty: "Chưa có tài khoản nào.",
+    emptyHint: "Mỗi phòng một tài khoản để người thuê tự xem hóa đơn của mình.",
+    cannotDeleteSelf: "Không xoá được tài khoản đang đăng nhập.",
     colRole: "Vai trò",
     currentAccount: "tài khoản đang đăng nhập",
     tenantRole: "Người thuê",
@@ -244,6 +256,7 @@ export const vi = {
   invoices: {
     generateFor: "Sinh hóa đơn {{period}}",
     emptyPeriod: "Chưa có hóa đơn nào cho {{period}}.",
+    emptyPeriodHint: "Ghi chỉ số điện nước cho kỳ này rồi bấm phát hành.",
     colCode: "Mã",
     colTotal: "Tổng",
     details: "Chi tiết",
@@ -286,6 +299,8 @@ export const vi = {
   },
 
   readings: {
+    emptyRooms: "Chưa có phòng nào để ghi chỉ số.",
+    emptyRoomsHint: "Chỉ số ghi theo từng phòng, nên phải có phòng trước.",
     deleteTitle: "Xoá chỉ số",
     confirmDelete:
       "Xoá chỉ số {{room}} {{period}}? Hóa đơn của kỳ này sẽ không sinh lại được cho tới khi nhập lại.",
@@ -321,6 +336,7 @@ export const vi = {
     renting: "Đang thuê",
     movedOut: "Đã chuyển đi",
     empty: "Chưa có người thuê nào.",
+    emptyHint: "Nhận người vào ở từ trang Phòng — mỗi lượt thuê gắn với một phòng.",
     recordMoveOut: "Ghi nhận chuyển đi",
     undoMoveOut: "Huỷ chuyển đi",
     deleteRecord: "Xoá bản ghi",
@@ -432,6 +448,7 @@ export const vi = {
     title: "Thông báo Zalo",
     note: "Bot gửi thông báo hóa đơn vào group người thuê và thông báo tiền vào cho quản lý. Thêm bao nhiêu bot và bao nhiêu đích cũng được — không cần deploy lại.",
     empty: "Chưa có bot nào. Thông báo đang tắt.",
+    emptyHint: "Thêm bot Zalo để được nhắc khi phát hành hóa đơn và khi tiền vào.",
     add: "Thêm bot",
     name: "Tên bot",
     token: "Token bot",

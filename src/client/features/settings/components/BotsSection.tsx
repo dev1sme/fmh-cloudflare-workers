@@ -1,10 +1,11 @@
 import { Button, Group, Stack, Text, Title } from "@mantine/core";
-import { IconPlus } from "@tabler/icons-react";
+import { IconPlus, IconRobot } from "@tabler/icons-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import type { BotTarget, BotWithTargets, Building } from "../../../../shared/types";
 import type { BotInput, BotTargetInput } from "../../../api";
+import { EmptyState } from "../../../components/EmptyState";
 import { PageState } from "../../../components/PageState";
 import { useConfirm } from "../../../hooks/useConfirm";
 import { BotCard } from "./BotCard";
@@ -95,9 +96,11 @@ export function BotsSection({
       <PageState loading={loading} refreshing={refreshing} error={error} onRetry={onRetry}>
         <Stack>
           {bots.length === 0 ? (
-            <Text c="dimmed" size="sm">
-              {t("bots.empty")}
-            </Text>
+            <EmptyState
+              icon={<IconRobot size={24} stroke={1.6} />}
+              title={t("bots.empty")}
+              hint={t("bots.emptyHint")}
+            />
           ) : (
             bots.map((bot) => (
               <BotCard

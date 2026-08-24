@@ -1,4 +1,4 @@
-import { Badge, Button, Group, Menu, Table, Text } from "@mantine/core";
+import { Badge, Button, Group, Menu, Stack, Table, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 
 import type { Account } from "../../../../shared/types";
@@ -63,13 +63,24 @@ export function AccountsTable({
                     </Menu.Target>
                     <Menu.Dropdown>
                       <Menu.Item onClick={() => onRename(account)}>{t("accounts.rename")}</Menu.Item>
-                      <Menu.Item
-                        color="red"
-                        disabled={account.id === idHienTai}
-                        onClick={() => onDelete(account)}
-                      >
-                        {t("accounts.delete")}
-                      </Menu.Item>
+                      {/* The API refuses this with CANNOT_DELETE_SELF, so the
+                          item has to be disabled — but grey with no reason
+                          reads as a bug. The row already says "the account you
+                          are signed in as"; this says what follows from it. */}
+                      {account.id === idHienTai ? (
+                        <Menu.Item color="red" disabled>
+                          <Stack gap={2}>
+                            <span>{t("accounts.delete")}</span>
+                            <Text size="xs" c="dimmed">
+                              {t("accounts.cannotDeleteSelf")}
+                            </Text>
+                          </Stack>
+                        </Menu.Item>
+                      ) : (
+                        <Menu.Item color="red" onClick={() => onDelete(account)}>
+                          {t("accounts.delete")}
+                        </Menu.Item>
+                      )}
                     </Menu.Dropdown>
                   </Menu>
                 </Group>

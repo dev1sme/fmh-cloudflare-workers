@@ -1,10 +1,11 @@
 import { Button, Group, Stack, Text, Title } from "@mantine/core";
-import { IconUserPlus } from "@tabler/icons-react";
+import { IconKey, IconUserPlus } from "@tabler/icons-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import type { Account } from "../../../shared/types";
 import type { SessionUser } from "../../api";
+import { EmptyState } from "../../components/EmptyState";
 import { PageState } from "../../components/PageState";
 import { useConfirm } from "../../hooks/useConfirm";
 import { AccountModal } from "./components/AccountModal";
@@ -50,13 +51,29 @@ export function AccountsPage({ user }: { user: SessionUser }) {
       </Text>
 
       <PageState loading={loading} refreshing={refreshing} error={error} onRetry={reload}>
-        <AccountsTable
-          taiKhoan={taiKhoan}
-          idHienTai={user.id}
-          onRename={setDangDoiTen}
-          onResetPassword={setDangReset}
-          onDelete={hoiXoa}
-        />
+        {taiKhoan.length === 0 ? (
+          <EmptyState
+            icon={<IconKey size={24} stroke={1.6} />}
+            title={t("accounts.empty")}
+            hint={t("accounts.emptyHint")}
+            action={
+              <Button
+                onClick={() => setDangThem(true)}
+                leftSection={<IconUserPlus size={16} stroke={1.8} />}
+              >
+                {t("accounts.add")}
+              </Button>
+            }
+          />
+        ) : (
+          <AccountsTable
+            taiKhoan={taiKhoan}
+            idHienTai={user.id}
+            onRename={setDangDoiTen}
+            onResetPassword={setDangReset}
+            onDelete={hoiXoa}
+          />
+        )}
       </PageState>
 
       <AccountModal

@@ -1,9 +1,10 @@
 import { Button, Group, Stack, Title } from "@mantine/core";
-import { IconUserPlus } from "@tabler/icons-react";
+import { IconUserPlus, IconUsers } from "@tabler/icons-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import type { TenantDetail } from "../../../shared/types";
+import { EmptyState } from "../../components/EmptyState";
 import { PageState } from "../../components/PageState";
 import { ngay } from "../../format";
 import { useConfirm } from "../../hooks/useConfirm";
@@ -71,13 +72,29 @@ export function TenantsPage() {
       </Group>
 
       <PageState loading={loading} refreshing={refreshing} error={error} onRetry={reload}>
-        <TenantsTable
-          nguoiThue={nguoiThue}
-          onEdit={(tenant) => setDangMo({ tenant })}
-          onMoveOut={hoiChuyenDi}
-          onUndoMoveOut={hoiHuyChuyenDi}
-          onDelete={hoiXoa}
-        />
+        {nguoiThue.length === 0 ? (
+          <EmptyState
+            icon={<IconUsers size={24} stroke={1.6} />}
+            title={t("tenants.empty")}
+            hint={t("tenants.emptyHint")}
+            action={
+              <Button
+                onClick={() => setDangMo({ tenant: null })}
+                leftSection={<IconUserPlus size={16} stroke={1.8} />}
+              >
+                {t("tenants.add")}
+              </Button>
+            }
+          />
+        ) : (
+          <TenantsTable
+            nguoiThue={nguoiThue}
+            onEdit={(tenant) => setDangMo({ tenant })}
+            onMoveOut={hoiChuyenDi}
+            onUndoMoveOut={hoiHuyChuyenDi}
+            onDelete={hoiXoa}
+          />
+        )}
       </PageState>
 
       <TenantModal

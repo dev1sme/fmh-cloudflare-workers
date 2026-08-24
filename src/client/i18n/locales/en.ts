@@ -133,6 +133,13 @@ export const en: Resources = {
 
   rooms: {
     add: "Add room",
+    empty: "No rooms yet.",
+    emptyHint: "Add the first room to start recording meters and issuing invoices.",
+    noBuilding: "No buildings yet.",
+    // Why "Add room" is disabled — a room belongs to a building, and buildings
+    // are created in Settings.
+    noBuildingHint: "A room belongs to a building. Create one in Settings first, then come back.",
+    needBuilding: "Create a building in Settings first.",
     editTitle: "Edit room — {{name}}",
     building: "Building",
     name: "Room name",
@@ -160,6 +167,8 @@ export const en: Resources = {
   },
 
   settings: {
+    empty: "No buildings yet.",
+    emptyHint: "A building holds the electricity and water rates and the account money is paid into. Everything else builds on it.",
     addBuilding: "Add building",
     ratesNote:
       "These rates apply to invoices generated from now on. An invoice already issued keeps the rate it was issued at.",
@@ -194,6 +203,9 @@ export const en: Resources = {
     add: "Add account",
     note: "One account per room, so tenants can see their invoices. Passwords are stored hashed — shown once when created or reset, never retrievable.",
     colUsername: "Username",
+    empty: "No accounts yet.",
+    emptyHint: "One account per room lets a tenant look up their own invoices.",
+    cannotDeleteSelf: "You cannot delete the account you are signed in as.",
     colRole: "Role",
     currentAccount: "the account you are signed in as",
     tenantRole: "Tenant",
@@ -233,6 +245,7 @@ export const en: Resources = {
   invoices: {
     generateFor: "Bill {{period}}",
     emptyPeriod: "No invoices for {{period}} yet.",
+    emptyPeriodHint: "Record the electricity and water meters for this period, then generate.",
     colCode: "Code",
     colTotal: "Total",
     details: "Details",
@@ -278,6 +291,8 @@ export const en: Resources = {
   },
 
   readings: {
+    emptyRooms: "No rooms to record meters for.",
+    emptyRoomsHint: "Readings are recorded per room, so a room has to exist first.",
     deleteTitle: "Delete reading",
     confirmDelete:
       "Delete the {{period}} reading for {{room}}? That period cannot be billed again until it is re-entered.",
@@ -313,6 +328,7 @@ export const en: Resources = {
     renting: "Renting",
     movedOut: "Moved out",
     empty: "No tenants yet.",
+    emptyHint: "Move someone in from the Rooms screen — a tenancy belongs to a room.",
     recordMoveOut: "Record move-out",
     undoMoveOut: "Undo move-out",
     deleteRecord: "Delete record",
@@ -419,6 +435,7 @@ export const en: Resources = {
     title: "Zalo notifications",
     note: "Bots announce invoice runs to the tenants' group and incoming payments to the manager. Add as many bots and destinations as you need — no redeploy.",
     empty: "No bots yet. Notifications are off.",
+    emptyHint: "Add a Zalo bot to be told when invoices go out and when money arrives.",
     add: "Add bot",
     name: "Bot name",
     token: "Bot token",

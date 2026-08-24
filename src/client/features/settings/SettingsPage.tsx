@@ -1,9 +1,10 @@
 import { Button, Divider, Group, Stack, Text, Title } from "@mantine/core";
-import { IconPlus } from "@tabler/icons-react";
+import { IconBuildingCommunity, IconPlus } from "@tabler/icons-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import type { Building } from "../../../shared/types";
+import { EmptyState } from "../../components/EmptyState";
 import { PageState } from "../../components/PageState";
 import { useConfirm } from "../../hooks/useConfirm";
 import { BotsSection } from "./components/BotsSection";
@@ -48,11 +49,30 @@ export function SettingsPage() {
       </Text>
 
       <PageState loading={loading} refreshing={refreshing} error={error} onRetry={reload}>
-        <Stack>
-          {nha.map((item) => (
-            <BuildingForm key={item.id} nha={item} onSave={luu} onDelete={hoiXoa} />
-          ))}
-        </Stack>
+        {/* `nha.map` over an empty list rendered literally nothing — the
+            screen below the intro text was blank, on the one screen a fresh
+            install has to start from. */}
+        {nha.length === 0 ? (
+          <EmptyState
+            icon={<IconBuildingCommunity size={24} stroke={1.6} />}
+            title={t("settings.empty")}
+            hint={t("settings.emptyHint")}
+            action={
+              <Button
+                onClick={() => setDangThem(true)}
+                leftSection={<IconPlus size={16} stroke={1.8} />}
+              >
+                {t("settings.addBuilding")}
+              </Button>
+            }
+          />
+        ) : (
+          <Stack>
+            {nha.map((item) => (
+              <BuildingForm key={item.id} nha={item} onSave={luu} onDelete={hoiXoa} />
+            ))}
+          </Stack>
+        )}
       </PageState>
 
       <Divider my="md" />

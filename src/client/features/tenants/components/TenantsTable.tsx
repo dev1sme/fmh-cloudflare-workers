@@ -1,4 +1,4 @@
-import { Badge, Button, Group, Menu, Table, Text } from "@mantine/core";
+import { Badge, Button, Group, Menu, Table } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 
 import type { TenantDetail } from "../../../../shared/types";
@@ -85,11 +85,6 @@ export function TenantsTable({
         </Table.Tbody>
       </Table>
 
-      {nguoiThue.length === 0 && (
-        <Text c="dimmed" py="md">
-          {t("tenants.empty")}
-        </Text>
-      )}
     </Table.ScrollContainer>
   );
 }

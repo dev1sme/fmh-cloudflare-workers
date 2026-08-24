@@ -1,7 +1,9 @@
-import { Box, Button, Group, Stack, Text, Title } from "@mantine/core";
+import { Box, Button, Group, Stack, Title } from "@mantine/core";
+import { IconFileInvoice } from "@tabler/icons-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import { EmptyState } from "../../components/EmptyState";
 import { PeriodPicker } from "../../components/PeriodPicker";
 import { PageState } from "../../components/PageState";
 import { currentPeriod, periodLabel } from "../../format";
@@ -40,7 +42,19 @@ export function InvoicesPage() {
 
       <PageState loading={loading} refreshing={refreshing} error={error} onRetry={reload}>
         {hoaDon.length === 0 ? (
-          <Text c="dimmed">{t("invoices.emptyPeriod", { period: periodLabel(period) })}</Text>
+          // A normal mid-month state, not a fault: the meters are read before
+          // the invoices are issued. The action is the same one in the header,
+          // repeated where the eye already is.
+          <EmptyState
+            icon={<IconFileInvoice size={24} stroke={1.6} />}
+            title={t("invoices.emptyPeriod", { period: periodLabel(period) })}
+            hint={t("invoices.emptyPeriodHint")}
+            action={
+              <Button onClick={() => setMoSinh(true)}>
+                {t("invoices.generateFor", { period: periodLabel(period) })}
+              </Button>
+            }
+          />
         ) : (
           <>
             {/* Nine columns do not fit a phone; cards carry the same facts. */}
