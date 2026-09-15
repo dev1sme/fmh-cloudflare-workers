@@ -30,3 +30,5 @@ yarn-error.log*
 
 # Claude Code — local, per-machine settings (.mcp.json and .claude/settings.json stay tracked)
 .claude/settings.local.json
+# Vendored Cloudflare skills — third-party content, kept out of the public repo
+.claude/skills/
