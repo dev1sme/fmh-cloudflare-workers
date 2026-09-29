@@ -75,8 +75,8 @@ export const auth = {
   logout: () => send<{ ok: true }>("POST", "/api/auth/logout"),
   changePassword: (currentPassword: string, newPassword: string) =>
     send<{ ok: true }>("POST", "/api/auth/change-password", {
-      mat_khau_cu: currentPassword,
-      mat_khau_moi: newPassword,
+      current_password: currentPassword,
+      new_password: newPassword,
     }),
 };
 

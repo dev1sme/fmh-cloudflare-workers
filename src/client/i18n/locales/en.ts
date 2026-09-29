@@ -539,6 +539,8 @@ export const en: Resources = {
   },
 
   fields: {
+    current_password: "current password",
+    new_password: "new password",
     room_name: "room name",
     rent: "rent",
     area: "area",

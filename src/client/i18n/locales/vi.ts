@@ -553,6 +553,8 @@ export const vi = {
 
   /** Field names, for the validation codes generated from them. */
   fields: {
+    current_password: "mật khẩu hiện tại",
+    new_password: "mật khẩu mới",
     room_name: "tên phòng",
     rent: "giá phòng",
     area: "diện tích",

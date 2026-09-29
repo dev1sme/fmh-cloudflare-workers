@@ -83,8 +83,8 @@ authRoutes.post("/change-password", async (c) => {
   if (!session) return failure(c, "UNAUTHORIZED", "Authentication required.", 401);
 
   const body = await jsonBody(c.req);
-  const currentPassword = requireString(body.mat_khau_cu, "mat_khau_cu", 200);
-  const newPassword = requireString(body.mat_khau_moi, "mat_khau_moi", 200);
+  const currentPassword = requireString(body.current_password, "current_password", 200);
+  const newPassword = requireString(body.new_password, "new_password", 200);
 
   if (newPassword.length < MIN_PASSWORD_LENGTH) fail("PASSWORD_TOO_SHORT");
 
