@@ -39,6 +39,13 @@
   --fmh-orb-settled: rgba(86, 150, 98, 0.11);
   --fmh-aurora: rgba(221, 133, 26, 0.07);
   --fmh-grain: 0.022;
+
+  /* Status surfaces: the one place an accent fills an area instead of a line
+     of text. Shades 0 and 2 of the same two tuples — no new colour. */
+  --fmh-owed-surface: #fdf4e7;
+  --fmh-owed-edge: #efc894;
+  --fmh-settled-surface: #eff7f0;
+  --fmh-settled-edge: #bad3be;
 }
 
 :root[data-mantine-color-scheme="dark"] {
@@ -56,6 +63,11 @@
   --fmh-orb-settled: rgba(86, 150, 98, 0.12);
   --fmh-aurora: rgba(221, 133, 26, 0.08);
   --fmh-grain: 0.035;
+
+  --fmh-owed-surface: rgba(221, 133, 26, 0.12);
+  --fmh-owed-edge: rgba(221, 133, 26, 0.32);
+  --fmh-settled-surface: rgba(86, 150, 98, 0.12);
+  --fmh-settled-edge: rgba(86, 150, 98, 0.32);
 }
 
 /*
@@ -231,6 +243,72 @@ textarea {
   text-transform: uppercase;
   color: var(--mantine-color-dimmed);
   border-bottom: 1px solid var(--fmh-rule) !important;
+}
+
+/*
+ * The one figure a screen exists to answer — what a tenant owes, what the
+ * landlord still has to collect. Every other number on the page is 1–1.5rem;
+ * this one is the size the eye lands on first.
+ */
+.fmh-display {
+  font-size: clamp(2.25rem, 1.6rem + 2.4vw, 3rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.fmh-display-unit {
+  font-size: 0.5em;
+  font-weight: 700;
+  margin-left: 0.15em;
+  color: var(--mantine-color-dimmed);
+}
+
+/*
+ * `StatusPanel`: an area filled by state. Amber while money is owed, green once
+ * it is settled — the whole block, so the answer is visible before a word is
+ * read. The border is a step darker than the fill so the panel still has an
+ * edge on the paper at a glance.
+ */
+.fmh-status {
+  border-radius: var(--mantine-radius-lg);
+  padding: var(--mantine-spacing-lg);
+  border: 1px solid var(--fmh-owed-edge);
+  background-color: var(--fmh-owed-surface);
+}
+
+.fmh-status[data-tone="settled"] {
+  border-color: var(--fmh-settled-edge);
+  background-color: var(--fmh-settled-surface);
+}
+
+/* Dimmed text on the dark tinted fill measured 3.9:1; bark[1] clears 5.8:1. */
+:root[data-mantine-color-scheme="dark"] .fmh-status {
+  --mantine-color-dimmed: #ada69b;
+}
+
+.fmh-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: none;
+  background-color: var(--mantine-color-owed-6);
+  box-shadow: 0 0 0 4px var(--fmh-owed-edge);
+}
+
+/*
+ * A row or card that still owes money carries a bar of amber on its leading
+ * edge — the list equivalent of the status panel, readable while scanning
+ * without reading the amount.
+ */
+.mantine-Card-root.fmh-owes {
+  box-shadow: inset 3px 0 0 var(--mantine-color-owed-6), var(--fmh-shadow);
+}
+
+/* A `<tr>` does not paint a box-shadow; its first cell does. */
+tr.fmh-owes > td:first-child {
+  box-shadow: inset 3px 0 0 var(--mantine-color-owed-6);
 }
 
 /*
