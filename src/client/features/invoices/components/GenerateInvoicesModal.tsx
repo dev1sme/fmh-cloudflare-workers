@@ -107,13 +107,17 @@ export function GenerateInvoicesModal({
               }
             />
 
-            <Table.ScrollContainer minWidth={520}>
+            {/* No 520 px minimum any more: on a phone that scrolled the
+                estimate — the one money column — out of a 306 px modal with
+                nothing to say it was there. Usage folds under the room name
+                below `sm` instead (see `RoomRow`). */}
+            <Table.ScrollContainer minWidth={300}>
               <Table highlightOnHover>
                 <Table.Thead>
                   <Table.Tr>
                     <Table.Th w={40} />
                     <Table.Th>{t("dashboard.colRoom")}</Table.Th>
-                    <Table.Th>{t("invoices.colUsage")}</Table.Th>
+                    <Table.Th visibleFrom="sm">{t("invoices.colUsage")}</Table.Th>
                     <Table.Th ta="right">{t("invoices.colEstimate")}</Table.Th>
                   </Table.Tr>
                 </Table.Thead>
@@ -172,6 +176,9 @@ function RoomRow({
 }) {
   const { t } = useTranslation();
   const lockReason = LOCK_REASON[item.status];
+  const usage = item.estimate
+    ? `${item.estimate.electricity_used} kWh · ${item.estimate.water_used} m³`
+    : t("common.empty");
 
   return (
     <Table.Tr opacity={lockReason ? 0.6 : 1}>
@@ -184,7 +191,7 @@ function RoomRow({
         />
       </Table.Td>
       <Table.Td fw={500}>
-        <Group gap="xs" wrap="nowrap">
+        <Group gap="xs">
           {item.room_name}
           {lockReason && (
             <Badge size="sm" variant="light" color="gray">
@@ -192,13 +199,14 @@ function RoomRow({
             </Badge>
           )}
         </Group>
+        <Text size="xs" c="dimmed" fw={400} hiddenFrom="sm">
+          {usage}
+        </Text>
       </Table.Td>
-      <Table.Td c="dimmed">
-        {item.estimate
-          ? `${item.estimate.electricity_used} kWh · ${item.estimate.water_used} m³`
-          : t("common.empty")}
+      <Table.Td c="dimmed" visibleFrom="sm">
+        {usage}
       </Table.Td>
-      <Table.Td ta="right" fw={600}>
+      <Table.Td ta="right" fw={600} className="fmh-num">
         {item.estimate ? money(item.estimate.total) : t("common.empty")}
       </Table.Td>
     </Table.Tr>

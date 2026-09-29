@@ -14,6 +14,8 @@ Chỉ kỳ đó được tải đầy đủ (`me.invoice(code)`); các kỳ khá
 
 **Bảng của quản lý dưới breakpoint `sm` chuyển thành card.** Chín cột trên màn 390 px là cuộn ngang với tên phòng nằm ngoài màn — mất hết ý nghĩa của cột. `InvoicesPage` render `InvoicesTable` trên `sm` và `InvoiceCards` dưới `sm`: cùng dữ liệu, mỗi hóa đơn một card. Các bảng quản lý khác vẫn cuộn ngang; chuyển tương tự khi bắt đầu được dùng trên điện thoại.
 
+Bảng nằm **trong card hoặc modal** thì không cuộn ngang được một cách có ích — cột bị cắt mà không có dấu hiệu gì. `PaymentsTable` và bảng trong `GenerateInvoicesModal` gập cột phụ (hình thức, ghi chú, tiêu thụ) xuống dưới cột đầu ở dưới `sm`, để cột tiền và nút xoá luôn nằm trong màn.
+
 `QuickSearch` (`Ctrl+K`) chỉ có ở quản lý, tải danh sách phòng và hóa đơn một lần khi mount. Ở quy mô này lọc vài chục dòng trong bộ nhớ tốt hơn một endpoint tìm kiếm cần index riêng và câu chuyện phân quyền riêng.
 
 ## Hệ thị giác
