@@ -11,7 +11,7 @@ Must hold:
 - Static sub-paths (`/readings/suggest`, `/invoices/generate-preview`) are registered before `/:code`.
 - Every value goes through `.bind()`. Never pass a request body into `buildSet` — build the patch field by field. No `...body` in `src/server/`.
 - `electricity_rate` / `water_rate` on an invoice are not patchable. Empty `room_ids` is rejected, not treated as "all".
-- Payment status is always re-derived from `SUM(payments)` via `capNhatTrangThai`; `CANCELLED` is never touched.
+- Payment status is always re-derived from `SUM(payments)` via `syncInvoiceStatus`; `CANCELLED` is never touched.
 - Dashboard: `CANCELLED` excluded from all money; all statements in one `db.batch()`.
 - Every new route picks its guard at its own mount (see `auth.md`).
 

@@ -15,8 +15,8 @@ Tài khoản người thuê gắn với **phòng**, không gắn với người,
 
 Hai middleware trong `auth.ts`, mỗi vai trò một cái:
 
-- `requireQuanLy` — endpoint quản lý; người thuê nhận 403.
-- `requirePhong` — `/api/me/*`; bắt buộc token có `room_id`, nên quản lý nhận 403 `NO_ROOM_BOUND` ở đó.
+- `requireManager` — endpoint quản lý; người thuê nhận 403.
+- `requireTenant` — `/api/me/*`; bắt buộc token có `room_id`, nên quản lý nhận 403 `NO_ROOM_BOUND` ở đó.
 
 **Không có `requireAuth` chung.** Đã từng có, và không route nào gắn nó: mọi route cần đăng nhập trong app thuộc đúng một vai trò, nên một guard chỉ kiểm "đã đăng nhập" là guard không ai dùng đúng được. Hai middleware tự kiểm phiên chứ không ghép nhau — lặp năm dòng, đổi lại không có helper nào dụ một route được bảo vệ ít hơn mức cần. `currentUser` là phần dùng chung, và nó không từ chối gì.
 
@@ -24,7 +24,7 @@ Phòng trong các query `/api/me/*` **luôn lấy từ token**, không bao giờ
 
 ### Bố cục route trong `src/server/index.ts`
 
-**Mỗi mount mang guard riêng trên prefix riêng.** `quanLyOnly(...)` bọc từng router quản lý, `requirePhong` gắn trên `/api/me`, `requireQuanLy` truyền inline cho `/api/dashboard`; `/api/health`, `/api/auth/*` và `/hooks/*` không có guard.
+**Mỗi mount mang guard riêng trên prefix riêng.** `managerOnly(...)` bọc từng router quản lý, `requireTenant` gắn trên `/api/me`, `requireManager` truyền inline cho `/api/dashboard`; `/api/health`, `/api/auth/*` và `/hooks/*` không có guard.
 
 Cố ý **không có middleware wildcard `/api/*`**. Đã từng có — một sub-app `admin` mount trên `/api` — và nó biến thứ tự đăng ký thành thứ quyết định phân quyền: route công khai chỉ công khai vì nằm trên dòng đó, route thêm vào bên dưới sẽ trả 401 mà trong file không có gì giải thích. Giờ thêm route là chọn guard, không phải chọn số dòng.
 
@@ -45,7 +45,7 @@ Lưu trong `users.password_hash` dạng `pbkdf2$sha256$<iterations>$<salt_b64>$<
 
 Hai kiểu đổi mật khẩu, cố ý ngược nhau:
 
-- **Tự đổi** (`POST /api/auth/change-password`, body `{ mat_khau_cu, mat_khau_moi }`, cả hai vai trò) **có** yêu cầu mật khẩu hiện tại — chỉ cookie phiên không được đủ để khoá chủ thật khỏi một thiết bị bị bỏ quên.
+- **Tự đổi** (`POST /api/auth/change-password`, body `{ current_password, new_password }`, cả hai vai trò) **có** yêu cầu mật khẩu hiện tại — chỉ cookie phiên không được đủ để khoá chủ thật khỏi một thiết bị bị bỏ quên.
 - **Quản lý đặt lại** (`POST /api/accounts/:code/reset-password`) **không** yêu cầu.
 
 Băm chạy **trong Worker** (`hashPassword` trong `auth.ts`), bằng Web Crypto (`crypto.subtle`), không dùng Node `crypto`. So sánh bằng hàm so byte thời gian hằng.
@@ -55,10 +55,10 @@ Băm chạy **trong Worker** (`hashPassword` trong `auth.ts`), bằng Web Crypto
 ```bash
 npm run hash-password -- <username>                      # quản lý, tự sinh mật khẩu
 npm run hash-password -- <username> <password>           # tự chọn mật khẩu
-npm run hash-password -- <username> --room <ten_phong>   # tài khoản gắn phòng
+npm run hash-password -- <username> --room <room_name>   # tài khoản gắn phòng
 ```
 
-Script in ra câu `INSERT ... ON CONFLICT DO UPDATE`; chạy bằng `./node_modules/.bin/wrangler d1 execute nha-tro --local` (hoặc `--remote`).
+Script in ra câu `INSERT ... ON CONFLICT DO UPDATE` (kèm `code` `AC…` sinh sẵn); tên phòng chỉ duy nhất trong một nhà, nên hai nhà trùng tên phòng thì tạo tài khoản đó từ màn Tài khoản thay vì script; chạy bằng `./node_modules/.bin/wrangler d1 execute nha-tro --local` (hoặc `--remote`).
 
 ## Số vòng PBKDF2
 

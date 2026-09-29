@@ -13,4 +13,4 @@ Must hold:
 - Confirm via `useConfirm`, never `window.confirm`.
 - Every screen behind login is `React.lazy`; `LoginPage`, `NotFoundPage` and both layouts stay eager. `<Suspense>` inside each layout, outside `PageTransition`.
 - Colours and sizes come from `theme.ts` / `theme.css` only. Two accents (`owed`, `settled`), no third. No `striped` tables.
-- Everything a caller can see is English (URLs, dirs, columns, fields, codes, enums).
+- Everything in code is English: URLs, dirs, columns, fields, codes, enums **and every identifier** (functions, variables, hooks, components, types, props). Vietnamese lives only in UI copy (`locales/vi.ts`) and Zalo message text. Do not reintroduce Vietnamese identifiers.

@@ -68,7 +68,7 @@ Route handler validate và quyết định; **không viết SQL** — SQL nằm 
 
 TypeScript chia ba project reference: `tsconfig.app.json` (client, DOM lib), `tsconfig.worker.json` (Worker, type workerd), `tsconfig.node.json` (`vite.config.ts`). Client **không** import từ `src/server/`, chỉ từ `src/shared/`.
 
-**Mọi thứ người gọi nhìn thấy đều là tiếng Anh**: URL, tên thư mục, cột DB, field API, mã lỗi, giá trị enum. Tiếng Việt chỉ còn ở chữ trên UI và ở tên định danh nội bộ (`xacNhan`, `thongBaoLoi`, `tien`).
+**Mọi thứ trong code đều là tiếng Anh**: URL, tên thư mục, cột DB, field API, mã lỗi, giá trị enum, và cả tên hàm, biến, hook, component, type. Tiếng Việt chỉ còn ở chữ trên UI (`src/client/i18n/locales/vi.ts`) và ở nội dung tin nhắn Zalo (`domain/zalo.ts`). Tên định danh tiếng Việt từng được giữ "cho nội bộ" rồi được đổi hết sang tiếng Anh — đừng thêm lại.
 
 ## Phân tầng client
 
@@ -80,9 +80,9 @@ Theo quy ước, không có công cụ ép:
 
 Mục đích: thêm một animation hay sửa một bảng chỉ đụng một file. Page file bắt đầu phình thì tách ra, đừng để nó nuốt feature tiếp theo.
 
-Hook truyền vào `useEffect` của component con **phải memo**. `goiY` của `useReadings` bọc `useCallback` vì đúng lý do đó — bỏ đi là `ReadingModal` render vòng vô hạn. Mảng mà con dùng để khởi tạo state cũng vậy: `useXemTruocSinh` memo `rooms` bằng `useMemo` để effect chọn phòng của `GenerateInvoicesModal` không lặp.
+Hook truyền vào `useEffect` của component con **phải memo**. `suggest` của `useReadings` bọc `useCallback` vì đúng lý do đó — bỏ đi là `ReadingModal` render vòng vô hạn. Mảng mà con dùng để khởi tạo state cũng vậy: `useGeneratePreview` memo `rooms` bằng `useMemo` để effect chọn phòng của `GenerateInvoicesModal` không lặp.
 
-Tải dữ liệu là `useResource` (fetch khi mount, `reload()` sau mutation). Không query library, không cache — một quản lý và vài phòng không cần. Xác nhận đi qua `useConfirm` (`xacNhan({...})` + render `hopThoai`), **không bao giờ** `window.confirm`: dialog native không style được và chặn cả tab.
+Tải dữ liệu là `useResource` (fetch khi mount, `reload()` sau mutation). Không query library, không cache — một quản lý và vài phòng không cần. Xác nhận đi qua `useConfirm` (`confirm({...})` + render `confirmDialog`), **không bao giờ** `window.confirm`: dialog native không style được và chặn cả tab.
 
 SPA không có guard phía client ngoài bảng route: `App.tsx` hỏi `GET /api/auth/me` một lần, rồi `routes.tsx` render route của quản lý hoặc người thuê. Đó là tiện điều hướng, không phải bảo mật — API mới là nơi ép vai trò.
 

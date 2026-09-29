@@ -9,7 +9,7 @@ Chuẩn envelope, định dạng thuộc tính và quy tắc `error.code` nằm 
 - Handler **không bao giờ gọi `c.json` trực tiếp** — đi qua `ok` / `failure` / `notFound` trong `src/server/envelope.ts`. `grep -rn "c\.json(" src/server/` chỉ được khớp `envelope.ts`.
 - `data` giữ nguyên hình dạng bên trong của từng route (`{ invoices }`, `{ room }`, `{ ok: true }`), không làm phẳng — `request<T>` trong `api.ts` bóc đúng một lớp.
 - `message` là câu tiếng Anh cho log; SPA không hiển thị, mà tự dựng câu từ `error.code`. `onError` log lỗi thật và trả `INTERNAL_ERROR`.
-- **Khác với ví dụ chung trong file envelope:** validation giữ **mã cụ thể** (`MISSING_ROOM_NAME`), không dùng `VALIDATION_ERROR`, rồi thêm `details: { "room_name": ["MISSING_ROOM_NAME"] }`. `chiTietValidation` tách field từ mã; mã nghiệp vụ không nêu field (`ELECTRICITY_END_BELOW_START`) thì `details: null`. Lý do: câu chữ nằm ở client, không phải server.
+- **Khác với ví dụ chung trong file envelope:** validation giữ **mã cụ thể** (`MISSING_ROOM_NAME`), không dùng `VALIDATION_ERROR`, rồi thêm `details: { "room_name": ["MISSING_ROOM_NAME"] }`. `validationDetails` tách field từ mã; mã nghiệp vụ không nêu field (`ELECTRICITY_END_BELOW_START`) thì `details: null`. Lý do: câu chữ nằm ở client, không phải server.
 
 Ánh xạ lỗi trong `app.onError` và các guard:
 
@@ -59,10 +59,10 @@ App không cứng hai nhà: quản lý thêm nhà ở màn **Nhà** (mỗi nhà 
 
 - `GET /invoices/generate-preview?period=` báo mọi phòng của kỳ, `status` (`READY` | `MISSING_READING` | `ALREADY_INVOICED`) và số tiền sẽ tính, không ghi gì. Cũng đăng ký trước `/:code`. Preview và `POST /generate` cùng tính qua `estimateInvoice`, nên preview **theo cấu trúc** chính là thứ sẽ được ghi.
 - `POST /invoices/generate` nhận `{ period, room_ids? }`, trả `{ created, skipped }`. Bỏ `room_ids` là tính mọi phòng; **mảng rỗng bị từ chối** (`EMPTY_ROOM_IDS`) chứ không hiểu thành "mọi phòng", cả ở route lẫn query builder. Phòng thiếu chỉ số hoặc đã có hóa đơn nằm trong `skipped` thay vì làm hỏng cả lô, vì quản lý cần biết phòng nào còn thiếu. Insert chạy trong một `db.batch()` — một kỳ được tạo trọn hoặc không gì cả.
-- `PATCH /invoices/:code` chỉ nhận `rent_amount`, `other_fees`, `status`, và tính lại `total`. **`electricity_rate`/`water_rate` cố ý không patch được** — sửa đơn giá sai là xoá hóa đơn rồi sinh lại, để hóa đơn đã lưu luôn khớp giá lúc phát hành.
+- `PATCH /invoices/:code` chỉ nhận `rent_amount`, `other_fees`, `status`, và tính lại `total`. Không gửi `status` thì trạng thái được **suy lại** qua `syncInvoiceStatus` sau khi đổi tiền — tăng phí trên hóa đơn `PAID` sẽ thành `UNPAID`, giảm xuống dưới số đã thu sẽ thành `PAID`. Gửi `status` rõ ràng thì giữ đúng giá trị đó. **`electricity_rate`/`water_rate` cố ý không patch được** — sửa đơn giá sai là xoá hóa đơn rồi sinh lại, để hóa đơn đã lưu luôn khớp giá lúc phát hành.
 - `GET /invoices/:code` trả `bank_transfer` (→ [payments.md](payments.md)).
 
-**Thanh toán**: ghi (`POST /invoices/:code/payments`) hoặc xoá (`DELETE /payments/:code`) payment đều **suy lại** `status` từ `SUM(payments.amount)` so với `total` (`capNhatTrangThai` trong `routes/payments.ts`). Hóa đơn `CANCELLED` không bao giờ bị phép tính này đụng tới và từ chối payment mới.
+**Thanh toán**: ghi (`POST /invoices/:code/payments`) hoặc xoá (`DELETE /payments/:code`) payment đều **suy lại** `status` từ `SUM(payments.amount)` so với `total` (`syncInvoiceStatus` trong `routes/payments.ts`). Hóa đơn `CANCELLED` không bao giờ bị phép tính này đụng tới và từ chối payment mới.
 
 **`GET /api/dashboard?period=`** (mặc định tháng hiện tại): rollup chỉ đọc cho màn chủ của quản lý — doanh thu kỳ, công nợ từng phòng **qua mọi kỳ**, tỉ lệ lấp phòng, tiêu thụ so với kỳ trước, và 12 kỳ gần nhất cho biểu đồ. Field tiếng Anh (`billed`, `collected`, `outstanding`) vì nó không phản chiếu bảng nào. Hai điều phải giữ:
 

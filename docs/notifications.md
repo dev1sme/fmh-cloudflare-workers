@@ -47,5 +47,5 @@ Fan-out dùng `Promise.allSettled`, không `all`. Với N đích, một chat đ�
 
 - Tin dùng `parse_mode: "markdown"`, không `text_styles`. Mảng style định vị theo UTF-16 code unit, mà tin có emoji — mỗi emoji hai unit — đếm lệch một offset là in đậm nhầm chữ.
 - API Zalo trả **200 kèm `{"ok": false}`** khi lỗi, nên status code một mình không nói tin đã đi hay chưa.
-- Giá trị từ DB đi qua `thoat()` trước khi nội suy — tên phòng quản lý gõ có thể chứa `_` hay `*`, nuốt nửa dòng còn lại vào chữ nghiêng.
+- Giá trị từ DB đi qua `escapeMarkdown()` trước khi nội suy — tên phòng quản lý gõ có thể chứa `_` hay `*`, nuốt nửa dòng còn lại vào chữ nghiêng.
 - Chat id lấy lại được bất cứ lúc nào: nhắn bot, `@`-mention bot trong group, rồi gọi `getUpdates`. Group id có dạng `zgr-…`.

@@ -79,7 +79,7 @@ Chuẩn hóa JSON response để frontend, mobile, QA và integration partner t�
 
 - `failure()` trong `src/server/envelope.ts` throw nếu code không khớp regex — không có đường nào trả về một code sai định dạng
 - `fail()` trong `src/server/validate.ts` throw tương tự, chặn tại chỗ ném lỗi
-- `chiTietValidation()` tách field từ code UPPER_SNAKE rồi hạ về chữ thường làm khóa trong `error.details`
+- `validationDetails()` tách field từ code UPPER_SNAKE rồi hạ về chữ thường làm khóa trong `error.details`
 
 Kiểm nhanh toàn bộ code đang dùng:
 
@@ -88,7 +88,7 @@ grep -rhoE '(failure\(c, "|fail\(")[a-zA-Z_]+"' src/server/ \
   | sed -E 's/.*"([a-zA-Z_]+)"/\1/' | sort -u | grep -vE '^[A-Z][A-Z0-9_]*$'
 ```
 
-Format đúng chưa đủ — code còn phải **đọc được bằng tiếng Việt**. `thongBaoLoi` tra `errors.<CODE>` trước, không có thì rơi xuống lối thoát sinh câu từ tên field (`INVALID_RENT` → "Giá trị không hợp lệ: giá phòng"). Lối thoát đó chỉ đẹp khi code **đặt tên đúng một field người dùng nhìn thấy**, và `fields.<field>` có mặt. `INVALID_BODY` từng in ra "Giá trị không hợp lệ: body." vì cả hai điều kiện đều sai.
+Format đúng chưa đủ — code còn phải **đọc được bằng tiếng Việt**. `errorMessage` tra `errors.<CODE>` trước, không có thì rơi xuống lối thoát sinh câu từ tên field (`INVALID_RENT` → "Giá trị không hợp lệ: giá phòng"). Lối thoát đó chỉ đẹp khi code **đặt tên đúng một field người dùng nhìn thấy**, và `fields.<field>` có mặt. `INVALID_BODY` từng in ra "Giá trị không hợp lệ: body." vì cả hai điều kiện đều sai.
 
 Tìm code thiếu message:
 

@@ -8,7 +8,7 @@ Hai vỏ từng là một — đó là tiện cho việc code chứ không phả
 
 Nên người thuê chỉ có **một màn** (`MyHomePage`): kỳ đang phải trả hiện đầy đủ kèm QR, cạnh đó là biểu đồ điện/nước, rồi các kỳ trước dạng dòng một hàng, mở ra khi cần. Kỳ được làm nổi là **kỳ mới nhất thực sự có hóa đơn**, không phải kỳ mới nhất — chủ nhà thường ghi chỉ số trước khi phát hành hóa đơn, và trong khoảng đó kỳ mới nhất chưa có gì để trả.
 
-Chỉ kỳ đó được tải đầy đủ (`me.invoice(code)`); các kỳ khác lấy dạng tóm tắt từ `me.dashboard()`. `useInvoicesCuaToiChiTiet("")` resolve thành null để một kỳ có chỉ số mà chưa có hóa đơn không bắn request.
+Chỉ kỳ đó được tải đầy đủ (`me.invoice(code)`); các kỳ khác lấy dạng tóm tắt từ `me.dashboard()`. `useMyInvoice("")` resolve thành null để một kỳ có chỉ số mà chưa có hóa đơn không bắn request.
 
 `/dashboard`, `/my-invoices`, `/my-readings` của người thuê redirect về `/` thay vì 404, để bookmark cũ vẫn tới chỗ có ích. `MyDashboardPage`, `MyInvoicesPage`, `MyReadingsPage`, `MonthsTable`, `InvoiceCard`, `ReadingsHistoryTable` đã bị xoá, không giữ lại "phòng khi cần".
 
@@ -28,7 +28,7 @@ Chỉ kỳ đó được tải đầy đủ (`me.invoice(code)`); các kỳ khá
 
 **Font Be Vietnam Pro**, bốn weight, chỉ subset `latin` + `vietnamese`, từ `@fontsource` chứ không CDN (CSP cho `font-src 'self'`). Khoảng 148 kB woff2 trong `dist/`; trình duyệt chỉ tải subset cần.
 
-Be Vietnam Pro rộng hơn system stack nó thay, và đã làm hỏng hai thứ một lần: nhãn trục biểu đồ và số trên stat card bị tràn. Số tiền dài trên trục dùng `tienRutGon` (`4,5tr`), giá trị chính xác giữ trong tooltip; stat card đo bằng `rem` và cho xuống dòng. Kiểm lại cả hai sau mọi thay đổi về chữ.
+Be Vietnam Pro rộng hơn system stack nó thay, và đã làm hỏng hai thứ một lần: nhãn trục biểu đồ và số trên stat card bị tràn. Số tiền dài trên trục dùng `moneyShort` (`4,5tr`), giá trị chính xác giữ trong tooltip; stat card đo bằng `rem` và cho xuống dòng. Kiểm lại cả hai sau mọi thay đổi về chữ.
 
 **Motion** (`motion`, tức Framer Motion) dùng đúng một chỗ: `PageTransition`, nâng 6 px trong 180 ms khi đổi route. Đây là công cụ mở hai mươi lần mỗi ngày — hiệu ứng duyên dáng ở lần đầu sẽ vướng víu ở lần thứ hai mươi. `useReducedMotion` thu khoảng cách về 0 chứ không bỏ component, để layout không xê dịch giữa hai chế độ.
 

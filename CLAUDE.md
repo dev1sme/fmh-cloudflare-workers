@@ -48,4 +48,5 @@ These are the ones that cost money, break production, or leak data when broken. 
 - **Never pass a request body into `buildSet`.** Column names come from a fixed allowlist at each call site; `...body` would be an injection hole. → `docs/api.md`
 - **Error codes are UPPER_SNAKE and are the API contract.** `failure()` and `fail()` throw on anything else. `errors.ts` maps them to Vietnamese. Do not reword or re-case them. → `.claude/rules/envelop-conventions.md`
 - **`d1_database_query` hits the REMOTE database.** Reads are fine; any write needs explicit approval first. → `.claude/rules/mcp-servers.md`
+- **Identifiers are English.** Functions, variables, hooks, components, types, props, API fields. Vietnamese is UI copy only. → `docs/architecture.md`
 - **`npx` does not work here** — a shell hook rewrites it to `npm`. Use an npm script or `./node_modules/.bin/<bin>`. → `.claude/rules/commands.md`

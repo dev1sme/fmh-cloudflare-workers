@@ -34,7 +34,7 @@ Chỉ hiện dạng chữ (`momo_phone`, `momo_name` trên `buildings`), **khôn
 
 Nằm ngoài `/api` vì không client nào gọi nó và nó không thuộc bề mặt API của app — nghĩa là **`run_worker_first` trong `wrangler.toml` phải có `/hooks/*`**, nếu không Cloudflare trả `index.html` từ kho asset và Worker không bao giờ chạy. Một webhook trả 200 kèm trang HTML trông như đã nhận, và làm mất mọi khoản thanh toán.
 
-Luồng xử lý: bóc mã hóa đơn từ nội dung chuyển khoản (`parseMaHoaDon`, không phân biệt hoa thường, chuẩn hoá về in hoa) → tra `getInvoiceByCode` → insert một dòng `payments` → gọi `capNhatTrangThai`.
+Luồng xử lý: bóc mã hóa đơn từ nội dung chuyển khoản (`parseInvoiceCode`, không phân biệt hoa thường, chuẩn hoá về in hoa) → tra `getInvoiceByCode` → insert một dòng `payments` → gọi `syncInvoiceStatus`.
 
 Nó **suy lại** trạng thái từ `SUM(payments)` chứ không set `PAID` thẳng — cùng đường với payment nhập tay. Người thuê chuyển thiếu là đã trả một phần, chưa trả hết, và hóa đơn phải tiếp tục nói đúng như vậy.
 
@@ -44,7 +44,7 @@ Nó **suy lại** trạng thái từ `SUM(payments)` chứ không set `PAID` th�
 
 - **Kiểm chữ ký trên raw body, trước khi parse.** `c.req.text()` trước, `JSON.parse` sau. Chữ ký phủ đúng từng byte SePay gửi; parse rồi serialize lại là đổi thứ tự key và khoảng trắng, chữ ký sẽ không bao giờ khớp.
 - Timestamp lệch quá **300 giây** bị từ chối trước cả khi kiểm chữ ký. Chữ ký có hiệu lực mãi mãi, nên không có cửa sổ này thì một request bị bắt trên đường có thể phát lại vô hạn. SePay ký lại mỗi lần retry, nên không xung đột với cơ chế retry.
-- So sánh chữ ký dùng `soSanhBiMat` (thời gian hằng), không dùng `===`.
+- So sánh chữ ký dùng `secretsEqual` (thời gian hằng), không dùng `===`.
 - Chưa đặt secret thì route trả **503 `WEBHOOK_NOT_CONFIGURED`**, không phải 401: không chữ ký nào verify được, và một deployment chưa cấu hình không được nhận ghi ẩn danh vào `payments`.
 
 ### Status code là chỉ thị cho SePay, không phải phán quyết

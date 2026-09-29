@@ -10,4 +10,4 @@ Must hold:
 - MoMo is text only, never a QR.
 - Webhook: `/hooks/*` must stay in `run_worker_first`. Verify HMAC against the raw body before `JSON.parse`; 300 s timestamp window; constant-time compare; unset secret → 503.
 - Everything a retry cannot fix answers 200. Idempotency is the `payments.external_id` unique index, not a SELECT-then-INSERT.
-- Status is re-derived via `capNhatTrangThai`, never set to `PAID` outright. Cancelled invoices are left alone.
+- Status is re-derived via `syncInvoiceStatus`, never set to `PAID` outright. Cancelled invoices are left alone.

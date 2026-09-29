@@ -9,4 +9,4 @@ Must hold:
 - Key unset → 503 `ENCRYPTION_NOT_CONFIGURED`.
 - Sending never breaks the trigger: `waitUntil` + `console.error`, `Promise.allSettled`. Only `POST /bot-targets/:code/test` awaits.
 - Invoice runs send one message per building, tallied from rows actually created.
-- `parse_mode: "markdown"`, not `text_styles`. Escape DB values with `thoat()`. Zalo errors come back as 200 `{"ok": false}`.
+- `parse_mode: "markdown"`, not `text_styles`. Escape DB values with `escapeMarkdown()`. Zalo errors come back as 200 `{"ok": false}`.
