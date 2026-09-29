@@ -1,6 +1,6 @@
 # Headers for the static SPA (HTML, JS, CSS).
 #
-# These cannot be set in the Worker: `run_worker_first = ["/api/*"]` in
+# These cannot be set in the Worker: `run_worker_first = ["/api/*", "/hooks/*"]` in
 # wrangler.toml means Cloudflare serves every non-API path straight from the
 # assets store without ever invoking the Worker. API responses get their own
 # headers from `securityHeaders` in src/server/headers.ts — keep the two in
