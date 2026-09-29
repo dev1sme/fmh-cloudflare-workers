@@ -2,9 +2,8 @@ import { Button, Card, Group, Stack, Text, Title } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Link, useParams } from "react-router-dom";
 
-import { BankTransferCard } from "../../components/BankTransferCard";
 import { InvoiceLines } from "../../components/InvoiceLines";
-import { MomoCard } from "../../components/MomoCard";
+import { PaymentMethods } from "../../components/PaymentMethods";
 import { PageState } from "../../components/PageState";
 import { PaymentsTable } from "../../components/PaymentsTable";
 import { StatusBadge } from "../../components/StatusBadge";
@@ -48,17 +47,15 @@ export function MyInvoiceDetailPage() {
               </Card>
             )}
 
-            {invoice.bank_transfer ? (
-              <BankTransferCard transfer={invoice.bank_transfer} />
-            ) : (
+            <PaymentMethods transfer={invoice.bank_transfer} momo={invoice.momo} />
+
+            {/* No bank account and no MoMo configured, but money still owed:
+                the memo alone is enough for the landlord to reconcile a
+                transfer made by other means. */}
+            {!invoice.bank_transfer &&
               !invoice.momo &&
               invoice.outstanding > 0 &&
-              invoice.status !== "CANCELLED" && (
-                <TransferInstructions invoiceCode={invoice.code} />
-              )
-            )}
-
-            {invoice.momo && <MomoCard momo={invoice.momo} />}
+              invoice.status !== "CANCELLED" && <TransferInstructions invoiceCode={invoice.code} />}
           </Stack>
         )}
       </PageState>

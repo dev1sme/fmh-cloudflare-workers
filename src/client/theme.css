@@ -258,13 +258,6 @@ textarea {
   font-variant-numeric: tabular-nums lining-nums;
 }
 
-.fmh-display-unit {
-  font-size: 0.5em;
-  font-weight: 700;
-  margin-left: 0.15em;
-  color: var(--mantine-color-dimmed);
-}
-
 /*
  * `StatusPanel`: an area filled by state. Amber while money is owed, green once
  * it is settled — the whole block, so the answer is visible before a word is
@@ -309,6 +302,48 @@ textarea {
 /* A `<tr>` does not paint a box-shadow; its first cell does. */
 tr.fmh-owes > td:first-child {
   box-shadow: inset 3px 0 0 var(--mantine-color-owed-6);
+}
+
+/*
+ * Receipt rules for `InvoiceLines`. `.fmh-rule-dashed` separates the header
+ * from the lines; `.fmh-tear` sits above the total and runs to the card's
+ * edges, where two paper-coloured notches make it read as a tear-off line.
+ * `--card-padding` is Mantine's own variable, so the line meets the edge at
+ * whatever padding the card was given.
+ */
+.fmh-rule-dashed {
+  border: 0;
+  border-top: 1.5px dashed var(--fmh-rule);
+  margin: 0;
+}
+
+.fmh-tear {
+  position: relative;
+  border: 0;
+  border-top: 1.5px dashed var(--fmh-rule);
+  margin: 4px calc(var(--card-padding, 1rem) * -1);
+  overflow: visible;
+}
+
+.fmh-tear::before,
+.fmh-tear::after {
+  content: "";
+  position: absolute;
+  top: -10px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background-color: var(--fmh-paper);
+}
+
+.fmh-tear::before {
+  left: -9px;
+  box-shadow: inset -1px 0 0 var(--fmh-rule);
+}
+
+.fmh-tear::after {
+  right: -9px;
+  box-shadow: inset 1px 0 0 var(--fmh-rule);
 }
 
 /*

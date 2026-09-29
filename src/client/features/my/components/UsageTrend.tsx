@@ -1,5 +1,6 @@
 import { LineChart } from "@mantine/charts";
 import { Card, Group, Text, Title } from "@mantine/core";
+import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 
 import type { TenantMonth } from "../../../../shared/types";
@@ -31,6 +32,35 @@ function axisDomain([min, max]: readonly [number, number]): [number, number] {
  * The unit sits beside the title because the y-axis ticks are bare numbers;
  * the tooltip carries it too, but that needs a hover the tenant may never do.
  */
+/**
+ * "Tháng gần nhất 198 kWh · −3% so với tháng trước", in words, above the chart.
+ *
+ * The chart shows the shape; this says the one comparison a tenant actually
+ * makes — is this month more than last — without asking them to read two
+ * points off an axis. Neutral grey on purpose: green here would say "paid",
+ * which is what green means everywhere else in the app, and using less power
+ * is not that.
+ *
+ * Compares the last two months *with* a reading, so a month with no reading
+ * in between does not turn the change into a comparison against nothing.
+ */
+function latestSummary(data: ChartPoint[], unit: string, t: TFunction): string | null {
+  const read = data.filter((point): point is { period: string; value: number } => point.value !== null);
+  const latest = read.at(-1);
+  if (!latest) return null;
+
+  const format = (value: number) => value.toLocaleString(isEnglish() ? "en-US" : "vi-VN");
+  const previous = read.at(-2);
+  if (!previous || previous.value === 0) {
+    return t("meter.latest", { value: format(latest.value), unit });
+  }
+
+  const pct = Math.round(((latest.value - previous.value) / previous.value) * 100);
+  // A real minus sign, not a hyphen: it lines up with "+" in tabular figures.
+  const change = pct === 0 ? "±0%" : `${pct > 0 ? "+" : "−"}${Math.abs(pct)}%`;
+  return t("meter.latestChange", { value: format(latest.value), unit, change });
+}
+
 function UsageChart({
   title,
   tooltipLabel,
@@ -46,14 +76,22 @@ function UsageChart({
   color: string;
   unit: string;
 }) {
+  const { t } = useTranslation();
+  const summary = latestSummary(data, unit, t);
+
   return (
     <Card>
-      <Group justify="space-between" align="baseline" mb="md">
+      <Group justify="space-between" align="baseline" mb={summary ? 2 : "md"}>
         <Title order={5}>{title}</Title>
         <Text size="xs" c="dimmed">
           {unit}
         </Text>
       </Group>
+      {summary && (
+        <Text size="sm" c="dimmed" mb="md">
+          {summary}
+        </Text>
+      )}
 
       <LineChart
         h={150}

@@ -104,10 +104,11 @@ export const vi = {
 
   tenant: {
     room: "Phòng",
-    // The amount leads in English and trails in Vietnamese, which is the whole
-    // reason this is one interpolated string rather than concatenation.
-    needToPay: "Cần đóng {{amount}}",
+    youOwe: "Bạn còn cần đóng",
+    owedHint: "Gồm {{count}} hóa đơn chưa trả đủ",
+    payNow: "Trả tiền ngay",
     paidUp: "Đã thanh toán đủ",
+    paidUpHint: "Hóa đơn {{period}} đã trả xong. Kỳ sau sẽ hiện ở đây khi chủ nhà phát hành.",
     noInvoiceYet: "Chủ nhà đã ghi chỉ số nhưng chưa phát hành hóa đơn cho kỳ này.",
     history: "Lịch sử",
     rangeLabel: "Khoảng thời gian",
@@ -136,6 +137,8 @@ export const vi = {
     water: "Nước",
     electricityUsed: "Điện tiêu thụ",
     waterUsed: "Nước tiêu thụ",
+    latest: "Tháng gần nhất {{value}} {{unit}}",
+    latestChange: "Tháng gần nhất {{value}} {{unit}} · {{change}} so với tháng trước",
   },
 
   dashboard: {
@@ -403,7 +406,11 @@ export const vi = {
   },
 
   payment: {
-    scanToPay: "Quét mã để chuyển khoản",
+    payTitle: "Trả tiền",
+    methodLabel: "Cách trả tiền",
+    methodBank: "Ngân hàng",
+    methodMomo: "MoMo",
+    scanHint: "Mở app ngân hàng và quét mã. Số tiền và nội dung đã điền sẵn.",
     previewTitle: "Mã QR người thuê nhìn thấy",
     previewNote: "Xem trước để đối chiếu. Người thuê quét mã này trong tài khoản phòng.",
     previewShort: "Xem trước để đối chiếu.",
@@ -413,7 +420,6 @@ export const vi = {
     memo: "Nội dung",
     keepMemo:
       "Giữ nguyên nội dung <b>{{memo}}</b> khi chuyển khoản để đối chiếu đúng hóa đơn. Mã QR đã điền sẵn số tiền và nội dung.",
-    momoTitle: "Hoặc chuyển qua MoMo",
     momoPhone: "Số điện thoại",
     momoReceiver: "Người nhận",
     momoHowTo:

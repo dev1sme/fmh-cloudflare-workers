@@ -3,9 +3,8 @@ import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useParams } from "react-router-dom";
 
 import type { Payment } from "../../../shared/types";
-import { BankTransferCard } from "../../components/BankTransferCard";
 import { InvoiceLines } from "../../components/InvoiceLines";
-import { MomoCard } from "../../components/MomoCard";
+import { PaymentMethods } from "../../components/PaymentMethods";
 import { PageState } from "../../components/PageState";
 import { money } from "../../format";
 import { useConfirm } from "../../hooks/useConfirm";
@@ -70,10 +69,7 @@ export function InvoiceDetailPage() {
           <Stack>
             <InvoiceHeader invoice={invoice} />
             <InvoiceLines invoice={invoice} />
-            {invoice.bank_transfer && (
-              <BankTransferCard transfer={invoice.bank_transfer} preview />
-            )}
-            {invoice.momo && <MomoCard momo={invoice.momo} preview />}
+            <PaymentMethods transfer={invoice.bank_transfer} momo={invoice.momo} preview />
             <OtherFeesCard otherFees={invoice.other_fees} onSave={saveOtherFees} />
             <PaymentsCard
               invoice={invoice}

@@ -9,22 +9,17 @@ import type { ReactNode } from "react";
  * the answer — is money still owed — reads from across the room before the
  * number does. Used once per screen at most: two of these would compete for
  * the same glance.
- *
- * `value` is the display figure; pass a string with the currency split off via
- * `unit` so the unit renders smaller than the digits.
  */
 export function StatusPanel({
   tone,
   label,
   value,
-  unit,
   hint,
   children,
 }: {
   tone: "owed" | "settled";
   label: string;
   value: ReactNode;
-  unit?: string;
   hint?: ReactNode;
   /** Actions or a progress bar, under the figure. */
   children?: ReactNode;
@@ -47,7 +42,6 @@ export function StatusPanel({
 
         <Text className="fmh-display" component="div">
           {value}
-          {unit && <span className="fmh-display-unit">{unit}</span>}
         </Text>
 
         {hint && (

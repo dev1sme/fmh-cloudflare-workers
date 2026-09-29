@@ -106,8 +106,11 @@ export const en: Resources = {
 
   tenant: {
     room: "Room",
-    needToPay: "{{amount}} due",
+    youOwe: "You still owe",
+    owedHint: "Across {{count}} unpaid invoice(s)",
+    payNow: "Pay now",
     paidUp: "All settled",
+    paidUpHint: "{{period}} is paid. The next invoice will show here once it is issued.",
     noInvoiceYet: "Your landlord has recorded the meters but has not issued a bill for this month.",
     history: "History",
     rangeLabel: "Time range",
@@ -126,6 +129,8 @@ export const en: Resources = {
     water: "Water",
     electricityUsed: "Electricity used",
     waterUsed: "Water used",
+    latest: "Latest month {{value}} {{unit}}",
+    latestChange: "Latest month {{value}} {{unit}} · {{change}} on the month before",
   },
 
   dashboard: {
@@ -395,7 +400,11 @@ export const en: Resources = {
   },
 
   payment: {
-    scanToPay: "Scan to pay by transfer",
+    payTitle: "Pay",
+    methodLabel: "Payment method",
+    methodBank: "Bank transfer",
+    methodMomo: "MoMo",
+    scanHint: "Open your banking app and scan. The amount and memo are filled in.",
     previewTitle: "The QR code your tenant sees",
     previewNote: "Preview only. Your tenant scans this from their room account.",
     previewShort: "Preview only.",
@@ -405,7 +414,6 @@ export const en: Resources = {
     memo: "Transfer memo",
     keepMemo:
       "Keep the memo <b>{{memo}}</b> exactly as it is so the transfer is matched to the right bill. The QR code already carries the amount and the memo.",
-    momoTitle: "Or pay by MoMo",
     momoPhone: "Phone number",
     momoReceiver: "Recipient",
     momoHowTo:
