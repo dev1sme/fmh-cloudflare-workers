@@ -59,7 +59,7 @@ async function moKhoaToken(
       // say so — silently sending nothing is how a broken integration looks
       // healthy for a month.
       if (!token) {
-        console.error(`Bot ${d.bot_id}: token failed to decrypt — re-enter it in Cài đặt`);
+        console.error(`Bot ${d.bot_id}: token failed to decrypt — re-enter it in Thông báo`);
         continue;
       }
       theoBot.set(d.bot_id, token);

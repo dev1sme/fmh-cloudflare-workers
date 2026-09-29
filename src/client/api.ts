@@ -35,7 +35,7 @@ export class ApiError extends Error {
 }
 
 /**
- * Unwraps the response envelope (`.claude/rules/envelop-conventions.md`).
+ * Unwraps the response envelope (`docs/api.md`).
  *
  * `T` is the shape inside `data`, which is the same object the routes always
  * returned (`{ invoices }`, `{ room }`, …) — so every caller below is unchanged

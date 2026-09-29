@@ -41,7 +41,7 @@ Chưa đặt khoá thì các route bot trả **503 `ENCRYPTION_NOT_CONFIGURED`**
 
 Fan-out dùng `Promise.allSettled`, không `all`. Với N đích, một chat đã kick bot ra sẽ làm dừng phần còn lại. Mỗi lỗi được log kèm chat id.
 
-`POST /api/bot-targets/:code/test` là ngoại lệ duy nhất: nó chờ và trả kết quả, vì quản lý bấm nó để biết chat id có đúng không. Tin thử có ghi label của đích, nên một chat id trỏ nhầm chỗ sẽ lộ ra thay vì trông như thành công.
+`POST /api/bot-targets/:code/test` là ngoại lệ duy nhất: nó chờ và trả kết quả (lỗi là `TEST_MESSAGE_FAILED` — 503 khi thiếu khoá, 502 khi Zalo từ chối), vì quản lý bấm nó để biết chat id có đúng không. Tin thử có ghi label của đích, nên một chat id trỏ nhầm chỗ sẽ lộ ra thay vì trông như thành công.
 
 ## Dễ làm sai
 

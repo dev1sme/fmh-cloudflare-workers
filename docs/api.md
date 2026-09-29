@@ -43,8 +43,13 @@ Validation giữ **mã cụ thể** (`MISSING_ROOM_NAME`), không dùng `VALIDAT
 | `ValidationError` | 400 | mã cụ thể (`INVALID_PERIOD`, …) |
 | D1 UNIQUE | 409 | `DUPLICATE_DATA` |
 | D1 FOREIGN KEY | 409 | `RELATED_DATA_EXISTS` |
-| D1 CHECK | 400 | |
+| D1 CHECK | 400 | `INVALID_DATA` |
 | Mã sai tiền tố / không phải code | 400 | `INVALID_CODE` |
+| Không tìm thấy (route hoặc bản ghi) | 404 | `NOT_FOUND` |
+| Chưa đăng nhập | 401 | `UNAUTHORIZED` |
+| Người thuê gọi route quản lý | 403 | `FORBIDDEN` |
+| Quản lý gọi `/api/me/*` | 403 | `NO_ROOM_BOUND` |
+| Lỗi khác | 500 | `INTERNAL_ERROR` (lỗi thật chỉ vào `console.error`) |
 
 ### Mã phải đọc được trên UI
 

@@ -2,7 +2,7 @@
 
 /**
  * Every API response is wrapped in an envelope — see
- * `.claude/rules/envelop-conventions.md`. `success` is what a client branches
+ * `docs/api.md`. `success` is what a client branches
  * on; `data` carries the payload, `error.code` the stable failure contract.
  */
 export type ApiMeta = {

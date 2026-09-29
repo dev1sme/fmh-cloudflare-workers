@@ -5,7 +5,7 @@ import type { ApiFailure, ApiSuccess } from "../shared/types";
 import type { AppEnv } from "./types";
 
 /**
- * The response envelope required by `.claude/rules/envelop-conventions.md`.
+ * The response envelope required by `docs/api.md`.
  *
  * Route handlers never call `c.json` directly — they go through `ok`, `failure`
  * or `notFound` so that `success`, `message` and `meta.timestamp` cannot be
@@ -29,7 +29,7 @@ export function ok<T>(
   return c.json({ success: true, message, data, meta: meta() } satisfies ApiSuccess<T>, status);
 }
 
-/** Every error code is UPPER_SNAKE — see `.claude/rules/envelop-conventions.md`. */
+/** Every error code is UPPER_SNAKE — see `docs/api.md`. */
 const UPPER_SNAKE = /^[A-Z][A-Z0-9]*(_[A-Z0-9]+)*$/;
 
 /**

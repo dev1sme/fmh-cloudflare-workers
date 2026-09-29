@@ -16,7 +16,7 @@ Tài khoản người thuê gắn với **phòng**, không gắn với người,
 Hai middleware trong `auth.ts`, mỗi vai trò một cái:
 
 - `requireQuanLy` — endpoint quản lý; người thuê nhận 403.
-- `requirePhong` — `/api/me/*`; bắt buộc token có `room_id`, nên quản lý nhận 403 ở đó.
+- `requirePhong` — `/api/me/*`; bắt buộc token có `room_id`, nên quản lý nhận 403 `NO_ROOM_BOUND` ở đó.
 
 **Không có `requireAuth` chung.** Đã từng có, và không route nào gắn nó: mọi route cần đăng nhập trong app thuộc đúng một vai trò, nên một guard chỉ kiểm "đã đăng nhập" là guard không ai dùng đúng được. Hai middleware tự kiểm phiên chứ không ghép nhau — lặp năm dòng, đổi lại không có helper nào dụ một route được bảo vệ ít hơn mức cần. `currentUser` là phần dùng chung, và nó không từ chối gì.
 
@@ -41,11 +41,11 @@ Hệ quả thấy được: `/api/...` không tồn tại trả 404 thay vì 401
 
 Lưu trong `users.password_hash` dạng `pbkdf2$sha256$<iterations>$<salt_b64>$<hash_b64>`. Số vòng nằm trong bản ghi, nên tăng về sau là băm lại + `UPDATE`, không cần migration.
 
-**Plaintext không bao giờ được lưu và không bao giờ đọc lại được.** Mật khẩu sinh ra hoặc tự chọn chỉ trả **đúng một lần**, trong response của lệnh tạo/đặt lại, kèm nút copy để quản lý đưa cho người thuê. `GET /api/accounts` không bao giờ có `password_hash` hay mật khẩu. Quên thì đặt lại, không tra cứu. Đừng thêm endpoint, cột hay dòng log nào giữ plaintext, kể cả khi có ai xin tính năng "xem mật khẩu" — đặt lại cho cùng khả năng thực tế mà không mang rủi ro. Lý do: phần lớn tài khoản là của người thuê, và người ta hay dùng lại mật khẩu ở dịch vụ khác.
+**Plaintext không bao giờ được lưu và không bao giờ đọc lại được.** Mật khẩu (tối thiểu 8 ký tự, `PASSWORD_TOO_SHORT`) sinh ra hoặc tự chọn chỉ trả **đúng một lần**, trong response của lệnh tạo/đặt lại, kèm nút copy để quản lý đưa cho người thuê. `GET /api/accounts` không bao giờ có `password_hash` hay mật khẩu. Quên thì đặt lại, không tra cứu. Đừng thêm endpoint, cột hay dòng log nào giữ plaintext, kể cả khi có ai xin tính năng "xem mật khẩu" — đặt lại cho cùng khả năng thực tế mà không mang rủi ro. Lý do: phần lớn tài khoản là của người thuê, và người ta hay dùng lại mật khẩu ở dịch vụ khác.
 
 Hai kiểu đổi mật khẩu, cố ý ngược nhau:
 
-- **Tự đổi** (`POST /api/auth/change-password`, cả hai vai trò) **có** yêu cầu mật khẩu hiện tại — chỉ cookie phiên không được đủ để khoá chủ thật khỏi một thiết bị bị bỏ quên.
+- **Tự đổi** (`POST /api/auth/change-password`, body `{ mat_khau_cu, mat_khau_moi }`, cả hai vai trò) **có** yêu cầu mật khẩu hiện tại — chỉ cookie phiên không được đủ để khoá chủ thật khỏi một thiết bị bị bỏ quên.
 - **Quản lý đặt lại** (`POST /api/accounts/:code/reset-password`) **không** yêu cầu.
 
 Băm chạy **trong Worker** (`hashPassword` trong `auth.ts`), bằng Web Crypto (`crypto.subtle`), không dùng Node `crypto`. So sánh bằng hàm so byte thời gian hằng.
