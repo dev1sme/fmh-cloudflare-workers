@@ -17,6 +17,7 @@ import type {
   Payment,
   Reading,
   ReadingDetail,
+  RevenueReport,
   RoomDetail,
   Tenant,
   TenantDashboard,
@@ -114,6 +115,12 @@ export const accounts = {
 export const dashboard = {
   /** Omit `period` for the current month. */
   get: (period?: string) => request<Dashboard>(`/api/dashboard${query({ period })}`),
+};
+
+export const reports = {
+  /** Omit `year` for the current year. */
+  revenue: (year?: number) =>
+    request<RevenueReport>(`/api/reports/revenue${query({ year })}`),
 };
 
 export type BotInput = {

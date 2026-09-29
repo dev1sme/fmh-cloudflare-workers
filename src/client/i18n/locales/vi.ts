@@ -76,6 +76,7 @@ export const vi = {
     groupBilling: "Thu tiền",
     readings: "Chỉ số điện nước",
     invoices: "Hóa đơn",
+    reports: "Báo cáo",
     groupSystem: "Hệ thống",
     accounts: "Tài khoản",
     // Trước là "settings" / "Cài đặt" — đổi tên vì trang giờ chỉ còn đúng một
@@ -151,6 +152,28 @@ export const vi = {
     waterUsed: "Nước tiêu thụ",
     latest: "Tháng gần nhất: {{value}} {{unit}}",
     latestChange: "Tháng gần nhất: {{value}} {{unit}} ({{change}} so với tháng trước)",
+  },
+
+  /** The yearly revenue screen (`ReportsPage`). */
+  reports: {
+    title: "Báo cáo doanh thu",
+    context: "{{count}} hóa đơn trong năm",
+    revenueOf: "Doanh thu năm {{year}}",
+    nothingBilled: "Chưa có hóa đơn nào trong năm {{year}}",
+    versusYear: "{{change}} so với năm {{year}}",
+    collectedOfBilled: "Đã thu {{collected}} / {{billed}}",
+    stillToCollect: "Còn phải thu {{amount}}",
+    cashIn: "Thực thu trong năm (theo ngày nhận tiền): {{amount}}",
+    monthsTitle: "Theo tháng, năm {{year}}",
+    byBuilding: "Theo nhà",
+    byRoom: "Theo phòng",
+    roomMeta: "{{building}} · {{count}} hóa đơn",
+    years: "Các năm",
+    colYear: "Năm",
+    colBilled: "Doanh thu",
+    colCollected: "Đã thu",
+    colOutstanding: "Còn nợ",
+    colCashIn: "Thực thu",
   },
 
   dashboard: {

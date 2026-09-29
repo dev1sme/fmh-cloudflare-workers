@@ -2,8 +2,8 @@ import { LineChart } from "@mantine/charts";
 import { Card, Text, Title } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 
-import type { DashboardHistoryPoint } from "../../../../shared/types";
-import { periodTick, money, moneyShort } from "../../../format";
+import type { DashboardHistoryPoint } from "../../shared/types";
+import { periodTick, money, moneyShort } from "../format";
 
 /**
  * Billed against collected, one line each.
@@ -24,7 +24,14 @@ import { periodTick, money, moneyShort } from "../../../format";
  * A period with no invoices is a real zero, not missing data, so the line
  * drops to the floor rather than breaking.
  */
-export function RevenueChart({ history }: { history: DashboardHistoryPoint[] }) {
+export function RevenueChart({
+  history,
+  title,
+}: {
+  history: DashboardHistoryPoint[];
+  /** Defaults to "the last N periods", which is what the dashboard shows. */
+  title?: string;
+}) {
   const { t } = useTranslation();
 
   // Series names are the data keys, so they are stable English identifiers;
@@ -38,7 +45,7 @@ export function RevenueChart({ history }: { history: DashboardHistoryPoint[] }) 
   return (
     <Card withBorder padding="md" radius="md">
       <Title order={5} mb="sm">
-        {t("dashboard.revenueTitle", { count: history.length })}
+        {title ?? t("dashboard.revenueTitle", { count: history.length })}
       </Title>
 
       {history.length === 0 ? (

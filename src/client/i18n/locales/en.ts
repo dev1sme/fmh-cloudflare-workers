@@ -78,6 +78,7 @@ export const en: Resources = {
     groupBilling: "Billing",
     readings: "Meter readings",
     invoices: "Invoices",
+    reports: "Reports",
     groupSystem: "System",
     accounts: "Accounts",
     // Was "settings" / "Settings" — renamed because the page now does exactly
@@ -142,6 +143,28 @@ export const en: Resources = {
     waterUsed: "Water used",
     latest: "Latest month: {{value}} {{unit}}",
     latestChange: "Latest month: {{value}} {{unit}} ({{change}} on the month before)",
+  },
+
+  /** The yearly revenue screen (`ReportsPage`). */
+  reports: {
+    title: "Revenue report",
+    context: "{{count}} invoice(s) this year",
+    revenueOf: "Revenue for {{year}}",
+    nothingBilled: "No invoices in {{year}}",
+    versusYear: "{{change}} on {{year}}",
+    collectedOfBilled: "Collected {{collected}} of {{billed}}",
+    stillToCollect: "{{amount}} still to collect",
+    cashIn: "Cash received in the year (by payment date): {{amount}}",
+    monthsTitle: "By month, {{year}}",
+    byBuilding: "By building",
+    byRoom: "By room",
+    roomMeta: "{{building}} · {{count}} invoice(s)",
+    years: "All years",
+    colYear: "Year",
+    colBilled: "Revenue",
+    colCollected: "Collected",
+    colOutstanding: "Outstanding",
+    colCashIn: "Cash in",
   },
 
   dashboard: {

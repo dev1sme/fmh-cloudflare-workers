@@ -581,6 +581,20 @@ tr.fmh-owes > td:first-child {
   }
 }
 
+/* Reports: by-building beside by-room once there is width for both. */
+.fmh-report-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--mantine-spacing-md);
+  align-items: start;
+}
+
+@media (min-width: 64em) {
+  .fmh-report-grid {
+    grid-template-columns: 0.8fr 1.2fr;
+  }
+}
+
 /*
  * Refresh indicator for `PageState`: the same query running again while its
  * previous result stays readable. A bar at the very top of the viewport rather

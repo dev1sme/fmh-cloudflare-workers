@@ -7,7 +7,7 @@ import { PeriodPicker } from "../../components/PeriodPicker";
 import { usePeriodParam } from "../../hooks/usePeriodParam";
 import { DebtsTable } from "./components/DebtsTable";
 import { RevenuePanel } from "./components/RevenuePanel";
-import { RevenueChart } from "./components/RevenueChart";
+import { RevenueChart } from "../../components/RevenueChart";
 import { RoomsAndUsage } from "./components/RoomsAndUsage";
 import { useDashboard } from "./useDashboard";
 
