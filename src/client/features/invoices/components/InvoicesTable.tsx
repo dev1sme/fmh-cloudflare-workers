@@ -6,6 +6,11 @@ import type { InvoiceWithRoom } from "../../../../shared/types";
 import { CollectionBar } from "../../../components/CollectionBar";
 import { money } from "../../../format";
 
+/** Not cancelled and not fully paid — the rows that get the amber edge. */
+function owes(invoice: InvoiceWithRoom): boolean {
+  return invoice.status !== "CANCELLED" && invoice.paid < invoice.total;
+}
+
 export function InvoicesTable({
   invoices,
   grandTotal,
@@ -34,7 +39,7 @@ export function InvoicesTable({
 
         <Table.Tbody>
           {invoices.map((invoice) => (
-            <Table.Tr key={invoice.id}>
+            <Table.Tr key={invoice.id} className={owes(invoice) ? "fmh-owes" : undefined}>
               <Table.Td>
                 <Text size="sm" c="dimmed">
                   {invoice.code}

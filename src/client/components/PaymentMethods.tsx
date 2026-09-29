@@ -19,7 +19,7 @@ type Method = "bank" | "momo";
  * Renders nothing when neither exists: the server leaves both null once the
  * invoice is paid or cancelled, so a settled invoice shows no QR to pay again.
  *
- * `id` is the scroll target for the "Trả tiền ngay" button on the tenant's
+ * `id` is the scroll target for the "Thanh toán ngay" button on the tenant's
  * status panel.
  */
 export function PaymentMethods({

@@ -104,11 +104,12 @@ export const vi = {
 
   tenant: {
     room: "Phòng",
-    youOwe: "Bạn còn cần đóng",
-    owedHint: "Gồm {{count}} hóa đơn chưa trả đủ",
-    payNow: "Trả tiền ngay",
+    youOwe: "Số tiền cần thanh toán",
+    owedHint: "Gồm {{count}} hóa đơn chưa thanh toán đủ",
+    payNow: "Thanh toán ngay",
     paidUp: "Đã thanh toán đủ",
-    paidUpHint: "Hóa đơn {{period}} đã trả xong. Kỳ sau sẽ hiện ở đây khi chủ nhà phát hành.",
+    paidUpHint:
+      "Hóa đơn tháng {{period}} đã được thanh toán. Hóa đơn kỳ tới sẽ hiện ở đây khi chủ nhà phát hành.",
     noInvoiceYet: "Chủ nhà đã ghi chỉ số nhưng chưa phát hành hóa đơn cho kỳ này.",
     history: "Lịch sử",
     rangeLabel: "Khoảng thời gian",
@@ -124,6 +125,17 @@ export const vi = {
       "{{eStart}} → {{eEnd}} kWh · {{wStart}} → {{wEnd}} m³ · ghi {{date}}",
   },
 
+  /** The line of context under each manager screen's title (`PageHeader`). */
+  pageContext: {
+    rooms: "{{count}} phòng · {{vacant}} phòng trống",
+    tenants: "{{active}} người đang thuê · {{past}} người đã chuyển đi",
+    readings: "Đã ghi chỉ số {{recorded}}/{{total}} phòng",
+    invoicesOwed: "{{count}} hóa đơn · còn phải thu {{amount}}",
+    invoicesSettled: "{{count}} hóa đơn · đã thu đủ",
+    accounts: "{{count}} tài khoản",
+    buildings: "{{count}} nhà",
+  },
+
   /**
    * Meter wording, shared by the tenant's charts and the manager's dashboard.
    *
@@ -137,18 +149,20 @@ export const vi = {
     water: "Nước",
     electricityUsed: "Điện tiêu thụ",
     waterUsed: "Nước tiêu thụ",
-    latest: "Tháng gần nhất {{value}} {{unit}}",
-    latestChange: "Tháng gần nhất {{value}} {{unit}} · {{change}} so với tháng trước",
+    latest: "Tháng gần nhất: {{value}} {{unit}}",
+    latestChange: "Tháng gần nhất: {{value}} {{unit}} ({{change}} so với tháng trước)",
   },
 
   dashboard: {
     billed: "Phải thu",
     collected: "Đã thu",
-    outstanding: "Còn nợ",
     invoices: "{{count}} hóa đơn",
     invoicesWithCancelled: "{{count}} hóa đơn · {{cancelled}} đã huỷ",
-    paidCount: "{{count}} hóa đơn đã thanh toán",
     unpaidCount: "{{count}} hóa đơn chưa thanh toán",
+    toCollect: "Còn phải thu",
+    allCollected: "Đã thu đủ kỳ này",
+    nothingBilled: "Chưa phát hành hóa đơn kỳ này",
+    collectedOfBilled: "Đã thu {{collected}} / {{billed}}",
     occupied: "Phòng đang thuê",
     occupiedHint: "{{vacant}} phòng trống · {{occupants}} người ở",
     missingReadings: "Chưa nhập chỉ số",
@@ -396,21 +410,23 @@ export const vi = {
     water: "Tiền nước",
     otherFees: "Phí khác",
     total: "Tổng cộng",
-    collected: "Đã thu",
+    // Worded for both sides: the tenant's receipt and the manager's invoice
+    // page share these, and "Đã thu" reads backwards to the person who paid.
+    collected: "Đã thanh toán",
     outstanding: "Còn lại",
     unitPrice: "đơn giá {{price}}/{{unit}}",
     meterNote: "{{start}} → {{end}} = {{used}} {{unit}} × {{price}}",
-    paidSection: "Đã thanh toán",
-    collectedAll: "Đã thu đủ",
-    stillOwed: "Còn {{amount}}",
+    paidSection: "Lịch sử thanh toán",
+    collectedAll: "Đã thanh toán đủ",
+    stillOwed: "Còn lại {{amount}}",
   },
 
   payment: {
-    payTitle: "Trả tiền",
-    methodLabel: "Cách trả tiền",
-    methodBank: "Ngân hàng",
+    payTitle: "Thanh toán",
+    methodLabel: "Phương thức thanh toán",
+    methodBank: "Chuyển khoản",
     methodMomo: "MoMo",
-    scanHint: "Mở app ngân hàng và quét mã. Số tiền và nội dung đã điền sẵn.",
+    scanHint: "Mở ứng dụng ngân hàng và quét mã. Số tiền và nội dung chuyển khoản đã được điền sẵn.",
     previewTitle: "Mã QR người thuê nhìn thấy",
     previewNote: "Xem trước để đối chiếu. Người thuê quét mã này trong tài khoản phòng.",
     previewShort: "Xem trước để đối chiếu.",

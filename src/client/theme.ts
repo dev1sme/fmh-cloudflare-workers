@@ -118,8 +118,13 @@ export const cssVariablesResolver: CSSVariablesResolver = (t) => ({
     "--mantine-color-owed-text": t.colors.owed[9],
     "--mantine-color-settled-text": t.colors.settled[9],
     "--mantine-color-anchor": t.colors.settled[9],
-    "--mantine-color-red-text": t.colors.red[9],
-    "--mantine-color-error": t.colors.red[9],
+    // Darker than red[9] (#c92a2a), which clears a card at 4.9:1 but not the
+    // paper at 4.3:1 — "Xoá hóa đơn" sits straight on the page.
+    "--mantine-color-red-text": "#b02525",
+    "--mantine-color-error": "#b02525",
+    // `subtle` / `light` buttons take their label colour from here, not from
+    // `-text`, so the same fix has to land on both.
+    "--mantine-color-red-light-color": "#b02525",
   },
   dark: {},
 });

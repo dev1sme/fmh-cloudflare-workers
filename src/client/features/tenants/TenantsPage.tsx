@@ -1,10 +1,11 @@
-import { Box, Button, Group, Stack, Title } from "@mantine/core";
+import { Box, Button, Stack } from "@mantine/core";
 import { IconUserPlus, IconUsers } from "@tabler/icons-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import type { TenantDetail } from "../../../shared/types";
 import { EmptyState } from "../../components/EmptyState";
+import { PageHeader } from "../../components/PageHeader";
 import { PageState } from "../../components/PageState";
 import { formatDate } from "../../format";
 import { useConfirm } from "../../hooks/useConfirm";
@@ -18,6 +19,7 @@ export function TenantsPage() {
   const { add, update, moveOut, undoMoveOut, remove } = useTenantActions(reload);
   const { confirm, confirmDialog } = useConfirm();
   const { t } = useTranslation();
+  const activeCount = tenants.filter((tenant) => tenant.moved_out === null).length;
 
   const [movingOut, setMovingOut] = useState<TenantTarget>(null);
 
@@ -60,17 +62,26 @@ export function TenantsPage() {
     });
   }
 
+  const headerContext = loading
+    ? undefined
+    : t("pageContext.tenants", { active: activeCount, past: tenants.length - activeCount });
+
   return (
     <Stack>
-      <Group justify="space-between">
-        <Title order={3}>{t("nav.tenants")}</Title>
-        <Button
-          onClick={() => setMovingOut({ tenant: null })}
-          leftSection={<IconUserPlus size={16} stroke={1.8} />}
-        >
-          {t("tenants.add")}
-        </Button>
-      </Group>
+      <PageHeader
+        title={t("nav.tenants")}
+        context={headerContext}
+        actions={
+          <>
+            <Button
+              onClick={() => setMovingOut({ tenant: null })}
+              leftSection={<IconUserPlus size={16} stroke={1.8} />}
+            >
+              {t("tenants.add")}
+            </Button>
+          </>
+        }
+      />
 
       <PageState loading={loading} refreshing={refreshing} error={error} onRetry={reload}>
         {tenants.length === 0 ? (

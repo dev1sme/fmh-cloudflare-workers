@@ -9,6 +9,10 @@ import type { ReactNode } from "react";
  * the answer — is money still owed — reads from across the room before the
  * number does. Used once per screen at most: two of these would compete for
  * the same glance.
+ *
+ * `neutral` is for a figure that is neither owed nor collected — a period with
+ * nothing invoiced yet. Green there would say "all paid", which is not true of
+ * a bill that was never issued.
  */
 export function StatusPanel({
   tone,
@@ -17,7 +21,7 @@ export function StatusPanel({
   hint,
   children,
 }: {
-  tone: "owed" | "settled";
+  tone: "owed" | "settled" | "neutral";
   label: string;
   value: ReactNode;
   hint?: ReactNode;
@@ -28,14 +32,14 @@ export function StatusPanel({
     <Box className="fmh-status" data-tone={tone}>
       <Stack gap={6}>
         <Group gap={8} wrap="nowrap">
-          {tone === "owed" ? (
+          {tone !== "settled" ? (
             <span className="fmh-status-dot" aria-hidden="true" />
           ) : (
             <Box c="settled" display="flex" aria-hidden="true">
               <IconCircleCheck size={18} stroke={2} />
             </Box>
           )}
-          <Text size="sm" fw={600} c={tone}>
+          <Text size="sm" fw={600} c={tone === "neutral" ? "dimmed" : tone}>
             {label}
           </Text>
         </Group>

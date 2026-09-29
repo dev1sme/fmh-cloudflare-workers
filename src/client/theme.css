@@ -276,6 +276,16 @@ textarea {
   background-color: var(--fmh-settled-surface);
 }
 
+.fmh-status[data-tone="neutral"] {
+  border-color: var(--fmh-rule);
+  background-color: var(--fmh-panel);
+}
+
+.fmh-status[data-tone="neutral"] .fmh-status-dot {
+  background-color: var(--fmh-rule);
+  box-shadow: none;
+}
+
 /* Dimmed text on the dark tinted fill measured 3.9:1; bark[1] clears 5.8:1. */
 :root[data-mantine-color-scheme="dark"] .fmh-status {
   --mantine-color-dimmed: #ada69b;
@@ -545,6 +555,29 @@ tr.fmh-owes > td:first-child {
 @media (min-width: 64em) {
   .fmh-tenant-grid {
     grid-template-columns: 1.15fr 0.85fr;
+  }
+}
+
+/*
+ * Manager's invoice detail: the invoice and its actions beside the tenant's
+ * payment view. The aside sticks under the header while the left column
+ * scrolls, so the QR being checked stays in view next to the payment form.
+ */
+.fmh-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--mantine-spacing-md);
+  align-items: start;
+}
+
+@media (min-width: 64em) {
+  .fmh-detail-grid {
+    grid-template-columns: 1.1fr 0.9fr;
+  }
+
+  .fmh-detail-aside {
+    position: sticky;
+    top: calc(var(--app-shell-header-height, 56px) + var(--mantine-spacing-md));
   }
 }
 

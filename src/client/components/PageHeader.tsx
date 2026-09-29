@@ -1,4 +1,4 @@
-import { Group, Text, Title } from "@mantine/core";
+import { Box, Group, Text, Title } from "@mantine/core";
 import type { ReactNode } from "react";
 
 /**
@@ -23,10 +23,14 @@ export function PageHeader({
     <Group justify="space-between" align="flex-end" wrap="wrap" gap="sm">
       <div style={{ minWidth: 0 }}>
         <Title order={3}>{title}</Title>
-        {context && (
+        {/* A string is a line of text; anything else (a badge beside a date)
+            brings its own layout and must not land inside a <p>. */}
+        {typeof context === "string" ? (
           <Text size="sm" c="dimmed" mt={2}>
             {context}
           </Text>
+        ) : (
+          context && <Box mt={4}>{context}</Box>
         )}
       </div>
       {actions && (

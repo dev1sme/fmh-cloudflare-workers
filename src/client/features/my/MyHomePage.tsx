@@ -42,7 +42,7 @@ import { useMyDashboard, useMyInvoice } from "./useMine";
  *  phone. */
 const DEFAULT_RANGE = "6";
 
-/** Where "Trả tiền ngay" scrolls to. */
+/** Where "Thanh toán ngay" scrolls to. */
 const PAY_ANCHOR = "pay";
 
 export function MyHomePage() {
@@ -115,7 +115,13 @@ export function MyHomePage() {
               tone="settled"
               label={t("tenant.paidUp")}
               value={money(0)}
-              hint={featured?.code ? t("tenant.paidUpHint", { period: periodLabel(featured.period) }) : undefined}
+              // "08/2026", not `periodLabel` — the sentence already says
+              // "tháng", and "Tháng 08/2026" mid-sentence doubles it.
+              hint={
+                featured?.code
+                  ? t("tenant.paidUpHint", { period: featured.period.split("-").reverse().join("/") })
+                  : undefined
+              }
             />
           )}
 
