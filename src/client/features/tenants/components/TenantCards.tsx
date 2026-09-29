@@ -47,7 +47,7 @@ export function TenantCards({
                   <Text fw={700}>{tenant.room_name}</Text>
                   <Text size="sm">{tenant.full_name}</Text>
                 </div>
-                <Badge color={isActive ? "teal" : "gray"} variant="light">
+                <Badge color={isActive ? "settled" : "gray"} variant="light">
                   {isActive ? t("tenants.renting") : t("tenants.movedOut")}
                 </Badge>
               </Group>
@@ -67,6 +67,7 @@ export function TenantCards({
               )}
 
               <TenantActions
+                size="sm"
                 tenant={tenant}
                 onEdit={onEdit}
                 onMoveOut={onMoveOut}

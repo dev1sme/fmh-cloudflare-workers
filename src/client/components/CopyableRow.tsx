@@ -59,8 +59,10 @@ export function CopyableRow({
             <Tooltip label={copied ? t("common.copied") : copyLabel} withArrow>
               <ActionIcon
                 variant={copied ? "filled" : "light"}
-                color={copied ? "teal" : "gray"}
-                size="sm"
+                color={copied ? "settled" : "gray"}
+                // 34 px, not 22: this is the button a tenant taps on a phone
+                // to copy the account number, the one action the screen is for.
+                size="lg"
                 onClick={copy}
                 aria-label={copyLabel}
               >

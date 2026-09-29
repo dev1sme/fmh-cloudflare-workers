@@ -46,7 +46,7 @@ export function AccountCards({
                   </Text>
                 )}
               </div>
-              <Badge color={account.role === "MANAGER" ? "teal" : "blue"} variant="light">
+              <Badge color={account.role === "MANAGER" ? "settled" : "gray"} variant="light">
                 {account.role === "MANAGER" ? t("common.manager") : t("accounts.tenantRole")}
               </Badge>
             </Group>
@@ -56,6 +56,7 @@ export function AccountCards({
             )}
 
             <AccountActions
+              size="sm"
               account={account}
               currentUserId={currentUserId}
               onRename={onRename}

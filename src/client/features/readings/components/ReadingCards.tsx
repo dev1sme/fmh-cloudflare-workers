@@ -75,6 +75,7 @@ export function ReadingCards({
               )}
 
               <ReadingActions
+                size="sm"
                 room={room}
                 reading={reading}
                 onEdit={onEdit}

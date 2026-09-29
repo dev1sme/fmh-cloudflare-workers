@@ -12,11 +12,14 @@ import type { ReadingDetail, RoomDetail } from "../../../../shared/types";
  */
 export function ReadingActions({
   room,
+  size = "xs",
   reading,
   onEdit,
   onDelete,
 }: {
   room: RoomDetail;
+  /** `xs` in a table row under a mouse; `sm` on a card, which is a finger on a phone. */
+  size?: "xs" | "sm";
   reading: ReadingDetail | null;
   onEdit: (room: RoomDetail, reading: ReadingDetail | null) => void;
   onDelete: (reading: ReadingDetail) => void;
@@ -25,12 +28,12 @@ export function ReadingActions({
 
   return (
     <Group justify="flex-end" gap="xs" wrap="nowrap">
-      <Button size="xs" variant="light" onClick={() => onEdit(room, reading)}>
+      <Button size={size} variant="light" onClick={() => onEdit(room, reading)}>
         {reading ? t("common.edit") : t("readings.enter")}
       </Button>
 
       {reading && (
-        <Button size="xs" variant="subtle" color="red" onClick={() => onDelete(reading)}>
+        <Button size={size} variant="subtle" color="red" onClick={() => onDelete(reading)}>
           {t("common.delete")}
         </Button>
       )}
