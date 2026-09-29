@@ -90,6 +90,15 @@ export function optionalPeriod(value: unknown): string | undefined {
   return requirePeriod(value);
 }
 
+const YEAR_PATTERN = /^\d{4}$/;
+
+/** Calendar year from a query string, `YYYY`. */
+export function optionalYear(value: unknown): number | undefined {
+  if (value === undefined || value === null || value === "") return undefined;
+  if (typeof value !== "string" || !YEAR_PATTERN.test(value)) fail("INVALID_YEAR");
+  return Number(value);
+}
+
 export function requireDate(value: unknown, field: string): string {
   if (typeof value !== "string" || !DATE_PATTERN.test(value)) fail(`INVALID_${upper(field)}`);
   return value as string;

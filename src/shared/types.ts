@@ -304,6 +304,60 @@ export type Dashboard = {
 };
 
 /**
+ * Money figures for a span of time, `GET /api/reports/revenue`.
+ *
+ * Two different questions, kept apart on purpose:
+ * - `billed` / `collected` / `outstanding` follow the **invoice period** — an
+ *   invoice for 12/2026 counts toward 2026 even if paid in January. Same basis
+ *   as the dashboard, so the two screens agree.
+ * - `cash_in` follows the **payment date** (`payments.paid_on`) — what actually
+ *   arrived in that span, whichever period it paid for.
+ *
+ * Cancelled invoices, and payments against them, are in none of these.
+ */
+export type RevenueFigures = {
+  billed: number;
+  collected: number;
+  /** `billed - collected`, never negative. */
+  outstanding: number;
+  cash_in: number;
+};
+
+export type RevenueYear = RevenueFigures & { year: number };
+
+/** One calendar month of the selected year, `YYYY-MM`. Always twelve. */
+export type RevenueMonth = RevenueFigures & { period: string };
+
+export type RevenueByBuilding = {
+  building_id: number;
+  building_name: string;
+  billed: number;
+  collected: number;
+  outstanding: number;
+};
+
+export type RevenueByRoom = {
+  room_id: number;
+  room_name: string;
+  building_name: string;
+  billed: number;
+  collected: number;
+  outstanding: number;
+  invoice_count: number;
+};
+
+export type RevenueReport = {
+  year: number;
+  /** The selected year's totals — the same numbers as its row in `years`. */
+  totals: RevenueFigures & { invoice_count: number };
+  months: RevenueMonth[];
+  buildings: RevenueByBuilding[];
+  rooms: RevenueByRoom[];
+  /** Every year with an invoice or a payment in it, newest first. */
+  years: RevenueYear[];
+};
+
+/**
  * One month as the tenant sees it, `GET /api/me/dashboard`.
  *
  * A month can exist with a reading but no invoice yet (the manager has not

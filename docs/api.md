@@ -46,6 +46,7 @@ Guard của từng nhóm → [auth.md](auth.md).
 | `/invoices` | `GET /`, `GET /generate-preview`, `POST /generate`, `GET /:code`, `PATCH /:code`, `DELETE /:code`, `GET /:code/payments`, `POST /:code/payments` |
 | `/payments` | `DELETE /:code` |
 | `/dashboard` | `GET /` |
+| `/reports` | `GET /revenue` |
 
 Hóa đơn không có `POST /` tạo lẻ — chỉ sinh qua `POST /generate`. Payment ghi qua `POST /invoices/:code/payments`, xoá qua `DELETE /payments/:code`.
 
@@ -68,6 +69,13 @@ App không cứng hai nhà: quản lý thêm nhà ở màn **Nhà** (mỗi nhà 
 
 - Hóa đơn `CANCELLED` bị loại khỏi **mọi** con số tiền — hóa đơn huỷ chưa bao giờ nợ.
 - Sáu câu truy vấn đi trong **một** `db.batch()`. Chuỗi `await` nối tiếp tốn phần lớn ngân sách ~10 ms CPU để chờ.
+
+**`GET /api/reports/revenue?year=`** (mặc định năm hiện tại, `YYYY`, sai định dạng → 400 `INVALID_YEAR`): doanh thu một năm theo tháng, theo nhà, theo phòng, kèm tổng của **mọi năm** có dữ liệu để so sánh. Chỉ đọc, guard `requireManager` ngay tại mount như `/api/dashboard`. Hai cơ sở tính, không bao giờ trộn trong một con số:
+
+- `billed` / `collected` / `outstanding` theo **kỳ hóa đơn** (`invoices.period`) — hóa đơn 12/2026 tính vào 2026 dù trả tháng 1/2027. Cùng cơ sở với dashboard, nên hai màn luôn khớp.
+- `cash_in` theo **ngày thu** (`payments.paid_on`) — tiền thực vào trong năm, trả cho kỳ nào cũng được. Một năm có thể có `cash_in` mà không có hóa đơn nào (tháng 1 trả nợ tháng 12), và vẫn nằm trong `years`.
+
+`months` luôn đủ 12 tháng, tháng trống là 0. Hóa đơn `CANCELLED` và payment của nó bị loại khỏi mọi con số. Sáu câu trong **một** `db.batch()`; lọc năm bằng khoảng (`period BETWEEN 'YYYY-01' AND 'YYYY-12'`) chứ không `substr(...) = ?`, để dùng được `idx_invoices_period`.
 
 **Tài khoản (`/api/accounts`)**: `GET` liệt kê; `POST` tạo (mật khẩu tuỳ chọn — bỏ trống thì server sinh 20 ký tự); `PATCH` đổi tên; `POST /:code/reset-password` đặt lại **không cần mật khẩu hiện tại**; `DELETE` xoá. Hai chốt chặn giữ app luôn vào được: không xoá tài khoản đang đăng nhập (`CANNOT_DELETE_SELF`), không xoá quản lý cuối cùng (`LAST_MANAGER_REQUIRED`).
 

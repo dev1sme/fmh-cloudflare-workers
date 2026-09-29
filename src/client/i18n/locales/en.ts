@@ -565,6 +565,7 @@ export const en: Resources = {
     new_password: "new password",
     room_name: "room name",
     rent: "rent",
+    year: "year",
     area: "area",
     full_name: "full name",
     phone: "phone number",

@@ -580,6 +580,7 @@ export const vi = {
     new_password: "mật khẩu mới",
     room_name: "tên phòng",
     rent: "giá phòng",
+    year: "năm",
     area: "diện tích",
     full_name: "họ tên",
     phone: "số điện thoại",
