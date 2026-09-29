@@ -20,7 +20,7 @@ Hai middleware trong `auth.ts`, mỗi vai trò một cái:
 
 **Không có `requireAuth` chung.** Đã từng có, và không route nào gắn nó: mọi route cần đăng nhập trong app thuộc đúng một vai trò, nên một guard chỉ kiểm "đã đăng nhập" là guard không ai dùng đúng được. Hai middleware tự kiểm phiên chứ không ghép nhau — lặp năm dòng, đổi lại không có helper nào dụ một route được bảo vệ ít hơn mức cần. `currentUser` là phần dùng chung, và nó không từ chối gì.
 
-Phòng trong các query `/api/me/*` **luôn lấy từ token**, không bao giờ từ request. `GET /api/me/invoices/:id` kiểm lại `room_id` và trả **404 (không phải 403)** cho hóa đơn phòng khác, để không dò được mã.
+Phòng trong các query `/api/me/*` **luôn lấy từ token**, không bao giờ từ request. `GET /api/me/invoices/:code` kiểm lại `room_id` và trả **404 (không phải 403)** cho hóa đơn phòng khác, để không dò được mã.
 
 ### Bố cục route trong `src/server/index.ts`
 
@@ -46,7 +46,7 @@ Lưu trong `users.password_hash` dạng `pbkdf2$sha256$<iterations>$<salt_b64>$<
 Hai kiểu đổi mật khẩu, cố ý ngược nhau:
 
 - **Tự đổi** (`POST /api/auth/change-password`, cả hai vai trò) **có** yêu cầu mật khẩu hiện tại — chỉ cookie phiên không được đủ để khoá chủ thật khỏi một thiết bị bị bỏ quên.
-- **Quản lý đặt lại** (`POST /api/accounts/:id/reset-password`) **không** yêu cầu.
+- **Quản lý đặt lại** (`POST /api/accounts/:code/reset-password`) **không** yêu cầu.
 
 Băm chạy **trong Worker** (`hashPassword` trong `auth.ts`), bằng Web Crypto (`crypto.subtle`), không dùng Node `crypto`. So sánh bằng hàm so byte thời gian hằng.
 

@@ -7,8 +7,8 @@ Must hold:
 - Handlers never call `c.json` — use `ok` / `failure` / `notFound` from `src/server/envelope.ts`. `grep -rn "c\.json(" src/server/` matches only `envelope.ts`.
 - Error codes are UPPER_SNAKE English and are the API contract. Never reword or re-case one. Validation keeps its specific code (`MISSING_ROOM_NAME`) plus `details`, never a blanket `VALIDATION_ERROR`.
 - A new user-facing error code needs a key in `src/client/i18n/locales/vi.ts` and `en.ts` (check commands in the doc).
-- Paths address resources by public `code` via `parseCode`, except `/api/buildings/:id`.
-- Static sub-paths (`/readings/suggest`, `/invoices/generate-preview`) are registered before `/:id`.
+- Paths address resources by public `code` via `parseCode`, except `/api/buildings/:code`.
+- Static sub-paths (`/readings/suggest`, `/invoices/generate-preview`) are registered before `/:code`.
 - Every value goes through `.bind()`. Never pass a request body into `buildSet` — build the patch field by field. No `...body` in `src/server/`.
 - `electricity_rate` / `water_rate` on an invoice are not patchable. Empty `room_ids` is rejected, not treated as "all".
 - Payment status is always re-derived from `SUM(payments)` via `capNhatTrangThai`; `CANCELLED` is never touched.

@@ -6,7 +6,7 @@ Luồng mặc định là **thủ công**: mỗi hóa đơn hiện một mã Vie
 
 Thông tin ngân hàng nằm trên `buildings` (`bank_bin`, `bank_account_no`, `bank_account_name`, migration 0002), vì mỗi nhà có thể thu vào một tài khoản khác. Quản lý cấu hình trong màn **Nhà**: ngân hàng (mã BIN NAPAS), số tài khoản, tên chủ tài khoản.
 
-`GET /api/invoices/:id` trả `bank_transfer` kèm payload, hoặc **null** khi nhà chưa có thông tin ngân hàng, hóa đơn đã huỷ, hoặc không còn gì phải trả — UI khi đó chỉ hiện mã hóa đơn dạng chữ.
+`GET /api/invoices/:code` trả `bank_transfer` kèm payload, hoặc **null** khi nhà chưa có thông tin ngân hàng, hóa đơn đã huỷ, hoặc không còn gì phải trả — UI khi đó chỉ hiện mã hóa đơn dạng chữ.
 
 Số tiền mã hoá là **`outstanding`, không phải `total`**: hóa đơn trả một phần sẽ quét ra đúng phần còn thiếu.
 
@@ -45,7 +45,7 @@ Nó **suy lại** trạng thái từ `SUM(payments)` chứ không set `PAID` th�
 - **Kiểm chữ ký trên raw body, trước khi parse.** `c.req.text()` trước, `JSON.parse` sau. Chữ ký phủ đúng từng byte SePay gửi; parse rồi serialize lại là đổi thứ tự key và khoảng trắng, chữ ký sẽ không bao giờ khớp.
 - Timestamp lệch quá **300 giây** bị từ chối trước cả khi kiểm chữ ký. Chữ ký có hiệu lực mãi mãi, nên không có cửa sổ này thì một request bị bắt trên đường có thể phát lại vô hạn. SePay ký lại mỗi lần retry, nên không xung đột với cơ chế retry.
 - So sánh chữ ký dùng `soSanhBiMat` (thời gian hằng), không dùng `===`.
-- Chưa đặt secret thì route trả **503**, không phải 401: không chữ ký nào verify được, và một deployment chưa cấu hình không được nhận ghi ẩn danh vào `payments`.
+- Chưa đặt secret thì route trả **503 `WEBHOOK_NOT_CONFIGURED`**, không phải 401: không chữ ký nào verify được, và một deployment chưa cấu hình không được nhận ghi ẩn danh vào `payments`.
 
 ### Status code là chỉ thị cho SePay, không phải phán quyết
 
