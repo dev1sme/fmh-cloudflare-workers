@@ -17,7 +17,7 @@ const APP_URL = "https://rentals.dev1sme.cloud";
  * collects failures per destination rather than letting one dead chat stop the
  * rest, while the manager's "send test" surfaces the reason.
  */
-export async function guiZalo(token: string, chatId: string, text: string): Promise<void> {
+export async function sendZalo(token: string, chatId: string, text: string): Promise<void> {
   const res = await fetch(`${API}/bot${token}/sendMessage`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -43,18 +43,18 @@ export async function guiZalo(token: string, chatId: string, text: string): Prom
  * typed by the manager and could contain an underscore or an asterisk, which
  * would silently swallow the rest of the line into italics.
  */
-function thoat(value: string): string {
+function escapeMarkdown(value: string): string {
   return value.replace(/([*_~`#>{}\\])/g, "\\$1");
 }
 
 /** "2026-08" -> "tháng 08/2026". The client has its own locale-aware version;
  *  this text is always Vietnamese and always goes to Zalo, so it stays here. */
-function nhanKy(period: string): string {
-  const [nam, thang] = period.split("-");
-  return `tháng ${thang}/${nam}`;
+function periodLabel(period: string): string {
+  const [year, month] = period.split("-");
+  return `tháng ${month}/${year}`;
 }
 
-function tien(n: number): string {
+function formatMoney(n: number): string {
   return `${n.toLocaleString("vi-VN")} đ`;
 }
 
@@ -76,13 +76,13 @@ function tien(n: number): string {
  * an invoice and the payment silently never lands. Asking for a heads-up in the
  * group is cheaper than reconciling the bank statement by hand.
  */
-export function vanBanHoaDonMoi(period: string, tenNhaTro?: string): string {
-  const tieuDe = tenNhaTro
-    ? `📄 Hóa đơn ${nhanKy(period)} — ${thoat(tenNhaTro)}`
-    : `📄 Hóa đơn ${nhanKy(period)}`;
+export function invoicesIssuedText(period: string, buildingName?: string): string {
+  const heading = buildingName
+    ? `📄 Hóa đơn ${periodLabel(period)} — ${escapeMarkdown(buildingName)}`
+    : `📄 Hóa đơn ${periodLabel(period)}`;
 
   return (
-    `{big}**${tieuDe}**{/big}\n\n` +
+    `{big}**${heading}**{/big}\n\n` +
     `Mọi người vào app xem chi tiết và quét mã QR để thanh toán:\n\n` +
     `${APP_URL}\n\n` +
     // Only the label is coloured, not the sentence. A whole red paragraph in a
@@ -94,23 +94,23 @@ export function vanBanHoaDonMoi(period: string, tenNhaTro?: string): string {
 }
 
 /** For a `MANAGER` target: money arrived, with the figures. */
-export function vanBanDaNhanTien(input: {
+export function paymentReceivedText(input: {
   roomName: string;
   invoiceCode: string;
-  soTien: number;
-  conLai: number;
+  amount: number;
+  outstanding: number;
 }): string {
   // Green for settled, amber for still owed — the same two signals the app's
   // own palette carries, so the message reads the way the screen does.
-  const mau = input.conLai > 0 ? "orange" : "green";
-  const ketLuan = input.conLai > 0 ? `Còn lại: **${tien(input.conLai)}**` : "✓ Đã thu đủ";
+  const colour = input.outstanding > 0 ? "orange" : "green";
+  const balanceLine = input.outstanding > 0 ? `Còn lại: **${formatMoney(input.outstanding)}**` : "✓ Đã thu đủ";
 
   return (
-    `{${mau}}**💰 Đã nhận thanh toán**{/${mau}}\n\n` +
-    `Phòng: **${thoat(input.roomName)}**\n` +
-    `Số tiền: **${tien(input.soTien)}**\n` +
-    `Hóa đơn: \`${thoat(input.invoiceCode)}\`\n\n` +
-    `{${mau}}${ketLuan}{/${mau}}`
+    `{${colour}}**💰 Đã nhận thanh toán**{/${colour}}\n\n` +
+    `Phòng: **${escapeMarkdown(input.roomName)}**\n` +
+    `Số tiền: **${formatMoney(input.amount)}**\n` +
+    `Hóa đơn: \`${escapeMarkdown(input.invoiceCode)}\`\n\n` +
+    `{${colour}}${balanceLine}{/${colour}}`
   );
 }
 
@@ -121,10 +121,10 @@ export function vanBanDaNhanTien(input: {
  * confirm a chat id points where the label claims — a generic "test" message
  * arriving in the wrong chat looks like a success.
  */
-export function vanBanThu(label: string, kind: string): string {
+export function testMessageText(label: string, kind: string): string {
   return (
     `{big}**🔔 Tin nhắn thử**{/big}\n\n` +
-    `Đích: **${thoat(label)}** (${kind})\n` +
+    `Đích: **${escapeMarkdown(label)}** (${kind})\n` +
     `Nếu bạn đọc được tin này thì cấu hình bot đã đúng.`
   );
 }

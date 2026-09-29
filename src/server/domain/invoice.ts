@@ -1,5 +1,5 @@
 import type { Invoice, Reading, InvoiceEstimate } from "../../shared/types";
-import { CODE_PREFIX, sinhMa } from "./code";
+import { CODE_PREFIX, generateCode } from "./code";
 
 /**
  * The invoice code: printed on the invoice, used as the bank transfer memo,
@@ -14,8 +14,8 @@ import { CODE_PREFIX, sinhMa } from "./code";
  * the unique index catches the birthday collision that a few thousand
  * invoices will never actually reach.
  */
-export function sinhMaHoaDon(): string {
-  return sinhMa(CODE_PREFIX.invoice);
+export function generateInvoiceCode(): string {
+  return generateCode(CODE_PREFIX.invoice);
 }
 
 /**
@@ -29,7 +29,7 @@ export function sinhMaHoaDon(): string {
  * capitals, so a memo the bank had lower-cased was silently unmatched and the
  * transfer went unrecognised.
  */
-export function parseMaHoaDon(text: string): string | null {
+export function parseInvoiceCode(text: string): string | null {
   const match = /HD([0-9A-F]{8})/i.exec(text);
   return match ? `HD${match[1]!.toUpperCase()}` : null;
 }
@@ -46,19 +46,19 @@ export type InvoiceAmounts = Pick<
  * time) and stored on the invoice — a later tariff change must never alter an
  * invoice that has already been issued.
  */
-function tinhHoaDon(input: {
+function computeInvoice(input: {
   reading: Pick<Reading, "electricity_start" | "electricity_end" | "water_start" | "water_end">;
   rent: number;
   electricity_rate: number;
   water_rate: number;
   other_fees?: number;
 }): InvoiceAmounts {
-  const soDien = input.reading.electricity_end - input.reading.electricity_start;
-  const soNuoc = input.reading.water_end - input.reading.water_start;
+  const electricityUsed = input.reading.electricity_end - input.reading.electricity_start;
+  const waterUsed = input.reading.water_end - input.reading.water_start;
 
   const rent_amount = input.rent;
-  const electricity_amount = soDien * input.electricity_rate;
-  const water_amount = soNuoc * input.water_rate;
+  const electricity_amount = electricityUsed * input.electricity_rate;
+  const water_amount = waterUsed * input.water_rate;
   const other_fees = input.other_fees ?? 0;
 
   return {
@@ -97,7 +97,7 @@ export function estimateInvoice(candidate: {
   const water_start = candidate.water_start ?? 0;
 
   return {
-    ...tinhHoaDon({
+    ...computeInvoice({
       reading: { electricity_start, electricity_end, water_start, water_end },
       rent: candidate.rent,
       electricity_rate: candidate.electricity_rate,
@@ -109,7 +109,7 @@ export function estimateInvoice(candidate: {
 }
 
 /** Recomputes the total after an admin edits one of the parts. */
-export function tongTien(
+export function invoiceTotal(
   parts: Pick<Invoice, "rent_amount" | "electricity_amount" | "water_amount" | "other_fees">,
 ): number {
   return parts.rent_amount + parts.electricity_amount + parts.water_amount + parts.other_fees;

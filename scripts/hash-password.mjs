@@ -2,11 +2,13 @@
 /**
  * Hashes an account password offline and prints the SQL to insert it.
  *
- *   node scripts/hash-password.mjs <username> [password] [--room <ten_phong>]
+ *   node scripts/hash-password.mjs <username> [password] [--room <room_name>]
  *
- * Without --room the account is the manager (`quan_ly`); with it, the account
- * belongs to that room (`nguoi_thue`) and can only read its own invoices and
- * meter history. Accounts are bound to a room, not to a person: when a tenant
+ * Without --room the account is the manager (`MANAGER`); with it, the account
+ * belongs to that room (`TENANT`) and can only read its own invoices and
+ * meter history. Room names are unique per building, not globally — if two
+ * buildings share one, the subquery picks either; create that account from
+ * the Tài khoản screen instead. Accounts are bound to a room, not to a person: when a tenant
  * moves out, change the password rather than creating another account.
  *
  * The password is never stored anywhere by this script — copy it out of the
@@ -26,13 +28,13 @@ const KEY_BITS = 256;
 
 const argv = process.argv.slice(2);
 const roomFlag = argv.indexOf("--room");
-const tenPhong = roomFlag === -1 ? null : argv[roomFlag + 1];
+const roomName = roomFlag === -1 ? null : argv[roomFlag + 1];
 if (roomFlag !== -1) argv.splice(roomFlag, 2);
 
 const [username, providedPassword] = argv;
 
-if (!username || (roomFlag !== -1 && !tenPhong)) {
-  console.error("Usage: node scripts/hash-password.mjs <username> [password] [--room <ten_phong>]");
+if (!username || (roomFlag !== -1 && !roomName)) {
+  console.error("Usage: node scripts/hash-password.mjs <username> [password] [--room <room_name>]");
   process.exit(1);
 }
 
@@ -60,21 +62,22 @@ const record = [
   base64(new Uint8Array(bits)),
 ].join("$");
 
-const vaiTro = tenPhong ? "nguoi_thue" : "quan_ly";
-const roomExpression = tenPhong
-  ? `(SELECT id FROM rooms WHERE ten_phong = '${sqlEscape(tenPhong)}')`
+const role = roomName ? "TENANT" : "MANAGER";
+const code = `AC${Buffer.from(crypto.getRandomValues(new Uint8Array(4))).toString("hex").toUpperCase()}`;
+const roomExpression = roomName
+  ? `(SELECT id FROM rooms WHERE room_name = '${sqlEscape(roomName)}')`
   : "NULL";
 
 console.log();
 console.log(`username : ${username}`);
-console.log(`vai_tro  : ${vaiTro}${tenPhong ? ` (phòng ${tenPhong})` : ""}`);
+console.log(`role     : ${role}${roomName ? ` (room ${roomName})` : ""}`);
 if (!providedPassword) {
   console.log(`password : ${password}      <-- save this now, it is not stored anywhere`);
 }
 console.log();
 console.log("-- Run against D1 (add --remote for production):");
 console.log(
-  `INSERT INTO users (username, password_hash, vai_tro, room_id) VALUES ('${sqlEscape(username)}', '${record}', '${vaiTro}', ${roomExpression})`,
+  `INSERT INTO users (code, username, password_hash, role, room_id) VALUES ('${code}', '${sqlEscape(username)}', '${record}', '${role}', ${roomExpression})`,
 );
 console.log(`  ON CONFLICT(username) DO UPDATE SET password_hash = excluded.password_hash;`);
 console.log();

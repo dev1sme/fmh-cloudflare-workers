@@ -71,7 +71,7 @@ export function notFound(c: Context<AppEnv>, message = "Resource not found.") {
  * key is lowercased back to the field name the caller actually sent. Domain
  * codes like `ELECTRICITY_END_BELOW_START` name no single field, and get null.
  */
-export function chiTietValidation(code: string): ApiFailure["error"]["details"] {
+export function validationDetails(code: string): ApiFailure["error"]["details"] {
   const match = /^(?:MISSING|INVALID|TOO_LONG)_(.+)$/.exec(code);
   return match ? { [match[1]!.toLowerCase()]: [code] } : null;
 }

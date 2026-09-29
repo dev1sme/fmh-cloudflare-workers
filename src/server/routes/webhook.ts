@@ -1,16 +1,16 @@
 import { Hono } from "hono";
 
-import { hmacSha256Hex, soSanhBiMat } from "../auth";
+import { hmacSha256Hex, secretsEqual } from "../auth";
 import { getInvoiceByCode } from "../db/invoices";
 import { createPayment, sumPayments } from "../db/payments";
 import { getRoom } from "../db/rooms";
-import { sinhMa } from "../domain/code";
+import { generateCode } from "../domain/code";
 import { CODE_PREFIX } from "../domain/code";
-import { parseMaHoaDon } from "../domain/invoice";
-import { baoDaNhanTien } from "../notify";
+import { parseInvoiceCode } from "../domain/invoice";
+import { notifyPaymentReceived } from "../notify";
 import { failure, ok } from "../envelope";
 import type { AppEnv } from "../types";
-import { capNhatTrangThai } from "./payments";
+import { syncInvoiceStatus } from "./payments";
 
 /**
  * What SePay POSTs on a balance change. Only the fields this route acts on are
@@ -34,7 +34,7 @@ type SePayEvent = {
  * back to today rather than writing something the date column cannot answer
  * questions about.
  */
-function ngayGiaoDich(value: string | undefined): string {
+function parseTransactionDate(value: string | undefined): string {
   const match = /^(\d{4}-\d{2}-\d{2})/.exec(value ?? "");
   return match ? match[1]! : new Date().toISOString().slice(0, 10);
 }
@@ -82,7 +82,7 @@ webhookRoutes.post("/sepay-payment", async (c) => {
   const raw = await c.req.text();
   const expected = `sha256=${await hmacSha256Hex(secret, `${timestamp}.${raw}`)}`;
 
-  if (!soSanhBiMat(signature, expected)) {
+  if (!secretsEqual(signature, expected)) {
     return failure(c, "UNAUTHORIZED", "Invalid webhook signature.", 401);
   }
 
@@ -107,12 +107,12 @@ webhookRoutes.post("/sepay-payment", async (c) => {
   // The memo is where the tenant's banking app puts the code. SePay's own
   // `code` field is only populated when its parsing rules are configured, so
   // it is a fallback rather than the source.
-  const maHoaDon = parseMaHoaDon(event.content ?? "") ?? parseMaHoaDon(event.code ?? "");
-  if (!maHoaDon) {
+  const invoiceCode = parseInvoiceCode(event.content ?? "") ?? parseInvoiceCode(event.code ?? "");
+  if (!invoiceCode) {
     return ok(c, { recorded: false, reason: "NO_INVOICE_CODE" }, "Ignored: no invoice code in memo.");
   }
 
-  const invoice = await getInvoiceByCode(c.env.DB, maHoaDon);
+  const invoice = await getInvoiceByCode(c.env.DB, invoiceCode);
   if (!invoice) {
     return ok(c, { recorded: false, reason: "INVOICE_NOT_FOUND" }, "Ignored: no such invoice.");
   }
@@ -128,10 +128,10 @@ webhookRoutes.post("/sepay-payment", async (c) => {
 
   try {
     await createPayment(c.env.DB, {
-      code: sinhMa(CODE_PREFIX.payment),
+      code: generateCode(CODE_PREFIX.payment),
       invoice_id: invoice.id,
       amount: Math.round(amount),
-      paid_on: ngayGiaoDich(event.transactionDate),
+      paid_on: parseTransactionDate(event.transactionDate),
       method: "BANK_TRANSFER",
       note: [event.gateway, event.referenceCode].filter(Boolean).join(" · ") || null,
       external_id: externalId,
@@ -149,7 +149,7 @@ webhookRoutes.post("/sepay-payment", async (c) => {
   // Re-derived from the sum of payments rather than set to PAID outright: a
   // tenant who transfers less than the total has paid something, not
   // everything, and the invoice has to keep saying so.
-  const updated = await capNhatTrangThai(c.env.DB, invoice.id);
+  const updated = await syncInvoiceStatus(c.env.DB, invoice.id);
 
   // Manager targets only, and with the figures — a group deliberately never
   // sees who paid what. Queued rather than awaited: SePay gives up after 30
@@ -157,20 +157,20 @@ webhookRoutes.post("/sepay-payment", async (c) => {
   // `Invoice` carries neither the room name nor a running balance, so both are
   // fetched here rather than assumed. Two small reads: waiting on D1 does not
   // count against the Worker's CPU budget.
-  const [room, daThu] = await Promise.all([
+  const [room, paidTotal] = await Promise.all([
     getRoom(c.env.DB, invoice.room_id),
     sumPayments(c.env.DB, invoice.id),
   ]);
 
-  baoDaNhanTien(c, {
+  notifyPaymentReceived(c, {
     // The room is what ties a payment to a building, and a manager target can
     // be scoped to one. Null when the room lookup missed, which routes the
     // message to the targets that cover every building rather than nowhere.
     buildingId: room?.building_id ?? null,
     roomName: room?.room_name ?? `#${invoice.room_id}`,
     invoiceCode: invoice.code,
-    soTien: Math.round(amount),
-    conLai: Math.max(0, (updated?.total ?? invoice.total) - daThu),
+    amount: Math.round(amount),
+    outstanding: Math.max(0, (updated?.total ?? invoice.total) - paidTotal),
   });
 
   return ok(

@@ -10,8 +10,8 @@ import {
   renameAccount,
   setPasswordHash,
 } from "../db/users";
-import { CODE_PREFIX, sinhMa } from "../domain/code";
-import { DO_DAI_TOI_THIEU, sinhMatKhau } from "../domain/password";
+import { CODE_PREFIX, generateCode } from "../domain/code";
+import { MIN_PASSWORD_LENGTH, generatePassword } from "../domain/password";
 import { failure, notFound, ok } from "../envelope";
 import type { AppEnv, Role } from "../types";
 import { fail, jsonBody, parseCode, requireEnum, requireId, requireString } from "../validate";
@@ -29,10 +29,10 @@ const ROLES: readonly Role[] = ["MANAGER", "TENANT"];
 export const accountRoutes = new Hono<AppEnv>();
 
 /** Uses the supplied password, or generates a strong one when none is given. */
-function chonMatKhau(value: unknown): string {
-  if (value === undefined || value === null || value === "") return sinhMatKhau();
+function resolvePassword(value: unknown): string {
+  if (value === undefined || value === null || value === "") return generatePassword();
   if (typeof value !== "string") fail("INVALID_PASSWORD");
-  if (value.length < DO_DAI_TOI_THIEU) fail("PASSWORD_TOO_SHORT");
+  if (value.length < MIN_PASSWORD_LENGTH) fail("PASSWORD_TOO_SHORT");
   return value;
 }
 
@@ -43,15 +43,15 @@ accountRoutes.get("/", async (c) =>
 accountRoutes.post("/", async (c) => {
   const body = await jsonBody(c.req);
 
-  const vaiTro = requireEnum(body.role, "role", ROLES);
-  const roomId = vaiTro === "MANAGER" ? null : requireId(body.room_id, "room_id");
-  const password = chonMatKhau(body.password);
+  const role = requireEnum(body.role, "role", ROLES);
+  const roomId = role === "MANAGER" ? null : requireId(body.room_id, "room_id");
+  const password = resolvePassword(body.password);
 
   const account = await createAccount(c.env.DB, {
-    code: sinhMa(CODE_PREFIX.account),
+    code: generateCode(CODE_PREFIX.account),
     username: requireString(body.username, "username", 50),
     password_hash: await hashPassword(password),
-    role: vaiTro,
+    role,
     room_id: roomId,
   });
 
@@ -85,7 +85,7 @@ accountRoutes.post("/:code/reset-password", async (c) => {
   const account = await getAccountByCode(c.env.DB, parseCode(CODE_PREFIX.account, c.req.param("code")));
   if (!account) return notFound(c, "Account not found.");
 
-  const password = chonMatKhau(body.password);
+  const password = resolvePassword(body.password);
   await setPasswordHash(c.env.DB, account.id, await hashPassword(password));
 
   return ok(c, { account, password }, "Password reset.");

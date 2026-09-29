@@ -11,12 +11,12 @@ import {
   updateInvoice,
 } from "../db/invoices";
 import { createPayment, listPayments } from "../db/payments";
-import { bayGio, homNay } from "../domain/period";
-import { estimateInvoice, sinhMaHoaDon, tongTien } from "../domain/invoice";
-import { CODE_PREFIX, sinhMa } from "../domain/code";
+import { nowIso, today } from "../domain/period";
+import { estimateInvoice, generateInvoiceCode, invoiceTotal } from "../domain/invoice";
+import { CODE_PREFIX, generateCode } from "../domain/code";
 import { failure, notFound, ok } from "../envelope";
-import { baoDaPhatHanhHoaDon } from "../notify";
-import { capNhatTrangThai } from "./payments";
+import { notifyInvoicesIssued } from "../notify";
+import { syncInvoiceStatus } from "./payments";
 import type { AppEnv } from "../types";
 import type {
   GeneratePreview,
@@ -87,16 +87,16 @@ invoiceRoutes.post("/generate", async (c) => {
       continue;
     }
 
-    const { electricity_used, water_used, ...tien } = amounts;
+    const { electricity_used, water_used, ...money } = amounts;
 
     inputs.push({
       // Random per invoice, never derived from the row id it will get.
-      code: sinhMaHoaDon(),
+      code: generateInvoiceCode(),
       room_id,
       period,
-      ...tien,
+      ...money,
       status: "UNPAID" as const,
-      created_at: bayGio(),
+      created_at: nowIso(),
     });
   }
 
@@ -109,12 +109,12 @@ invoiceRoutes.post("/generate", async (c) => {
   // to a building, and a combined count would tell one building's tenants how
   // many rooms were billed in the other. Tallied from `created` rather than from
   // `inputs`, so a room that did not make it into the batch is not announced.
-  for (const [buildingId, nhaTro] of demTheoNhaTro(candidates, created).entries()) {
-    baoDaPhatHanhHoaDon(c, {
+  for (const [buildingId, building] of countByBuilding(candidates, created).entries()) {
+    notifyInvoicesIssued(c, {
       buildingId,
-      buildingName: nhaTro.name,
+      buildingName: building.name,
       period,
-      soLuong: nhaTro.count,
+      count: building.count,
     });
   }
 
@@ -138,12 +138,12 @@ invoiceRoutes.get("/generate-preview", async (c) => {
 
   return ok(
     c,
-    { period, rooms: candidates.map(xemTruocPhong) } satisfies GeneratePreview,
+    { period, rooms: candidates.map(previewRoom) } satisfies GeneratePreview,
     "Generation preview retrieved.",
   );
 });
 
-function xemTruocPhong(candidate: GenerationCandidate): PreviewRoom {
+function previewRoom(candidate: GenerationCandidate): PreviewRoom {
   const estimate = estimateInvoice(candidate);
 
   return {
@@ -174,25 +174,25 @@ function parseRoomIds(value: unknown): number[] | undefined {
  * them here rather than re-querying keeps the notification off the request's
  * critical path — this runs after the write is already done.
  */
-function demTheoNhaTro(
+function countByBuilding(
   candidates: GenerationCandidate[],
   created: { room_id: number }[],
 ): Map<number, { name: string; count: number }> {
-  const theoPhong = new Map(
+  const buildingByRoom = new Map(
     candidates.map((k) => [k.room_id, { id: k.building_id, name: k.building_name }]),
   );
 
-  const dem = new Map<number, { name: string; count: number }>();
+  const counts = new Map<number, { name: string; count: number }>();
   for (const invoice of created) {
-    const nhaTro = theoPhong.get(invoice.room_id);
-    if (!nhaTro) continue;
+    const building = buildingByRoom.get(invoice.room_id);
+    if (!building) continue;
 
-    const hien = dem.get(nhaTro.id);
-    if (hien) hien.count += 1;
-    else dem.set(nhaTro.id, { name: nhaTro.name, count: 1 });
+    const existing = counts.get(building.id);
+    if (existing) existing.count += 1;
+    else counts.set(building.id, { name: building.name, count: 1 });
   }
 
-  return dem;
+  return counts;
 }
 
 // Paths carry the invoice `code`, not the row id — see domain/invoice.ts.
@@ -221,7 +221,7 @@ invoiceRoutes.patch("/:code", async (c) => {
     rent_amount,
     other_fees,
     status: optionalEnum(body.status, "status", STATUSES),
-    total: tongTien({ ...current, rent_amount, other_fees }),
+    total: invoiceTotal({ ...current, rent_amount, other_fees }),
   });
 
   return ok(c, { invoice }, "Invoice updated.");
@@ -254,10 +254,10 @@ invoiceRoutes.post("/:code/payments", async (c) => {
   }
 
   const payment = await createPayment(c.env.DB, {
-    code: sinhMa(CODE_PREFIX.payment),
+    code: generateCode(CODE_PREFIX.payment),
     invoice_id: invoiceId,
     amount: requireInt(body.amount, "amount"),
-    paid_on: body.paid_on === undefined ? homNay() : requireDate(body.paid_on, "paid_on"),
+    paid_on: body.paid_on === undefined ? today() : requireDate(body.paid_on, "paid_on"),
     method:
       body.method === undefined
         ? "BANK_TRANSFER"
@@ -265,7 +265,7 @@ invoiceRoutes.post("/:code/payments", async (c) => {
     note: optionalString(body.note, "note", 200),
   });
 
-  const updated = await capNhatTrangThai(c.env.DB, invoiceId);
+  const updated = await syncInvoiceStatus(c.env.DB, invoiceId);
 
   return ok(c, { payment, invoice: updated }, "Payment recorded.", 201);
 });

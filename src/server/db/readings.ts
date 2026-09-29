@@ -35,7 +35,7 @@ export function getReadingByCode(db: D1Database, code: string): Promise<Reading 
   return db.prepare(`${SELECT} WHERE code = ?`).bind(code).first<Reading>();
 }
 
-export function getReadingByRoomKy(
+export function getReadingByRoomPeriod(
   db: D1Database,
   roomId: number,
   period: string,

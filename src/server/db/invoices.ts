@@ -5,8 +5,8 @@ import type {
   InvoiceStatus,
   InvoiceWithRoom,
 } from "../../shared/types";
-import { chuanHoaNoiDung, nganHangHopLe, taoVietQR } from "../domain/vietqr";
-import { getReadingByRoomKy } from "./readings";
+import { normalizeTransferNote, validBankAccount, buildVietQR } from "../domain/vietqr";
+import { getReadingByRoomPeriod } from "./readings";
 import { listPayments, sumPayments } from "./payments";
 import { buildSet, Where } from "./sql";
 
@@ -75,62 +75,62 @@ export async function getInvoiceDetail(
   const row = await db.prepare(`${DETAIL_SELECT} WHERE i.code = ?`).bind(code).first<DetailRow>();
   if (!row) return null;
 
-  const [reading, payments, daThu] = await Promise.all([
-    getReadingByRoomKy(db, row.room_id, row.period),
+  const [reading, payments, paidTotal] = await Promise.all([
+    getReadingByRoomPeriod(db, row.room_id, row.period),
     listPayments(db, row.id),
     sumPayments(db, row.id),
   ]);
 
   const { bank_bin, bank_account_no, bank_account_name, momo_phone, momo_name, ...invoice } = row;
-  const conLai = row.total - daThu;
-  const maHd = row.code;
-  const conNo = conLai > 0 && row.status !== "CANCELLED";
+  const outstanding = row.total - paidTotal;
+  const invoiceCode = row.code;
+  const hasOutstanding = outstanding > 0 && row.status !== "CANCELLED";
 
   return {
     ...invoice,
     reading,
     payments,
-    paid: daThu,
-    outstanding: conLai,
-    bank_transfer: taoChuyenKhoan(
+    paid: paidTotal,
+    outstanding,
+    bank_transfer: buildBankTransfer(
       { bank_bin, bank_account_no, bank_account_name },
-      conLai,
-      maHd,
+      outstanding,
+      invoiceCode,
       row.status,
     ),
     momo:
-      conNo && momo_phone
+      hasOutstanding && momo_phone
         ? {
             phone: momo_phone,
             name: momo_name,
-            amount: conLai,
-            transfer_note: chuanHoaNoiDung(maHd),
+            amount: outstanding,
+            transfer_note: normalizeTransferNote(invoiceCode),
           }
         : null,
   };
 }
 
 /** No QR for a cancelled or fully paid invoice, or an unconfigured building. */
-function taoChuyenKhoan(
+function buildBankTransfer(
   bank: { bank_bin: string | null; bank_account_no: string | null; bank_account_name: string | null },
-  conLai: number,
-  maHoaDonStr: string,
-  trangThai: InvoiceStatus,
+  outstanding: number,
+  invoiceCode: string,
+  status: InvoiceStatus,
 ): BankTransfer | null {
-  if (conLai <= 0 || trangThai === "CANCELLED") return null;
+  if (outstanding <= 0 || status === "CANCELLED") return null;
 
-  const nganHang = nganHangHopLe(bank);
-  if (!nganHang) return null;
+  const account = validBankAccount(bank);
+  if (!account) return null;
 
-  const noiDung = chuanHoaNoiDung(maHoaDonStr);
+  const transferNote = normalizeTransferNote(invoiceCode);
 
   return {
-    vietqr: taoVietQR({ nganHang, soTien: conLai, noiDung }),
-    bank_bin: nganHang.bank_bin,
-    bank_account_no: nganHang.bank_account_no,
-    bank_account_name: nganHang.bank_account_name,
-    transfer_note: noiDung,
-    amount: conLai,
+    vietqr: buildVietQR({ bank: account, amount: outstanding, transferNote }),
+    bank_bin: account.bank_bin,
+    bank_account_no: account.bank_account_no,
+    bank_account_name: account.bank_account_name,
+    transfer_note: transferNote,
+    amount: outstanding,
   };
 }
 

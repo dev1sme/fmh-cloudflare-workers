@@ -3,7 +3,7 @@ import { buildSet } from "./sql";
 
 /**
  * `token` is absent from every SELECT a client can reach. It appears in exactly
- * one query — `dichDenGui`, which is only ever called from a notification send
+ * one query — `listSendDestinations`, which is only ever called from a notification send
  * — so there is no route that can return it by forgetting to strip a field.
  */
 const BOT_COLUMNS = `id, code, name, platform, active, created_at,
@@ -15,11 +15,11 @@ const TARGET_COLUMNS = `id, code, bot_id, kind, chat_id, label, building_id, act
 type BotRow = Omit<Bot, "active" | "has_token"> & { active: number; has_token: number };
 type TargetRow = Omit<BotTarget, "active"> & { active: number };
 
-function doiBot(row: BotRow): Bot {
+function toBot(row: BotRow): Bot {
   return { ...row, active: row.active === 1, has_token: row.has_token === 1 };
 }
 
-function doiTarget(row: TargetRow): BotTarget {
+function toTarget(row: TargetRow): BotTarget {
   return { ...row, active: row.active === 1 };
 }
 
@@ -35,17 +35,17 @@ export async function listBots(db: D1Database): Promise<BotWithTargets[]> {
     db.prepare(`SELECT ${TARGET_COLUMNS} FROM bot_targets ORDER BY kind, label`),
   ]);
 
-  const theoBot = new Map<number, BotTarget[]>();
+  const targetsByBot = new Map<number, BotTarget[]>();
   for (const row of (targets?.results ?? []) as TargetRow[]) {
-    const target = doiTarget(row);
-    const danhSach = theoBot.get(target.bot_id);
-    if (danhSach) danhSach.push(target);
-    else theoBot.set(target.bot_id, [target]);
+    const target = toTarget(row);
+    const targetList = targetsByBot.get(target.bot_id);
+    if (targetList) targetList.push(target);
+    else targetsByBot.set(target.bot_id, [target]);
   }
 
   return ((bots?.results ?? []) as BotRow[]).map((row) => ({
-    ...doiBot(row),
-    targets: theoBot.get(row.id) ?? [],
+    ...toBot(row),
+    targets: targetsByBot.get(row.id) ?? [],
   }));
 }
 
@@ -54,7 +54,7 @@ export async function getBotByCode(db: D1Database, code: string): Promise<Bot | 
     .prepare(`SELECT ${BOT_COLUMNS} FROM bots WHERE code = ?`)
     .bind(code)
     .first<BotRow>();
-  return row ? doiBot(row) : null;
+  return row ? toBot(row) : null;
 }
 
 /**
@@ -88,7 +88,7 @@ export async function createBot(db: D1Database, input: BotInput): Promise<Bot | 
     )
     .bind(input.code, input.name, input.platform, input.token, input.created_at)
     .first<BotRow>();
-  return row ? doiBot(row) : null;
+  return row ? toBot(row) : null;
 }
 
 /**
@@ -111,7 +111,7 @@ export async function updateBot(
     .prepare(`UPDATE bots SET ${set.clause} WHERE code = ? RETURNING ${BOT_COLUMNS}`)
     .bind(...set.values, code)
     .first<BotRow>();
-  return row ? doiBot(row) : null;
+  return row ? toBot(row) : null;
 }
 
 /** Replaces the token outright. There is no path that reads the old one back. */
@@ -124,7 +124,7 @@ export async function setBotToken(
     .prepare(`UPDATE bots SET token = ? WHERE code = ? RETURNING ${BOT_COLUMNS}`)
     .bind(token, code)
     .first<BotRow>();
-  return row ? doiBot(row) : null;
+  return row ? toBot(row) : null;
 }
 
 /** 409 RELATED_DATA_EXISTS while the bot still has targets — the FK restricts. */
@@ -137,7 +137,7 @@ export async function getTargetByCode(db: D1Database, code: string): Promise<Bot
     .prepare(`SELECT ${TARGET_COLUMNS} FROM bot_targets WHERE code = ?`)
     .bind(code)
     .first<TargetRow>();
-  return row ? doiTarget(row) : null;
+  return row ? toTarget(row) : null;
 }
 
 export type TargetInput = {
@@ -160,7 +160,7 @@ export async function createTarget(
     )
     .bind(input.code, input.bot_id, input.kind, input.chat_id, input.label, input.building_id)
     .first<TargetRow>();
-  return row ? doiTarget(row) : null;
+  return row ? toTarget(row) : null;
 }
 
 /**
@@ -190,7 +190,7 @@ export async function updateTarget(
     .prepare(`UPDATE bot_targets SET ${set.clause} WHERE code = ? RETURNING ${TARGET_COLUMNS}`)
     .bind(...set.values, code)
     .first<TargetRow>();
-  return row ? doiTarget(row) : null;
+  return row ? toTarget(row) : null;
 }
 
 export async function deleteTarget(db: D1Database, code: string): Promise<void> {
@@ -198,7 +198,7 @@ export async function deleteTarget(db: D1Database, code: string): Promise<void> 
 }
 
 /** A destination to send to: the bot's stored (encrypted) token and one chat. */
-export type DiaChiGui = {
+export type SendDestination = {
   bot_id: number;
   token: string;
   chat_id: string;
@@ -211,11 +211,11 @@ export type DiaChiGui = {
  * `building_id IS NULL` on a target means every building, so a setup that
  * never bothers with per-building routing keeps working with one row.
  */
-export async function dichDenGui(
+export async function listSendDestinations(
   db: D1Database,
   kind: BotTargetKind,
   buildingId: number | null,
-): Promise<DiaChiGui[]> {
+): Promise<SendDestination[]> {
   const { results } = await db
     .prepare(
       `SELECT t.bot_id, b.token, t.chat_id
@@ -225,6 +225,6 @@ export async function dichDenGui(
          AND (t.building_id IS NULL OR t.building_id = ?)`,
     )
     .bind(kind, buildingId)
-    .all<DiaChiGui>();
+    .all<SendDestination>();
   return results;
 }

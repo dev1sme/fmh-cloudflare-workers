@@ -88,7 +88,7 @@ async function deriveBits(
  * guess was right. Exported for the SePay webhook, which compares signatures
  * and must not leak one a byte at a time.
  */
-export function soSanhBiMat(a: string, b: string): boolean {
+export function secretsEqual(a: string, b: string): boolean {
   const enc = new TextEncoder();
   return timingSafeEqual(enc.encode(a), enc.encode(b));
 }
@@ -190,7 +190,7 @@ export async function currentUser(c: Context<AppEnv>): Promise<SessionUser | nul
 }
 
 /** Management endpoints: everything that writes to rooms, readings or money. */
-export const requireQuanLy = createMiddleware<AppEnv>(async (c, next) => {
+export const requireManager = createMiddleware<AppEnv>(async (c, next) => {
   const user = await currentUser(c);
   if (!user) return failure(c, "UNAUTHORIZED", "Authentication required.", 401);
   if (user.role !== "MANAGER") {
@@ -205,7 +205,7 @@ export const requireQuanLy = createMiddleware<AppEnv>(async (c, next) => {
  * Tenant endpoints under /api/me. The room always comes from the token, never
  * from the request, so one tenant cannot read another room's invoices.
  */
-export const requirePhong = createMiddleware<AppEnv>(async (c, next) => {
+export const requireTenant = createMiddleware<AppEnv>(async (c, next) => {
   const user = await currentUser(c);
   if (!user) return failure(c, "UNAUTHORIZED", "Authentication required.", 401);
   if (user.room_id === null) {

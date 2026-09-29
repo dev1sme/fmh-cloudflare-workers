@@ -6,12 +6,12 @@ import {
   deleteReading,
   getPreviousReading,
   getReadingByCode,
-  getReadingByRoomKy,
+  getReadingByRoomPeriod,
   listReadings,
   updateReading,
 } from "../db/readings";
-import { CODE_PREFIX, sinhMa } from "../domain/code";
-import { homNay } from "../domain/period";
+import { CODE_PREFIX, generateCode } from "../domain/code";
+import { today } from "../domain/period";
 import { failure, notFound, ok } from "../envelope";
 import type { AppEnv } from "../types";
 import {
@@ -83,7 +83,7 @@ readingRoutes.post("/", async (c) => {
   if (!(await getRoom(c.env.DB, roomId))) {
     return failure(c, "ROOM_NOT_FOUND", "Room not found.", 404);
   }
-  if (await getReadingByRoomKy(c.env.DB, roomId, period)) {
+  if (await getReadingByRoomPeriod(c.env.DB, roomId, period)) {
     return failure(c, "READING_ALREADY_EXISTS", "This room already has a reading for the period.", 409);
   }
 
@@ -97,14 +97,14 @@ readingRoutes.post("/", async (c) => {
   if (water_end < water_start) fail("WATER_END_BELOW_START");
 
   const reading = await createReading(c.env.DB, {
-    code: sinhMa(CODE_PREFIX.reading),
+    code: generateCode(CODE_PREFIX.reading),
     room_id: roomId,
     period,
     electricity_start,
     electricity_end,
     water_start,
     water_end,
-    recorded_on: optionalDate(body.recorded_on, "recorded_on") ?? homNay(),
+    recorded_on: optionalDate(body.recorded_on, "recorded_on") ?? today(),
   });
 
   return ok(c, { reading }, "Reading recorded.", 201);

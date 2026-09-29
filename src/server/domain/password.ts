@@ -5,12 +5,12 @@
  */
 const ALPHABET = "abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789-_@#$%&*";
 
-const DO_DAI = 20;
+const GENERATED_LENGTH = 20;
 
 /** ~120 bits of entropy; shown once, never stored in plaintext. */
-export function sinhMatKhau(length = DO_DAI): string {
+export function generatePassword(length = GENERATED_LENGTH): string {
   const bytes = crypto.getRandomValues(new Uint8Array(length));
   return Array.from(bytes, (byte) => ALPHABET[byte % ALPHABET.length]).join("");
 }
 
-export const DO_DAI_TOI_THIEU = 8;
+export const MIN_PASSWORD_LENGTH = 8;

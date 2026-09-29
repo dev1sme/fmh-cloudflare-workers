@@ -1,4 +1,4 @@
-import { maPattern, type CodePrefix } from "./domain/code";
+import { codePattern, type CodePrefix } from "./domain/code";
 
 /**
  * Hand-rolled request validation. Every failure throws a ValidationError whose
@@ -76,12 +76,12 @@ export function optionalArea(value: unknown, field: string): number | null {
   return value as number;
 }
 
-const KY_PATTERN = /^\d{4}-(0[1-9]|1[0-2])$/;
+const PERIOD_PATTERN = /^\d{4}-(0[1-9]|1[0-2])$/;
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 /** Billing period, `YYYY-MM`. */
 export function requirePeriod(value: unknown): string {
-  if (typeof value !== "string" || !KY_PATTERN.test(value)) fail("INVALID_PERIOD");
+  if (typeof value !== "string" || !PERIOD_PATTERN.test(value)) fail("INVALID_PERIOD");
   return value as string;
 }
 
@@ -128,7 +128,7 @@ export function optionalEnum<T extends string>(
  */
 export function parseCode(prefix: CodePrefix, value: string | undefined): string {
   const code = (value ?? "").toUpperCase();
-  if (!maPattern(prefix).test(code)) fail("INVALID_CODE");
+  if (!codePattern(prefix).test(code)) fail("INVALID_CODE");
   return code;
 }
 

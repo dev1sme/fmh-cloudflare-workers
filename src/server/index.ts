@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 
-import { requirePhong, requireQuanLy } from "./auth";
-import { chiTietValidation, failure, notFound, ok } from "./envelope";
+import { requireTenant, requireManager } from "./auth";
+import { validationDetails, failure, notFound, ok } from "./envelope";
 import { securityHeaders } from "./headers";
 import { getDashboard } from "./db/dashboard";
 import { currentPeriod } from "./domain/period";
@@ -25,7 +25,7 @@ const app = new Hono<AppEnv>();
 /**
  * Wraps a resource router in the manager guard **at its own mount point**.
  *
- * The shape this replaces was one sub-app carrying `use("*", requireQuanLy)`
+ * The shape this replaces was one sub-app carrying `use("*", requireManager)`
  * and mounted on `/api`. It worked, but only because of registration order:
  * `/api/health`, `/api/auth/*` and `/api/me/*` stayed reachable purely by being
  * registered above it, and a public route added below would have started
@@ -36,9 +36,9 @@ const app = new Hono<AppEnv>();
  * under a wildcard meant for a different one and the order of these lines no
  * longer decides who can call what.
  */
-function quanLyOnly(routes: Hono<AppEnv>): Hono<AppEnv> {
+function managerOnly(routes: Hono<AppEnv>): Hono<AppEnv> {
   const guarded = new Hono<AppEnv>();
-  guarded.use("*", requireQuanLy);
+  guarded.use("*", requireManager);
   guarded.route("/", routes);
   return guarded;
 }
@@ -51,7 +51,7 @@ app.get("/api/health", (c) => ok(c, { ok: true }, "Service is healthy."));
 app.route("/api/auth", authRoutes);
 
 // SePay calls this with a signature, not a session cookie, so it cannot sit
-// under `requireQuanLy`. It authenticates itself before touching anything.
+// under `requireManager`. It authenticates itself before touching anything.
 //
 // Outside /api on purpose — it is not part of the app's API surface and no
 // client calls it. `run_worker_first` in wrangler.toml has to list /hooks/*
@@ -60,7 +60,7 @@ app.route("/hooks", webhookRoutes);
 
 // Tenant accounts: read-only, always scoped to the room in their token.
 const me = new Hono<AppEnv>();
-me.use("*", requirePhong);
+me.use("*", requireTenant);
 me.route("/", meRoutes);
 app.route("/api/me", me);
 
@@ -69,24 +69,24 @@ app.route("/api/me", me);
 // one route.
 
 /** Revenue, debt, occupancy and usage for one period. Defaults to this month. */
-app.get("/api/dashboard", requireQuanLy, async (c) => {
+app.get("/api/dashboard", requireManager, async (c) => {
   const period = optionalPeriod(c.req.query("period")) ?? currentPeriod();
   return ok(c, await getDashboard(c.env.DB, period), "Dashboard retrieved.");
 });
 
-app.route("/api/accounts", quanLyOnly(accountRoutes));
-app.route("/api/buildings", quanLyOnly(buildingRoutes));
-app.route("/api/rooms", quanLyOnly(roomRoutes));
-app.route("/api/tenants", quanLyOnly(tenantRoutes));
-app.route("/api/readings", quanLyOnly(readingRoutes));
-app.route("/api/invoices", quanLyOnly(invoiceRoutes));
-app.route("/api/payments", quanLyOnly(paymentRoutes));
+app.route("/api/accounts", managerOnly(accountRoutes));
+app.route("/api/buildings", managerOnly(buildingRoutes));
+app.route("/api/rooms", managerOnly(roomRoutes));
+app.route("/api/tenants", managerOnly(tenantRoutes));
+app.route("/api/readings", managerOnly(readingRoutes));
+app.route("/api/invoices", managerOnly(invoiceRoutes));
+app.route("/api/payments", managerOnly(paymentRoutes));
 // Notification bots and their destinations. Two mounts because a target is
 // addressed by its own code, not nested under the bot's — `PATCH
 // /bot-targets/TG…` beats threading the bot code through a path that already
 // identifies the row uniquely.
-app.route("/api/bots", quanLyOnly(botRoutes));
-app.route("/api/bot-targets", quanLyOnly(botTargetRoutes));
+app.route("/api/bots", managerOnly(botRoutes));
+app.route("/api/bot-targets", managerOnly(botTargetRoutes));
 
 app.notFound((c) => notFound(c, "Endpoint not found."));
 
@@ -98,7 +98,7 @@ app.onError((err, c) => {
       err.message,
       "The given data was invalid.",
       400,
-      chiTietValidation(err.message),
+      validationDetails(err.message),
     );
   }
 

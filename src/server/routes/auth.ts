@@ -10,7 +10,7 @@ import {
   verifyPassword,
 } from "../auth";
 import { getUserByUsername, setPasswordHash } from "../db/users";
-import { DO_DAI_TOI_THIEU } from "../domain/password";
+import { MIN_PASSWORD_LENGTH } from "../domain/password";
 import { failure, notFound, ok } from "../envelope";
 import type { AppEnv, SessionUser } from "../types";
 import { fail, jsonBody, requireString } from "../validate";
@@ -83,19 +83,19 @@ authRoutes.post("/change-password", async (c) => {
   if (!session) return failure(c, "UNAUTHORIZED", "Authentication required.", 401);
 
   const body = await jsonBody(c.req);
-  const matKhauCu = requireString(body.mat_khau_cu, "mat_khau_cu", 200);
-  const matKhauMoi = requireString(body.mat_khau_moi, "mat_khau_moi", 200);
+  const currentPassword = requireString(body.mat_khau_cu, "mat_khau_cu", 200);
+  const newPassword = requireString(body.mat_khau_moi, "mat_khau_moi", 200);
 
-  if (matKhauMoi.length < DO_DAI_TOI_THIEU) fail("PASSWORD_TOO_SHORT");
+  if (newPassword.length < MIN_PASSWORD_LENGTH) fail("PASSWORD_TOO_SHORT");
 
   const user = await getUserByUsername(c.env.DB, session.username);
   if (!user) return notFound(c, "Account not found.");
 
-  if (!(await verifyPassword(matKhauCu, user.password_hash))) {
+  if (!(await verifyPassword(currentPassword, user.password_hash))) {
     return failure(c, "WRONG_CURRENT_PASSWORD", "The current password is wrong.", 400);
   }
 
-  await setPasswordHash(c.env.DB, user.id, await hashPassword(matKhauMoi));
+  await setPasswordHash(c.env.DB, user.id, await hashPassword(newPassword));
 
   return ok(c, { ok: true }, "Password changed.");
 });

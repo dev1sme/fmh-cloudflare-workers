@@ -11,10 +11,10 @@ export function previousPeriod(period: string): string {
   return date.toISOString().slice(0, 7);
 }
 
-export function homNay(): string {
+export function today(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
-export function bayGio(): string {
+export function nowIso(): string {
   return new Date().toISOString();
 }

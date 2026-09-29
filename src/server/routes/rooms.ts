@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 
 import { createRoom, deleteRoom, getRoomByCode, listRooms, updateRoom } from "../db/rooms";
-import { CODE_PREFIX, sinhMa } from "../domain/code";
+import { CODE_PREFIX, generateCode } from "../domain/code";
 import { notFound, ok } from "../envelope";
 import type { AppEnv } from "../types";
 import {
@@ -30,7 +30,7 @@ roomRoutes.post("/", async (c) => {
   const body = await jsonBody(c.req);
 
   const room = await createRoom(c.env.DB, {
-    code: sinhMa(CODE_PREFIX.room),
+    code: generateCode(CODE_PREFIX.room),
     building_id: requireId(body.building_id, "building_id"),
     room_name: requireString(body.room_name, "room_name", 50),
     rent: requireInt(body.rent, "rent"),

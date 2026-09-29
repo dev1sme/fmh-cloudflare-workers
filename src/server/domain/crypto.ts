@@ -23,7 +23,7 @@
  *
  * The version prefix is there so a later key rotation or algorithm change can
  * still read what is already stored, instead of needing every row re-entered —
- * `giaiMa` refuses anything carrying a version it does not know.
+ * `decrypt` refuses anything carrying a version it does not know.
  */
 const VERSION = "v1";
 const IV_BYTES = 12;
@@ -33,7 +33,7 @@ const KEY_BYTES = 32;
  * `null` when the key is not configured, so a route can answer 503 rather than
  * writing a row it will never be able to read back.
  */
-export function docKhoa(env: { BOT_ENCRYPTION_KEY?: string }): string | null {
+export function readEncryptionKey(env: { BOT_ENCRYPTION_KEY?: string }): string | null {
   const raw = env.BOT_ENCRYPTION_KEY?.trim();
   return raw ? raw : null;
 }
@@ -43,7 +43,7 @@ export function docKhoa(env: { BOT_ENCRYPTION_KEY?: string }): string | null {
 // value is never served from the cache of the old one.
 let cache: { raw: string; key: CryptoKey } | null = null;
 
-async function nhapKhoa(raw: string): Promise<CryptoKey> {
+async function importKey(raw: string): Promise<CryptoKey> {
   if (cache?.raw === raw) return cache.key;
 
   const bytes = decodeBase64(raw);
@@ -67,8 +67,8 @@ async function nhapKhoa(raw: string): Promise<CryptoKey> {
  * under the same key in GCM does not just weaken it, it forfeits the whole
  * guarantee — two messages under one IV leak their XOR and the auth key.
  */
-export async function maHoa(rawKey: string, plaintext: string): Promise<string> {
-  const key = await nhapKhoa(rawKey);
+export async function encrypt(rawKey: string, plaintext: string): Promise<string> {
+  const key = await importKey(rawKey);
   const iv = crypto.getRandomValues(new Uint8Array(IV_BYTES));
 
   const sealed = await crypto.subtle.encrypt(
@@ -86,7 +86,7 @@ export async function maHoa(rawKey: string, plaintext: string): Promise<string> 
  * that bot instead of failing the invoice run that triggered it; GCM's tag is
  * what makes "does not decrypt" also mean "was tampered with".
  */
-export async function giaiMa(rawKey: string, record: string): Promise<string | null> {
+export async function decrypt(rawKey: string, record: string): Promise<string | null> {
   const parts = record.split(".");
   if (parts.length !== 3 || parts[0] !== VERSION) return null;
 
@@ -95,7 +95,7 @@ export async function giaiMa(rawKey: string, record: string): Promise<string | n
   if (!iv || iv.length !== IV_BYTES || !sealed) return null;
 
   try {
-    const key = await nhapKhoa(rawKey);
+    const key = await importKey(rawKey);
     const opened = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, sealed);
     return new TextDecoder().decode(opened);
   } catch {

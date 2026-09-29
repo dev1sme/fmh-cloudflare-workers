@@ -13,18 +13,18 @@ import { parseCode } from "../validate";
  * deleting a mistaken payment flips it back to unpaid. A cancelled invoice is
  * left alone — that state is a human decision, not an arithmetic one.
  */
-export async function capNhatTrangThai(
+export async function syncInvoiceStatus(
   db: D1Database,
   invoiceId: number,
 ): Promise<Invoice | null> {
   const invoice = await getInvoice(db, invoiceId);
   if (!invoice || invoice.status === "CANCELLED") return invoice;
 
-  const daThu = await sumPayments(db, invoiceId);
-  const trangThai = daThu >= invoice.total ? "PAID" : "UNPAID";
+  const paidTotal = await sumPayments(db, invoiceId);
+  const status = paidTotal >= invoice.total ? "PAID" : "UNPAID";
 
-  if (trangThai === invoice.status) return invoice;
-  return updateInvoice(db, invoiceId, { status: trangThai });
+  if (status === invoice.status) return invoice;
+  return updateInvoice(db, invoiceId, { status });
 }
 
 export const paymentRoutes = new Hono<AppEnv>();
@@ -35,7 +35,7 @@ paymentRoutes.delete("/:code", async (c) => {
   if (!payment) return notFound(c, "Payment not found.");
 
   await deletePayment(c.env.DB, payment.id);
-  const invoice = await capNhatTrangThai(c.env.DB, payment.invoice_id);
+  const invoice = await syncInvoiceStatus(c.env.DB, payment.invoice_id);
 
   return ok(c, { ok: true, invoice }, "Payment deleted.");
 });

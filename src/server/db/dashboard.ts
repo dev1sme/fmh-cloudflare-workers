@@ -28,7 +28,7 @@ const PAID_PER_INVOICE = `
 const HISTORY_PERIODS = 12;
 
 export async function getDashboard(db: D1Database, period: string): Promise<Dashboard> {
-  const truoc = previousPeriod(period);
+  const prevPeriod = previousPeriod(period);
 
   const [revenue, debts, rooms, usage, usagePrev, history] = await db.batch([
     db
@@ -74,7 +74,7 @@ export async function getDashboard(db: D1Database, period: string): Promise<Dash
       .bind(period),
 
     db.prepare(USAGE).bind(period),
-    db.prepare(USAGE).bind(truoc),
+    db.prepare(USAGE).bind(prevPeriod),
 
     db
       .prepare(

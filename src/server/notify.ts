@@ -1,8 +1,8 @@
 import type { Context } from "hono";
 
-import { dichDenGui, type DiaChiGui } from "./db/bots";
-import { docKhoa, giaiMa } from "./domain/crypto";
-import { guiZalo, vanBanDaNhanTien, vanBanHoaDonMoi, vanBanThu } from "./domain/zalo";
+import { listSendDestinations, type SendDestination } from "./db/bots";
+import { readEncryptionKey, decrypt } from "./domain/crypto";
+import { sendZalo, paymentReceivedText, invoicesIssuedText, testMessageText } from "./domain/zalo";
 import type { BotTarget, BotTargetKind } from "../shared/types";
 import type { AppEnv } from "./types";
 
@@ -28,9 +28,9 @@ import type { AppEnv } from "./types";
  * gives up after 30 seconds and retries anything it does not get an answer to.
  * Waiting on Zalo there would risk a duplicate delivery to save nothing.
  */
-function nen(c: Context<AppEnv>, viec: Promise<unknown>): void {
+function runInBackground(c: Context<AppEnv>, task: Promise<unknown>): void {
   c.executionCtx.waitUntil(
-    viec.catch((err: unknown) => {
+    task.catch((err: unknown) => {
       console.error("Zalo notification failed", err);
     }),
   );
@@ -39,21 +39,21 @@ function nen(c: Context<AppEnv>, viec: Promise<unknown>): void {
 /**
  * Decrypts each bot's token once, not once per destination.
  *
- * A bot with three targets comes back from `dichDenGui` as three rows carrying
+ * A bot with three targets comes back from `listSendDestinations` as three rows carrying
  * the same ciphertext; decrypting per row would do the same AES-GCM work three
  * times. Cheap either way, but the grouping also gives one place to drop a bot
  * whose token will not decrypt.
  */
-async function moKhoaToken(
+async function unsealToken(
   rawKey: string,
-  diaChi: DiaChiGui[],
+  destinations: SendDestination[],
 ): Promise<{ token: string; chatId: string }[]> {
-  const theoBot = new Map<number, string>();
-  const ra: { token: string; chatId: string }[] = [];
+  const tokensByBot = new Map<number, string>();
+  const sends: { token: string; chatId: string }[] = [];
 
-  for (const d of diaChi) {
-    if (!theoBot.has(d.bot_id)) {
-      const token = await giaiMa(rawKey, d.token);
+  for (const d of destinations) {
+    if (!tokensByBot.has(d.bot_id)) {
+      const token = await decrypt(rawKey, d.token);
       // A token that does not decrypt means the key was rotated without the
       // tokens being re-entered, or the row was tampered with. Skip the bot and
       // say so — silently sending nothing is how a broken integration looks
@@ -62,14 +62,14 @@ async function moKhoaToken(
         console.error(`Bot ${d.bot_id}: token failed to decrypt — re-enter it in Thông báo`);
         continue;
       }
-      theoBot.set(d.bot_id, token);
+      tokensByBot.set(d.bot_id, token);
     }
 
-    const token = theoBot.get(d.bot_id);
-    if (token) ra.push({ token, chatId: d.chat_id });
+    const token = tokensByBot.get(d.bot_id);
+    if (token) sends.push({ token, chatId: d.chat_id });
   }
 
-  return ra;
+  return sends;
 }
 
 /**
@@ -79,30 +79,30 @@ async function moKhoaToken(
  * from would otherwise abort the rest of the fan-out. Each failure is logged
  * with its chat id so the manager can tell which target to fix.
  */
-async function phatTan(
+async function broadcast(
   c: Context<AppEnv>,
   kind: BotTargetKind,
   buildingId: number | null,
   text: string,
 ): Promise<void> {
-  const rawKey = docKhoa(c.env);
+  const rawKey = readEncryptionKey(c.env);
   if (!rawKey) {
     console.error("BOT_ENCRYPTION_KEY is not set — notifications are off");
     return;
   }
 
-  const diaChi = await dichDenGui(c.env.DB, kind, buildingId);
-  if (diaChi.length === 0) return;
+  const destinations = await listSendDestinations(c.env.DB, kind, buildingId);
+  if (destinations.length === 0) return;
 
-  const gui = await moKhoaToken(rawKey, diaChi);
+  const sends = await unsealToken(rawKey, destinations);
 
-  const ketQua = await Promise.allSettled(
-    gui.map(({ token, chatId }) => guiZalo(token, chatId, text)),
+  const results = await Promise.allSettled(
+    sends.map(({ token, chatId }) => sendZalo(token, chatId, text)),
   );
 
-  ketQua.forEach((r, i) => {
+  results.forEach((r, i) => {
     if (r.status === "rejected") {
-      console.error(`Zalo send to ${gui[i]?.chatId} failed`, r.reason);
+      console.error(`Zalo send to ${sends[i]?.chatId} failed`, r.reason);
     }
   });
 }
@@ -114,30 +114,30 @@ async function phatTan(
  * scoped to a building and a combined count would tell the wrong group how many
  * rooms were billed somewhere else.
  */
-export function baoDaPhatHanhHoaDon(
+export function notifyInvoicesIssued(
   c: Context<AppEnv>,
-  input: { buildingId: number; buildingName?: string; period: string; soLuong: number },
+  input: { buildingId: number; buildingName?: string; period: string; count: number },
 ): void {
-  // `soLuong` no longer appears in the message, but it still decides whether
+  // `count` no longer appears in the message, but it still decides whether
   // there is anything to announce — a building that had nothing created gets no
   // notice at all.
-  if (input.soLuong <= 0) return;
+  if (input.count <= 0) return;
 
-  nen(c, phatTan(c, "GROUP", input.buildingId, vanBanHoaDonMoi(input.period, input.buildingName)));
+  runInBackground(c, broadcast(c, "GROUP", input.buildingId, invoicesIssuedText(input.period, input.buildingName)));
 }
 
 /** Managers only, and with the figures. */
-export function baoDaNhanTien(
+export function notifyPaymentReceived(
   c: Context<AppEnv>,
   input: {
     buildingId: number | null;
     roomName: string;
     invoiceCode: string;
-    soTien: number;
-    conLai: number;
+    amount: number;
+    outstanding: number;
   },
 ): void {
-  nen(c, phatTan(c, "MANAGER", input.buildingId, vanBanDaNhanTien(input)));
+  runInBackground(c, broadcast(c, "MANAGER", input.buildingId, paymentReceivedText(input)));
 }
 
 /**
@@ -145,19 +145,19 @@ export function baoDaNhanTien(
  * whole point is to report back whether it worked, so a failure is returned to
  * the caller rather than logged and forgotten.
  */
-export async function guiThu(
+export async function sendTestMessage(
   c: Context<AppEnv>,
   target: BotTarget,
   encryptedToken: string,
 ): Promise<{ ok: true } | { ok: false; reason: string }> {
-  const rawKey = docKhoa(c.env);
+  const rawKey = readEncryptionKey(c.env);
   if (!rawKey) return { ok: false, reason: "ENCRYPTION_NOT_CONFIGURED" };
 
-  const token = await giaiMa(rawKey, encryptedToken);
+  const token = await decrypt(rawKey, encryptedToken);
   if (!token) return { ok: false, reason: "TOKEN_UNREADABLE" };
 
   try {
-    await guiZalo(token, target.chat_id, vanBanThu(target.label, target.kind));
+    await sendZalo(token, target.chat_id, testMessageText(target.label, target.kind));
     return { ok: true };
   } catch (err) {
     return { ok: false, reason: (err as Error).message };

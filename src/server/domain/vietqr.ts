@@ -11,18 +11,18 @@
 
 const GUID_NAPAS = "A000000727";
 /** Transfer to an account number (as opposed to QRIBFTTC, to a card). */
-const DICH_VU_CHUYEN_KHOAN = "QRIBFTTA";
-const TIEN_TE_VND = "704";
-const QUOC_GIA = "VN";
+const TRANSFER_SERVICE = "QRIBFTTA";
+const CURRENCY_VND = "704";
+const COUNTRY_CODE = "VN";
 
-export type ThongTinNganHang = {
+export type BankAccount = {
   /** 6-digit NAPAS acquirer id, e.g. 970436 for Vietcombank. */
   bank_bin: string;
   bank_account_no: string;
   bank_account_name: string | null;
 };
 
-function truong(id: string, value: string): string {
+function tlvField(id: string, value: string): string {
   return id + String(value.length).padStart(2, "0") + value;
 }
 
@@ -48,7 +48,7 @@ function crc16(input: string): string {
  * Banking apps reject diacritics and most punctuation in the transfer memo.
  * The memo only needs to carry the invoice code for reconciliation.
  */
-export function chuanHoaNoiDung(text: string): string {
+export function normalizeTransferNote(text: string): string {
   return text
     .normalize("NFD")
     .replace(/[̀-ͯ]/g, "")
@@ -60,43 +60,43 @@ export function chuanHoaNoiDung(text: string): string {
     .slice(0, 99);
 }
 
-export function taoVietQR(input: {
-  nganHang: ThongTinNganHang;
+export function buildVietQR(input: {
+  bank: BankAccount;
   /** VND, whole number. Omit for a QR the payer types the amount into. */
-  soTien?: number;
-  noiDung: string;
+  amount?: number;
+  transferNote: string;
 }): string {
-  const { nganHang } = input;
+  const { bank } = input;
 
-  const thongTinThuHuong = truong("00", nganHang.bank_bin) + truong("01", nganHang.bank_account_no);
+  const beneficiary = tlvField("00", bank.bank_bin) + tlvField("01", bank.bank_account_no);
 
   const napas =
-    truong("00", GUID_NAPAS) +
-    truong("01", thongTinThuHuong) +
-    truong("02", DICH_VU_CHUYEN_KHOAN);
+    tlvField("00", GUID_NAPAS) +
+    tlvField("01", beneficiary) +
+    tlvField("02", TRANSFER_SERVICE);
 
-  const noiDung = chuanHoaNoiDung(input.noiDung);
+  const transferNote = normalizeTransferNote(input.transferNote);
 
   const payload =
-    truong("00", "01") +
+    tlvField("00", "01") +
     // 12 = dynamic: this QR carries one amount and is used once.
-    truong("01", input.soTien === undefined ? "11" : "12") +
-    truong("38", napas) +
-    truong("53", TIEN_TE_VND) +
-    (input.soTien === undefined ? "" : truong("54", String(Math.round(input.soTien)))) +
-    truong("58", QUOC_GIA) +
-    (noiDung === "" ? "" : truong("62", truong("08", noiDung)));
+    tlvField("01", input.amount === undefined ? "11" : "12") +
+    tlvField("38", napas) +
+    tlvField("53", CURRENCY_VND) +
+    (input.amount === undefined ? "" : tlvField("54", String(Math.round(input.amount)))) +
+    tlvField("58", COUNTRY_CODE) +
+    (transferNote === "" ? "" : tlvField("62", tlvField("08", transferNote)));
 
-  const chuaCoCrc = `${payload}6304`;
-  return chuaCoCrc + crc16(chuaCoCrc);
+  const withoutCrc = `${payload}6304`;
+  return withoutCrc + crc16(withoutCrc);
 }
 
 /** Null when the building has no bank details configured yet. */
-export function nganHangHopLe(input: {
+export function validBankAccount(input: {
   bank_bin: string | null;
   bank_account_no: string | null;
   bank_account_name: string | null;
-}): ThongTinNganHang | null {
+}): BankAccount | null {
   if (!input.bank_bin || !input.bank_account_no) return null;
 
   return {

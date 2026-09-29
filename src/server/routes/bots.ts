@@ -14,11 +14,11 @@ import {
   updateBot,
   updateTarget,
 } from "../db/bots";
-import { CODE_PREFIX, sinhMa } from "../domain/code";
-import { docKhoa, maHoa } from "../domain/crypto";
-import { bayGio } from "../domain/period";
+import { CODE_PREFIX, generateCode } from "../domain/code";
+import { readEncryptionKey, encrypt } from "../domain/crypto";
+import { nowIso } from "../domain/period";
 import { failure, notFound, ok } from "../envelope";
-import { guiThu } from "../notify";
+import { sendTestMessage } from "../notify";
 import type { AppEnv } from "../types";
 import type { BotPlatform, BotTargetKind } from "../../shared/types";
 import {
@@ -59,10 +59,10 @@ botRoutes.get("/", async (c) => ok(c, { bots: await listBots(c.env.DB) }, "Bots 
  * and fail silently at the next invoice run. Same shape as the SePay webhook's
  * answer to a missing signing secret.
  */
-async function niemPhong(c: Context<AppEnv>, token: string): Promise<string | null> {
-  const rawKey = docKhoa(c.env);
+async function sealToken(c: Context<AppEnv>, token: string): Promise<string | null> {
+  const rawKey = readEncryptionKey(c.env);
   if (!rawKey) return null;
-  return maHoa(rawKey, token);
+  return encrypt(rawKey, token);
 }
 
 botRoutes.post("/", async (c) => {
@@ -71,17 +71,17 @@ botRoutes.post("/", async (c) => {
   const token = requireString(body.token, "token", TOKEN_MAX);
   const platform = optionalEnum(body.platform, "platform", PLATFORMS) ?? "ZALO";
 
-  const sealed = await niemPhong(c, token);
+  const sealed = await sealToken(c, token);
   if (!sealed) {
     return failure(c, "ENCRYPTION_NOT_CONFIGURED", "Bot encryption key is not set.", 503);
   }
 
   const bot = await createBot(c.env.DB, {
-    code: sinhMa(CODE_PREFIX.bot),
+    code: generateCode(CODE_PREFIX.bot),
     name,
     platform,
     token: sealed,
-    created_at: bayGio(),
+    created_at: nowIso(),
   });
 
   return ok(c, { bot }, "Bot created.", 201);
@@ -106,7 +106,7 @@ botRoutes.post("/:code/token", async (c) => {
   const body = await jsonBody(c.req);
   const token = requireString(body.token, "token", TOKEN_MAX);
 
-  const sealed = await niemPhong(c, token);
+  const sealed = await sealToken(c, token);
   if (!sealed) {
     return failure(c, "ENCRYPTION_NOT_CONFIGURED", "Bot encryption key is not set.", 503);
   }
@@ -139,7 +139,7 @@ botRoutes.post("/:code/targets", async (c) => {
   const body = await jsonBody(c.req);
 
   const target = await createTarget(c.env.DB, {
-    code: sinhMa(CODE_PREFIX.botTarget),
+    code: generateCode(CODE_PREFIX.botTarget),
     bot_id: bot.id,
     kind: requireEnum(body.kind, "kind", KINDS),
     chat_id: requireString(body.chat_id, "chat_id", 100),
@@ -194,7 +194,7 @@ botTargetRoutes.post("/:code/test", async (c) => {
   const sealed = await getBotTokenById(c.env.DB, target.bot_id);
   if (!sealed) return notFound(c, "Bot not found.");
 
-  const result = await guiThu(c, target, sealed);
+  const result = await sendTestMessage(c, target, sealed);
   if (!result.ok) {
     // The reason is Zalo's own description or a configuration problem, both of
     // which the manager needs to read. 502: the fault is upstream, not in the

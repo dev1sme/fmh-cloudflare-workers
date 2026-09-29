@@ -39,13 +39,13 @@ function bankBin(value: unknown): string | null {
   return bin;
 }
 
-function bankSoTk(value: unknown): string | null {
-  const so = optionalString(value, "bank_account_no", 30);
-  if (so !== null && !/^\d+$/.test(so)) fail("INVALID_BANK_ACCOUNT_NO");
-  return so;
+function bankAccountNo(value: unknown): string | null {
+  const accountNo = optionalString(value, "bank_account_no", 30);
+  if (accountNo !== null && !/^\d+$/.test(accountNo)) fail("INVALID_BANK_ACCOUNT_NO");
+  return accountNo;
 }
 
-function momoSdt(value: unknown): string | null {
+function momoPhone(value: unknown): string | null {
   const phone = optionalString(value, "momo_phone", 15);
   if (phone !== null && !/^0\d{8,11}$/.test(phone)) fail("INVALID_MOMO_PHONE");
   return phone;
@@ -60,9 +60,9 @@ buildingRoutes.post("/", async (c) => {
     electricity_rate: requireInt(body.electricity_rate, "electricity_rate"),
     water_rate: requireInt(body.water_rate, "water_rate"),
     bank_bin: bankBin(body.bank_bin),
-    bank_account_no: bankSoTk(body.bank_account_no),
+    bank_account_no: bankAccountNo(body.bank_account_no),
     bank_account_name: optionalString(body.bank_account_name, "bank_account_name", 100),
-    momo_phone: momoSdt(body.momo_phone),
+    momo_phone: momoPhone(body.momo_phone),
     momo_name: optionalString(body.momo_name, "momo_name", 100),
   });
 
@@ -83,12 +83,12 @@ buildingRoutes.patch("/:id", async (c) => {
     electricity_rate: optionalInt(body.electricity_rate, "electricity_rate"),
     water_rate: optionalInt(body.water_rate, "water_rate"),
     bank_bin: body.bank_bin === undefined ? undefined : bankBin(body.bank_bin),
-    bank_account_no: body.bank_account_no === undefined ? undefined : bankSoTk(body.bank_account_no),
+    bank_account_no: body.bank_account_no === undefined ? undefined : bankAccountNo(body.bank_account_no),
     bank_account_name:
       body.bank_account_name === undefined
         ? undefined
         : optionalString(body.bank_account_name, "bank_account_name", 100),
-    momo_phone: body.momo_phone === undefined ? undefined : momoSdt(body.momo_phone),
+    momo_phone: body.momo_phone === undefined ? undefined : momoPhone(body.momo_phone),
     momo_name:
       body.momo_name === undefined ? undefined : optionalString(body.momo_name, "momo_name", 100),
   });

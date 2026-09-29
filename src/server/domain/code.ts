@@ -29,13 +29,13 @@ export type CodePrefix = (typeof CODE_PREFIX)[keyof typeof CODE_PREFIX];
 
 const CODE_BYTES = 4;
 
-export function sinhMa(prefix: CodePrefix): string {
+export function generateCode(prefix: CodePrefix): string {
   const bytes = crypto.getRandomValues(new Uint8Array(CODE_BYTES));
   const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
   return `${prefix}${hex.toUpperCase()}`;
 }
 
 /** SQL for the same shape, used by migrations to backfill existing rows. */
-export function maPattern(prefix: CodePrefix): RegExp {
+export function codePattern(prefix: CodePrefix): RegExp {
   return new RegExp(`^${prefix}[0-9A-F]{8}$`);
 }

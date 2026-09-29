@@ -1,8 +1,8 @@
 import { Hono } from "hono";
 
 import { createTenant, deleteTenant, getTenantByCode, listTenants, updateTenant } from "../db/tenants";
-import { CODE_PREFIX, sinhMa } from "../domain/code";
-import { homNay } from "../domain/period";
+import { CODE_PREFIX, generateCode } from "../domain/code";
+import { today } from "../domain/period";
 import { notFound, ok } from "../envelope";
 import type { AppEnv } from "../types";
 import {
@@ -18,7 +18,7 @@ import {
 } from "../validate";
 
 /** Occupants living under one tenancy. The named tenant counts as one. */
-function soNguoi(value: unknown, fallback?: number): number | undefined {
+function parseOccupants(value: unknown, fallback?: number): number | undefined {
   if (value === undefined || value === null) return fallback;
   if (typeof value !== "number" || !Number.isInteger(value) || value < 1) fail("INVALID_OCCUPANTS");
   return value;
@@ -40,12 +40,12 @@ tenantRoutes.post("/", async (c) => {
   const body = await jsonBody(c.req);
 
   const tenant = await createTenant(c.env.DB, {
-    code: sinhMa(CODE_PREFIX.tenant),
+    code: generateCode(CODE_PREFIX.tenant),
     room_id: requireId(body.room_id, "room_id"),
     full_name: requireString(body.full_name, "full_name", 100),
     phone: optionalString(body.phone, "phone", 20),
-    occupants: soNguoi(body.occupants, 1)!,
-    moved_in: body.moved_in === undefined ? homNay() : requireDate(body.moved_in, "moved_in"),
+    occupants: parseOccupants(body.occupants, 1)!,
+    moved_in: body.moved_in === undefined ? today() : requireDate(body.moved_in, "moved_in"),
   });
 
   return ok(c, { tenant }, "Tenant moved in.", 201);
@@ -65,7 +65,7 @@ tenantRoutes.patch("/:code", async (c) => {
   const tenant = await updateTenant(c.env.DB, current.id, {
     full_name: body.full_name === undefined ? undefined : requireString(body.full_name, "full_name", 100),
     phone: body.phone === undefined ? undefined : optionalString(body.phone, "phone", 20),
-    occupants: soNguoi(body.occupants),
+    occupants: parseOccupants(body.occupants),
     moved_in: body.moved_in === undefined ? undefined : requireDate(body.moved_in, "moved_in"),
     moved_out: body.moved_out === undefined ? undefined : optionalDate(body.moved_out, "moved_out"),
   });
