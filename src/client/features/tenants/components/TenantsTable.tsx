@@ -48,7 +48,7 @@ export function TenantsTable({
                 <Table.Td>{formatDate(tenant.moved_in)}</Table.Td>
                 <Table.Td>{formatDate(tenant.moved_out)}</Table.Td>
                 <Table.Td>
-                  <Badge color={isActive ? "teal" : "gray"} variant="light">
+                  <Badge color={isActive ? "settled" : "gray"} variant="light">
                     {isActive ? t("tenants.renting") : t("tenants.movedOut")}
                   </Badge>
                 </Table.Td>

@@ -1,4 +1,5 @@
 import { Button, Group, Menu, Stack, Text } from "@mantine/core";
+import { IconDots } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
 import type { Account } from "../../../../shared/types";
@@ -13,12 +14,15 @@ import type { Account } from "../../../../shared/types";
  */
 export function AccountActions({
   account,
+  size = "xs",
   currentUserId,
   onRename,
   onResetPassword,
   onDelete,
 }: {
   account: Account;
+  /** `xs` in a table row under a mouse; `sm` on a card, which is a finger on a phone. */
+  size?: "xs" | "sm";
   /** The logged-in manager, so their own row can refuse deletion. */
   currentUserId: number;
   onRename: (account: Account) => void;
@@ -30,14 +34,14 @@ export function AccountActions({
 
   return (
     <Group gap="xs" justify="flex-end" wrap="nowrap">
-      <Button size="xs" variant="light" onClick={() => onResetPassword(account)}>
+      <Button size={size} variant="light" onClick={() => onResetPassword(account)}>
         {t("accounts.resetPassword")}
       </Button>
 
       <Menu position="bottom-end" withinPortal>
         <Menu.Target>
-          <Button size="xs" variant="subtle" color="gray" aria-label={t("common.more")}>
-            ⋯
+          <Button size={size} variant="subtle" color="gray" aria-label={t("common.more")}>
+            <IconDots size={16} stroke={1.8} />
           </Button>
         </Menu.Target>
         <Menu.Dropdown>
@@ -47,7 +51,7 @@ export function AccountActions({
             <Menu.Item color="red" disabled>
               <Stack gap={2}>
                 <span>{t("accounts.delete")}</span>
-                <Text size="xs" c="dimmed">
+                <Text size={size} c="dimmed">
                   {t("accounts.cannotDeleteSelf")}
                 </Text>
               </Stack>

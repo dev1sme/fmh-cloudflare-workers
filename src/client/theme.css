@@ -39,6 +39,13 @@
   --fmh-orb-settled: rgba(86, 150, 98, 0.11);
   --fmh-aurora: rgba(221, 133, 26, 0.07);
   --fmh-grain: 0.022;
+
+  /* Status surfaces: the one place an accent fills an area instead of a line
+     of text. Shades 0 and 2 of the same two tuples — no new colour. */
+  --fmh-owed-surface: #fdf4e7;
+  --fmh-owed-edge: #efc894;
+  --fmh-settled-surface: #eff7f0;
+  --fmh-settled-edge: #bad3be;
 }
 
 :root[data-mantine-color-scheme="dark"] {
@@ -56,6 +63,11 @@
   --fmh-orb-settled: rgba(86, 150, 98, 0.12);
   --fmh-aurora: rgba(221, 133, 26, 0.08);
   --fmh-grain: 0.035;
+
+  --fmh-owed-surface: rgba(221, 133, 26, 0.12);
+  --fmh-owed-edge: rgba(221, 133, 26, 0.32);
+  --fmh-settled-surface: rgba(86, 150, 98, 0.12);
+  --fmh-settled-edge: rgba(86, 150, 98, 0.32);
 }
 
 /*
@@ -152,6 +164,22 @@ body {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
+/*
+ * Held still on a phone. Three infinite animations over 90 px blurs keep the
+ * GPU compositing every frame for as long as the page is open — which, for a
+ * tenant, is the whole time they stand at a banking app copying the account
+ * number. On a 375 px screen a 380 px orb covers most of it, so the drift is
+ * barely visible anyway. The colour stays; only the movement goes, the same
+ * treatment as reduced motion below.
+ */
+@media (max-width: 48em) {
+  .fmh-bg-aurora,
+  .fmh-bg-orb {
+    animation: none;
+    will-change: auto;
+  }
+}
+
 @keyframes fmh-drift-a {
   from {
     transform: translate3d(0, 0, 0) scale(1);
@@ -215,6 +243,117 @@ textarea {
   text-transform: uppercase;
   color: var(--mantine-color-dimmed);
   border-bottom: 1px solid var(--fmh-rule) !important;
+}
+
+/*
+ * The one figure a screen exists to answer — what a tenant owes, what the
+ * landlord still has to collect. Every other number on the page is 1–1.5rem;
+ * this one is the size the eye lands on first.
+ */
+.fmh-display {
+  font-size: clamp(2.25rem, 1.6rem + 2.4vw, 3rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+/*
+ * `StatusPanel`: an area filled by state. Amber while money is owed, green once
+ * it is settled — the whole block, so the answer is visible before a word is
+ * read. The border is a step darker than the fill so the panel still has an
+ * edge on the paper at a glance.
+ */
+.fmh-status {
+  border-radius: var(--mantine-radius-lg);
+  padding: var(--mantine-spacing-lg);
+  border: 1px solid var(--fmh-owed-edge);
+  background-color: var(--fmh-owed-surface);
+}
+
+.fmh-status[data-tone="settled"] {
+  border-color: var(--fmh-settled-edge);
+  background-color: var(--fmh-settled-surface);
+}
+
+.fmh-status[data-tone="neutral"] {
+  border-color: var(--fmh-rule);
+  background-color: var(--fmh-panel);
+}
+
+.fmh-status[data-tone="neutral"] .fmh-status-dot {
+  background-color: var(--fmh-rule);
+  box-shadow: none;
+}
+
+/* Dimmed text on the dark tinted fill measured 3.9:1; bark[1] clears 5.8:1. */
+:root[data-mantine-color-scheme="dark"] .fmh-status {
+  --mantine-color-dimmed: #ada69b;
+}
+
+.fmh-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: none;
+  background-color: var(--mantine-color-owed-6);
+  box-shadow: 0 0 0 4px var(--fmh-owed-edge);
+}
+
+/*
+ * A row or card that still owes money carries a bar of amber on its leading
+ * edge — the list equivalent of the status panel, readable while scanning
+ * without reading the amount.
+ */
+.mantine-Card-root.fmh-owes {
+  box-shadow: inset 3px 0 0 var(--mantine-color-owed-6), var(--fmh-shadow);
+}
+
+/* A `<tr>` does not paint a box-shadow; its first cell does. */
+tr.fmh-owes > td:first-child {
+  box-shadow: inset 3px 0 0 var(--mantine-color-owed-6);
+}
+
+/*
+ * Receipt rules for `InvoiceLines`. `.fmh-rule-dashed` separates the header
+ * from the lines; `.fmh-tear` sits above the total and runs to the card's
+ * edges, where two paper-coloured notches make it read as a tear-off line.
+ * `--card-padding` is Mantine's own variable, so the line meets the edge at
+ * whatever padding the card was given.
+ */
+.fmh-rule-dashed {
+  border: 0;
+  border-top: 1.5px dashed var(--fmh-rule);
+  margin: 0;
+}
+
+.fmh-tear {
+  position: relative;
+  border: 0;
+  border-top: 1.5px dashed var(--fmh-rule);
+  margin: 4px calc(var(--card-padding, 1rem) * -1);
+  overflow: visible;
+}
+
+.fmh-tear::before,
+.fmh-tear::after {
+  content: "";
+  position: absolute;
+  top: -10px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background-color: var(--fmh-paper);
+}
+
+.fmh-tear::before {
+  left: -9px;
+  box-shadow: inset -1px 0 0 var(--fmh-rule);
+}
+
+.fmh-tear::after {
+  right: -9px;
+  box-shadow: inset 1px 0 0 var(--fmh-rule);
 }
 
 /*
@@ -296,6 +435,34 @@ textarea {
 
 .mantine-Input-input {
   background-color: var(--fmh-input);
+}
+
+/*
+ * 16 px inputs on a phone, or iOS Safari zooms the page in on focus and never
+ * zooms back out — the user is left pinching the screen after every login.
+ * Safari does this for any focused field under 16 px, and Mantine's default
+ * `sm` input is 14 px.
+ *
+ * Mantine writes `--input-fz` / `--input-height` as inline style on the
+ * wrapper, which only an `!important` declaration can override. Height goes to
+ * 42 px with it: a 36 px field is a small target for a thumb, and the
+ * password-visibility toggle inside it is sized off that height.
+ *
+ * Not `maximum-scale=1` on the viewport: that stops the zoom by taking pinch
+ * zoom away from everyone who needs it.
+ */
+@media (max-width: 48em) {
+  .mantine-Input-wrapper {
+    --input-fz: 1rem !important;
+  }
+
+  .mantine-Input-wrapper[data-size="sm"] {
+    --input-height: 2.625rem !important;
+  }
+
+  .mantine-PasswordInput-root {
+    --psi-button-size: 2.25rem !important;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -388,6 +555,43 @@ textarea {
 @media (min-width: 64em) {
   .fmh-tenant-grid {
     grid-template-columns: 1.15fr 0.85fr;
+  }
+}
+
+/*
+ * Manager's invoice detail: the invoice and its actions beside the tenant's
+ * payment view. The aside sticks under the header while the left column
+ * scrolls, so the QR being checked stays in view next to the payment form.
+ */
+.fmh-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--mantine-spacing-md);
+  align-items: start;
+}
+
+@media (min-width: 64em) {
+  .fmh-detail-grid {
+    grid-template-columns: 1.1fr 0.9fr;
+  }
+
+  .fmh-detail-aside {
+    position: sticky;
+    top: calc(var(--app-shell-header-height, 56px) + var(--mantine-spacing-md));
+  }
+}
+
+/* Reports: by-building beside by-room once there is width for both. */
+.fmh-report-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--mantine-spacing-md);
+  align-items: start;
+}
+
+@media (min-width: 64em) {
+  .fmh-report-grid {
+    grid-template-columns: 0.8fr 1.2fr;
   }
 }
 

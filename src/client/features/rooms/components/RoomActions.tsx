@@ -1,4 +1,5 @@
 import { Button, Group, Menu } from "@mantine/core";
+import { IconDots } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
 import type { RoomDetail } from "../../../../shared/types";
@@ -12,12 +13,15 @@ import type { RoomDetail } from "../../../../shared/types";
  */
 export function RoomActions({
   room,
+  size = "xs",
   onEdit,
   onMoveIn,
   onMoveOut,
   onDelete,
 }: {
   room: RoomDetail;
+  /** `xs` in a table row under a mouse; `sm` on a card, which is a finger on a phone. */
+  size?: "xs" | "sm";
   onEdit: (room: RoomDetail) => void;
   onMoveIn: (room: RoomDetail) => void;
   onMoveOut: (room: RoomDetail) => void;
@@ -27,24 +31,24 @@ export function RoomActions({
 
   return (
     <Group gap="xs" justify="flex-end" wrap="nowrap">
-      <Button size="xs" variant="light" onClick={() => onEdit(room)}>
+      <Button size={size} variant="light" onClick={() => onEdit(room)}>
         {t("common.edit")}
       </Button>
 
       {room.tenant ? (
-        <Button size="xs" variant="subtle" color="orange" onClick={() => onMoveOut(room)}>
+        <Button size={size} variant="subtle" color="red" onClick={() => onMoveOut(room)}>
           {t("rooms.moveOut")}
         </Button>
       ) : (
-        <Button size="xs" variant="subtle" onClick={() => onMoveIn(room)}>
+        <Button size={size} variant="subtle" onClick={() => onMoveIn(room)}>
           {t("rooms.moveIn")}
         </Button>
       )}
 
       <Menu position="bottom-end" withinPortal>
         <Menu.Target>
-          <Button size="xs" variant="subtle" color="gray" aria-label={t("common.more")}>
-            ⋯
+          <Button size={size} variant="subtle" color="gray" aria-label={t("common.more")}>
+            <IconDots size={16} stroke={1.8} />
           </Button>
         </Menu.Target>
         <Menu.Dropdown>

@@ -30,24 +30,40 @@ function MonthRow({ month }: { month: TenantMonth }) {
   const { t } = useTranslation();
   const hasReading = month.electricity_used !== null;
 
+  // Amber while anything is still owed, green once paid, grey when there is
+  // nothing to pay (no invoice yet, or cancelled) — the list read as a column
+  // of states before any amount is read.
+  const dot =
+    month.status === "CANCELLED" || month.total === null
+      ? "var(--fmh-rule)"
+      : month.outstanding > 0
+        ? "var(--mantine-color-owed-6)"
+        : "var(--mantine-color-settled-6)";
+
   const content = (
     <Group justify="space-between" wrap="nowrap" gap="md">
-      <div style={{ minWidth: 0 }}>
-        <Text fw={600}>{periodLabel(month.period)}</Text>
-        <Text size="xs" c="dimmed">
-          {hasReading
-            ? // Non-null asserted: all five come from the same `readings` row,
-              // so `electricity_used` being present means the rest are too.
-              t("tenant.monthMeta", {
-                eStart: month.electricity_start!,
-                eEnd: month.electricity_end!,
-                wStart: month.water_start!,
-                wEnd: month.water_end!,
-                date: formatDate(month.recorded_on).slice(0, 5),
-              })
-            : t("tenant.noReading")}
-        </Text>
-      </div>
+      <Group gap="sm" wrap="nowrap" style={{ minWidth: 0 }}>
+        <span
+          aria-hidden="true"
+          style={{ width: 10, height: 10, borderRadius: "50%", flex: "none", backgroundColor: dot }}
+        />
+        <div style={{ minWidth: 0 }}>
+          <Text fw={600}>{periodLabel(month.period)}</Text>
+          <Text size="xs" c="dimmed">
+            {hasReading
+              ? // Non-null asserted: all five come from the same `readings` row,
+                // so `electricity_used` being present means the rest are too.
+                t("tenant.monthMeta", {
+                  eStart: month.electricity_start!,
+                  eEnd: month.electricity_end!,
+                  wStart: month.water_start!,
+                  wEnd: month.water_end!,
+                  date: formatDate(month.recorded_on).slice(0, 5),
+                })
+              : t("tenant.noReading")}
+          </Text>
+        </div>
+      </Group>
 
       <Group gap="md" wrap="nowrap">
         <div style={{ textAlign: "right" }}>
@@ -102,7 +118,7 @@ export function MonthList({
         </Text>
 
         {owedOutsideWindow > 0 && (
-          <Text size="xs" c="owed.6">
+          <Text size="xs" c="owed">
             {t("tenant.outOfRangeDebt", { count: owedOutsideWindow })}
           </Text>
         )}

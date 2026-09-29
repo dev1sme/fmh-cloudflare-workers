@@ -9,8 +9,10 @@ export function InvoiceHeader({ invoice }: { invoice: InvoiceDetail }) {
   const { t } = useTranslation();
 
   return (
-    <Group>
-      <Text c="dimmed">{periodLabel(invoice.period)}</Text>
+    <Group gap="xs" wrap="wrap">
+      <Text size="sm" c="dimmed">
+        {periodLabel(invoice.period)}
+      </Text>
       <StatusBadge value={invoice.status} />
       <Text c="dimmed" size="sm">
         {t("invoices.createdOn", { date: formatDate(invoice.created_at) })}

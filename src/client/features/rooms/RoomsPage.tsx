@@ -1,10 +1,11 @@
-import { Box, Button, Group, Stack, Title, Tooltip } from "@mantine/core";
+import { Box, Button, Stack, Tooltip } from "@mantine/core";
 import { IconBuildingCommunity, IconHome, IconPlus } from "@tabler/icons-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import type { RoomDetail } from "../../../shared/types";
 import { EmptyState } from "../../components/EmptyState";
+import { PageHeader } from "../../components/PageHeader";
 import { PageState } from "../../components/PageState";
 import { useConfirm } from "../../hooks/useConfirm";
 import { Link } from "react-router-dom";
@@ -33,7 +34,7 @@ export function RoomsPage() {
         room: room.room_name,
       }),
       confirmLabel: t("rooms.movedOutLabel"),
-      color: "orange",
+      color: "red",
       onConfirm: () => moveOut(room.tenant!.code),
     });
   }
@@ -47,27 +48,39 @@ export function RoomsPage() {
     });
   }
 
+  const headerContext = loading
+    ? undefined
+    : t("pageContext.rooms", {
+        count: rooms.length,
+        vacant: rooms.filter((room) => !room.tenant).length,
+      });
+
   return (
     <Stack>
-      <Group justify="space-between">
-        <Title order={3}>{t("nav.rooms")}</Title>
-        {/* Disabled needs a reason attached to it. A room belongs to a
-            building, and on a fresh install this button is grey with nothing
-            on the screen saying why or where to go. A Tooltip alone would not
-            do it — Mantine strips pointer events from a disabled button, so it
-            never fires — hence the wrapping span. */}
-        <Tooltip label={t("rooms.needBuilding")} disabled={buildings.length > 0} withArrow>
-          <span>
-            <Button
-              onClick={() => setMovingOut({ room: null })}
-              disabled={buildings.length === 0}
-              leftSection={<IconPlus size={16} stroke={1.8} />}
-            >
-              {t("rooms.add")}
-            </Button>
-          </span>
-        </Tooltip>
-      </Group>
+      <PageHeader
+        title={t("nav.rooms")}
+        context={headerContext}
+        actions={
+          <>
+            {/* Disabled needs a reason attached to it. A room belongs to a
+                building, and on a fresh install this button is grey with nothing
+                on the screen saying why or where to go. A Tooltip alone would not
+                do it — Mantine strips pointer events from a disabled button, so it
+                never fires — hence the wrapping span. */}
+            <Tooltip label={t("rooms.needBuilding")} disabled={buildings.length > 0} withArrow>
+              <span>
+                <Button
+                  onClick={() => setMovingOut({ room: null })}
+                  disabled={buildings.length === 0}
+                  leftSection={<IconPlus size={16} stroke={1.8} />}
+                >
+                  {t("rooms.add")}
+                </Button>
+              </span>
+            </Tooltip>
+          </>
+        }
+      />
 
       <PageState loading={loading} refreshing={refreshing} error={error} onRetry={reload}>
         {rooms.length === 0 ? (

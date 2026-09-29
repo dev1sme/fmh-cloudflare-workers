@@ -1,4 +1,5 @@
-import { Card, Divider, Group, Stack, Text } from "@mantine/core";
+import { Card, Group, Progress, Stack, Text, Title } from "@mantine/core";
+import { IconCircleCheck } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
 import type { InvoiceDetail } from "../../shared/types";
@@ -8,20 +9,76 @@ function Line({ label, note, value }: { label: string; note?: string; value: num
   return (
     <Group justify="space-between" align="flex-start" wrap="nowrap">
       <div>
-        <Text>{label}</Text>
+        <Text fw={500}>{label}</Text>
         {note && (
           <Text size="xs" c="dimmed">
             {note}
           </Text>
         )}
       </div>
-      <Text ta="right">{money(value)}</Text>
+      <Text ta="right" className="fmh-num">
+        {money(value)}
+      </Text>
     </Group>
   );
 }
 
-/** The invoice breakdown, shared by the manager and tenant views. */
-export function InvoiceLines({ invoice }: { invoice: InvoiceDetail }) {
+/**
+ * How much of the total is in, as one bar and a line under it.
+ *
+ * Green for what has been collected over an amber track for what is still
+ * out, so the remainder is the amber that is left — the same reading as the
+ * status panel above it, at the scale of one invoice. A cancelled invoice owed
+ * nothing and gets no bar.
+ */
+function Collected({ invoice }: { invoice: InvoiceDetail }) {
+  const { t } = useTranslation();
+  if (invoice.status === "CANCELLED") return null;
+
+  const ratio = invoice.total > 0 ? Math.min(100, (invoice.paid / invoice.total) * 100) : 0;
+  const settled = invoice.outstanding <= 0;
+
+  return (
+    <Stack gap={6}>
+      <Progress.Root size={10} radius="xl" style={{ backgroundColor: "var(--fmh-owed-edge)" }}>
+        <Progress.Section value={ratio} color="settled" />
+      </Progress.Root>
+      <Group justify="space-between" wrap="wrap" gap="xs">
+        <Text size="sm" c="settled">
+          {t("invoice.collected")} {money(invoice.paid)}
+        </Text>
+        {settled ? (
+          <Group gap={4} c="settled" wrap="nowrap">
+            <IconCircleCheck size={16} stroke={2} />
+            <Text size="sm" fw={600}>
+              {t("invoice.collectedAll")}
+            </Text>
+          </Group>
+        ) : (
+          <Text size="sm" c="owed" fw={700}>
+            {t("invoice.stillOwed", { amount: money(invoice.outstanding) })}
+          </Text>
+        )}
+      </Group>
+    </Stack>
+  );
+}
+
+/**
+ * The invoice breakdown, shared by the manager and tenant views, laid out as a
+ * receipt: a dashed rule under the heading, a tear-off line above the total.
+ *
+ * `heading` is the tenant's — their card has no page title above it saying
+ * which month this is. The manager's page already names the invoice in its
+ * header, so there it is left out rather than said twice.
+ */
+export function InvoiceLines({
+  invoice,
+  heading,
+}: {
+  invoice: InvoiceDetail;
+  heading?: string;
+}) {
   const { t } = useTranslation();
 
   const electricityUsed = invoice.reading
@@ -32,8 +89,20 @@ export function InvoiceLines({ invoice }: { invoice: InvoiceDetail }) {
     : null;
 
   return (
-    <Card withBorder padding="md">
+    <Card withBorder padding="lg">
       <Stack gap="sm">
+        {heading && (
+          <>
+            <Group justify="space-between" align="baseline" wrap="nowrap" gap="sm">
+              <Title order={4}>{heading}</Title>
+              <Text size="xs" c="dimmed" ff="monospace" style={{ letterSpacing: "0.04em" }}>
+                #{invoice.code}
+              </Text>
+            </Group>
+            <hr className="fmh-rule-dashed" />
+          </>
+        )}
+
         <Line label={t("invoice.rent")} value={invoice.rent_amount} />
         <Line
           label={t("invoice.electricity")}
@@ -69,28 +138,18 @@ export function InvoiceLines({ invoice }: { invoice: InvoiceDetail }) {
           <Line label={t("invoice.otherFees")} value={invoice.other_fees} />
         )}
 
-        <Divider />
+        <hr className="fmh-tear" />
 
-        <Group justify="space-between">
-          <Text fw={600}>{t("invoice.total")}</Text>
+        <Group justify="space-between" align="baseline">
           <Text fw={700} size="lg">
+            {t("invoice.total")}
+          </Text>
+          <Text fw={800} fz="xl" className="fmh-num">
             {money(invoice.total)}
           </Text>
         </Group>
-        <Group justify="space-between">
-          <Text c="dimmed">{t("invoice.collected")}</Text>
-          <Text c="dimmed">{money(invoice.paid)}</Text>
-        </Group>
-        {invoice.outstanding > 0 && (
-          <Group justify="space-between">
-            <Text c="orange" fw={500}>
-              {t("invoice.outstanding")}
-            </Text>
-            <Text c="orange" fw={600}>
-              {money(invoice.outstanding)}
-            </Text>
-          </Group>
-        )}
+
+        <Collected invoice={invoice} />
       </Stack>
     </Card>
   );

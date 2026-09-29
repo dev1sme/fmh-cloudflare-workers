@@ -1,4 +1,4 @@
-import { Box, Button, Group, Stack, Title } from "@mantine/core";
+import { Box, Button, Stack } from "@mantine/core";
 import { IconHome } from "@tabler/icons-react";
 import { Link } from "react-router-dom";
 import { useState } from "react";
@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import type { ReadingDetail } from "../../../shared/types";
 import { PeriodPicker } from "../../components/PeriodPicker";
 import { EmptyState } from "../../components/EmptyState";
+import { PageHeader } from "../../components/PageHeader";
 import { PageState } from "../../components/PageState";
 import { periodLabel } from "../../format";
 import { useConfirm } from "../../hooks/useConfirm";
@@ -37,12 +38,24 @@ export function ReadingsPage() {
     });
   }
 
+  const headerContext = loading
+    ? undefined
+    : t("pageContext.readings", {
+        recorded: rooms.filter((room) => readingForRoom(room.id)).length,
+        total: rooms.length,
+      });
+
   return (
     <Stack>
-      <Group justify="space-between" align="flex-end">
-        <Title order={3}>{t("nav.readings")}</Title>
-        <PeriodPicker value={period} onChange={setPeriod} />
-      </Group>
+      <PageHeader
+        title={t("nav.readings")}
+        context={headerContext}
+        actions={
+          <>
+            <PeriodPicker value={period} onChange={setPeriod} />
+          </>
+        }
+      />
 
       <PageState loading={loading} refreshing={refreshing} error={error} onRetry={reload}>
         {/* Rows here are rooms, not readings — an empty table means no rooms

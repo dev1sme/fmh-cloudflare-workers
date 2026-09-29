@@ -44,7 +44,7 @@ export function AccountsTable({
               </Table.Td>
               <Table.Td>
                 <Badge
-                  color={account.role === "MANAGER" ? "teal" : "blue"}
+                  color={account.role === "MANAGER" ? "settled" : "gray"}
                   variant="light"
                 >
                   {account.role === "MANAGER" ? t("common.manager") : t("accounts.tenantRole")}

@@ -76,6 +76,7 @@ export function RoomCards({
             )}
 
             <RoomActions
+              size="sm"
               room={room}
               onEdit={onEdit}
               onMoveIn={onMoveIn}

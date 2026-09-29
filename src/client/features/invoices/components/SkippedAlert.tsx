@@ -1,4 +1,5 @@
 import { Alert, List } from "@mantine/core";
+import { IconAlertTriangle } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
 import type { GenerateResult } from "../../../../shared/types";
@@ -21,7 +22,13 @@ export function SkippedAlert({
   if (skipped.length === 0) return null;
 
   return (
-    <Alert color="yellow" title={t("invoices.skippedTitle")} withCloseButton onClose={onClose}>
+    <Alert
+      color="gray"
+      icon={<IconAlertTriangle size={18} stroke={1.8} />}
+      title={t("invoices.skippedTitle")}
+      withCloseButton
+      onClose={onClose}
+    >
       <List size="sm">
         {skipped.map((item) => (
           <List.Item key={item.room_id}>

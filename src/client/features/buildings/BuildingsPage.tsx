@@ -1,10 +1,11 @@
-import { Button, Group, Stack, Text, Title } from "@mantine/core";
+import { Button, Stack, Text } from "@mantine/core";
 import { IconBuildingCommunity, IconPlus } from "@tabler/icons-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import type { Building } from "../../../shared/types";
 import { EmptyState } from "../../components/EmptyState";
+import { PageHeader } from "../../components/PageHeader";
 import { PageState } from "../../components/PageState";
 import { useConfirm } from "../../hooks/useConfirm";
 import { BuildingForm } from "./components/BuildingForm";
@@ -39,17 +40,26 @@ export function BuildingsPage() {
     });
   }
 
+  const headerContext = loading
+    ? undefined
+    : t("pageContext.buildings", { count: buildings.length });
+
   return (
     <Stack>
-      <Group justify="space-between">
-        <Title order={3}>{t("nav.buildings")}</Title>
-        <Button
-          onClick={() => setAdding(true)}
-          leftSection={<IconPlus size={16} stroke={1.8} />}
-        >
-          {t("buildings.addBuilding")}
-        </Button>
-      </Group>
+      <PageHeader
+        title={t("nav.buildings")}
+        context={headerContext}
+        actions={
+          <>
+            <Button
+              onClick={() => setAdding(true)}
+              leftSection={<IconPlus size={16} stroke={1.8} />}
+            >
+              {t("buildings.addBuilding")}
+            </Button>
+          </>
+        }
+      />
 
       <Text c="dimmed" size="sm">
         {t("buildings.ratesNote")}

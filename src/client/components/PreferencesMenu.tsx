@@ -34,7 +34,7 @@ export function PreferencesMenu() {
   return (
     <Menu position="bottom-end" shadow="md" width={190}>
       <Menu.Target>
-        <UnstyledButton className="fmh-account" px="xs" py={4}>
+        <UnstyledButton className="fmh-account" px="xs" py="xs">
           <Group gap={6} wrap="nowrap">
             <Icon size={17} stroke={1.7} />
             <Text size="sm">{language?.label}</Text>

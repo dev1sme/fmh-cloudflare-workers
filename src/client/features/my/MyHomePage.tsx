@@ -1,14 +1,15 @@
-import { Alert, Box, Card, Group, SegmentedControl, Stack, Text, Title } from "@mantine/core";
-import { IconCircleCheck } from "@tabler/icons-react";
+import { Alert, Box, Button, Card, Group, SegmentedControl, Stack, Text, Title } from "@mantine/core";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { BankTransferCard } from "../../components/BankTransferCard";
 import { InvoiceLines } from "../../components/InvoiceLines";
-import { MomoCard } from "../../components/MomoCard";
 import { PageState } from "../../components/PageState";
+import { PaymentMethods } from "../../components/PaymentMethods";
+import { PaymentsTable } from "../../components/PaymentsTable";
+import { StatusPanel } from "../../components/StatusPanel";
 import { periodLabel, money } from "../../format";
 import { MonthList } from "./components/MonthList";
+import { TransferInstructions } from "./components/TransferInstructions";
 import { UsageTrend } from "./components/UsageTrend";
 import { useMyDashboard, useMyInvoice } from "./useMine";
 
@@ -41,6 +42,9 @@ import { useMyDashboard, useMyInvoice } from "./useMine";
  *  phone. */
 const DEFAULT_RANGE = "6";
 
+/** Where "Thanh toán ngay" scrolls to. */
+const PAY_ANCHOR = "pay";
+
 export function MyHomePage() {
   const { dashboard, loading, refreshing, error, reload } = useMyDashboard();
   const [range, setRange] = useState(DEFAULT_RANGE);
@@ -72,59 +76,93 @@ export function MyHomePage() {
 
   // Only the newest month needs its QR and line items up front.
   const { invoice } = useMyInvoice(featured?.code ?? "");
+  const canPay = Boolean(invoice?.bank_transfer || invoice?.momo);
+  const unpaidCount = allMonths.filter((m) => m.outstanding > 0).length;
 
   return (
     <PageState loading={loading} refreshing={refreshing} error={error} onRetry={reload}>
       {dashboard && (
         <Stack gap="lg">
-          <Group justify="space-between" align="flex-end" wrap="wrap">
-            <div>
-              <Text size="xs" c="dimmed" tt="uppercase" fw={600} style={{ letterSpacing: "0.06em" }}>
-                {t("tenant.room")}
-              </Text>
-              <Title order={2}>{dashboard.room_name}</Title>
-            </div>
+          <div>
+            <Text size="xs" c="dimmed" tt="uppercase" fw={600} style={{ letterSpacing: "0.06em" }}>
+              {t("tenant.room")}
+            </Text>
+            <Title order={2}>{dashboard.room_name}</Title>
+          </div>
 
-            {dashboard.outstanding_total > 0 ? (
-              <Text className="fmh-num" fw={700} fz="1.35rem" c="owed.6">
-                {t("tenant.needToPay", { amount: money(dashboard.outstanding_total) })}
-              </Text>
-            ) : (
-              <Group gap={6} c="settled.6">
-                <IconCircleCheck size={18} stroke={1.8} />
-                <Text fw={600}>{t("tenant.paidUp")}</Text>
-              </Group>
-            )}
-          </Group>
+          {/* The answer to the one question the tenant opened the app for,
+              filled amber or green so it reads before the number does. */}
+          {dashboard.outstanding_total > 0 ? (
+            <StatusPanel
+              tone="owed"
+              label={t("tenant.youOwe")}
+              value={money(dashboard.outstanding_total)}
+              hint={t("tenant.owedHint", { count: unpaidCount })}
+            >
+              {canPay && (
+                <Button
+                  size="md"
+                  onClick={() =>
+                    document.getElementById(PAY_ANCHOR)?.scrollIntoView({ behavior: "smooth" })
+                  }
+                >
+                  {t("tenant.payNow")}
+                </Button>
+              )}
+            </StatusPanel>
+          ) : (
+            <StatusPanel
+              tone="settled"
+              label={t("tenant.paidUp")}
+              value={money(0)}
+              // "08/2026", not `periodLabel` — the sentence already says
+              // "tháng", and "Tháng 08/2026" mid-sentence doubles it.
+              hint={
+                featured?.code
+                  ? t("tenant.paidUpHint", { period: featured.period.split("-").reverse().join("/") })
+                  : undefined
+              }
+            />
+          )}
 
           <Box className="fmh-tenant-grid">
             {/* Left / top: the month being paid right now. */}
             <Stack gap="md">
-              {featured && (
-                <Card>
-                  <Stack gap="md">
-                    <Group justify="space-between" align="baseline" wrap="nowrap">
+              {featured &&
+                (featured.total === null ? (
+                  <Card>
+                    <Stack gap="md">
                       <Title order={4}>{periodLabel(featured.period)}</Title>
-                      {featured.code && (
-                        <Text size="sm" c="dimmed">
-                          {featured.code}
-                        </Text>
-                      )}
-                    </Group>
-
-                    {featured.total === null ? (
                       <Alert color="gray" variant="light">
                         {t("tenant.noInvoiceYet")}
                       </Alert>
-                    ) : (
-                      invoice && <InvoiceLines invoice={invoice} />
-                    )}
+                    </Stack>
+                  </Card>
+                ) : (
+                  invoice && <InvoiceLines invoice={invoice} heading={periodLabel(featured.period)} />
+                ))}
+
+              {invoice && (
+                <PaymentMethods transfer={invoice.bank_transfer} momo={invoice.momo} id={PAY_ANCHOR} />
+              )}
+
+              {invoice &&
+                !invoice.bank_transfer &&
+                !invoice.momo &&
+                invoice.outstanding > 0 &&
+                invoice.status !== "CANCELLED" && <TransferInstructions invoiceCode={invoice.code} />}
+
+              {/* Once paid there is no QR (the server stops sending one), so
+                  the space shows what was paid instead — the receipt a tenant
+                  would otherwise ask the landlord for. */}
+              {invoice && invoice.payments.length > 0 && (
+                <Card>
+                  <Stack gap="sm">
+                    <Title order={5}>{t("invoice.paidSection")}</Title>
+                    <PaymentsTable payments={invoice.payments} />
                   </Stack>
                 </Card>
               )}
-
-              {invoice?.bank_transfer && <BankTransferCard transfer={invoice.bank_transfer} />}
-              {invoice?.momo && <MomoCard momo={invoice.momo} />}
             </Stack>
 
             {/* Right / bottom: trend across months, then each month in full.
@@ -142,7 +180,7 @@ export function MyHomePage() {
                   {t("tenant.history")}
                 </Text>
                 <SegmentedControl
-                  size="xs"
+                  size="sm"
                   value={range}
                   onChange={setRange}
                   data={rangeOptions}

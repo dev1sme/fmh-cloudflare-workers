@@ -1,4 +1,4 @@
-import { Box, Button, Group, Stack, Text, Title } from "@mantine/core";
+import { Box, Button, Stack, Text } from "@mantine/core";
 import { IconKey, IconUserPlus } from "@tabler/icons-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import type { Account } from "../../../shared/types";
 import type { SessionUser } from "../../api";
 import { EmptyState } from "../../components/EmptyState";
+import { PageHeader } from "../../components/PageHeader";
 import { PageState } from "../../components/PageState";
 import { useConfirm } from "../../hooks/useConfirm";
 import { AccountModal } from "./components/AccountModal";
@@ -35,17 +36,24 @@ export function AccountsPage({ user }: { user: SessionUser }) {
     });
   }
 
+  const headerContext = loading ? undefined : t("pageContext.accounts", { count: accounts.length });
+
   return (
     <Stack>
-      <Group justify="space-between">
-        <Title order={3}>{t("nav.accounts")}</Title>
-        <Button
-          onClick={() => setAdding(true)}
-          leftSection={<IconUserPlus size={16} stroke={1.8} />}
-        >
-          {t("accounts.add")}
-        </Button>
-      </Group>
+      <PageHeader
+        title={t("nav.accounts")}
+        context={headerContext}
+        actions={
+          <>
+            <Button
+              onClick={() => setAdding(true)}
+              leftSection={<IconUserPlus size={16} stroke={1.8} />}
+            >
+              {t("accounts.add")}
+            </Button>
+          </>
+        }
+      />
 
       <Text c="dimmed" size="sm">
         {t("accounts.note")}

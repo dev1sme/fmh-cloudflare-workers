@@ -15,7 +15,7 @@ export function InvoiceActions({
   return (
     <Group>
       {!cancelled && (
-        <Button variant="light" color="orange" onClick={onCancel}>
+        <Button variant="light" color="red" onClick={onCancel}>
           {t("invoices.cancel")}
         </Button>
       )}

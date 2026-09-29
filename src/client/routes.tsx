@@ -50,6 +50,9 @@ const InvoicesPage = lazy(() =>
 const InvoiceDetailPage = lazy(() =>
   import("./features/invoices/InvoiceDetailPage").then((m) => ({ default: m.InvoiceDetailPage })),
 );
+const ReportsPage = lazy(() =>
+  import("./features/reports/ReportsPage").then((m) => ({ default: m.ReportsPage })),
+);
 const AccountsPage = lazy(() =>
   import("./features/accounts/AccountsPage").then((m) => ({ default: m.AccountsPage })),
 );
@@ -136,6 +139,7 @@ export function AppRoutes({ user, onLogout }: { user: SessionUser; onLogout: () 
             <Route path="/readings" element={<ReadingsPage />} />
             <Route path="/invoices" element={<InvoicesPage />} />
             <Route path="/invoices/:code" element={<InvoiceDetailPage />} />
+            <Route path="/reports" element={<ReportsPage />} />
             <Route path="/accounts" element={<AccountsPage user={user} />} />
             <Route path="/notifications" element={<NotificationsPage />} />
             {/* "Cài đặt" is what this screen was called before buildings split

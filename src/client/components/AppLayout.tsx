@@ -23,6 +23,7 @@ import {
   IconKey,
   IconLayoutDashboard,
   IconLogout,
+  IconReportMoney,
   IconSearch,
   IconUsers,
 } from "@tabler/icons-react";
@@ -79,6 +80,7 @@ const NAV_GROUPS = [
     links: [
       { to: "/readings", key: "nav.readings", icon: <IconBolt {...ICON} /> },
       { to: "/invoices", key: "nav.invoices", icon: <IconFileInvoice {...ICON} /> },
+      { to: "/reports", key: "nav.reports", icon: <IconReportMoney {...ICON} /> },
     ],
   },
   {

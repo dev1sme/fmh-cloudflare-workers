@@ -4,8 +4,9 @@ import { requireTenant, requireManager } from "./auth";
 import { validationDetails, failure, notFound, ok } from "./envelope";
 import { securityHeaders } from "./headers";
 import { getDashboard } from "./db/dashboard";
+import { getRevenueReport } from "./db/reports";
 import { currentPeriod } from "./domain/period";
-import { optionalPeriod } from "./validate";
+import { optionalPeriod, optionalYear } from "./validate";
 import { accountRoutes } from "./routes/accounts";
 import { authRoutes } from "./routes/auth";
 import { botRoutes, botTargetRoutes } from "./routes/bots";
@@ -72,6 +73,16 @@ app.route("/api/me", me);
 app.get("/api/dashboard", requireManager, async (c) => {
   const period = optionalPeriod(c.req.query("period")) ?? currentPeriod();
   return ok(c, await getDashboard(c.env.DB, period), "Dashboard retrieved.");
+});
+
+/**
+ * Revenue for one calendar year, broken down by month, building and room, plus
+ * every year's totals for comparison. Defaults to this year. Read-only, and a
+ * single handler like the dashboard, so the guard sits inline.
+ */
+app.get("/api/reports/revenue", requireManager, async (c) => {
+  const year = optionalYear(c.req.query("year")) ?? Number(currentPeriod().slice(0, 4));
+  return ok(c, await getRevenueReport(c.env.DB, year), "Revenue report retrieved.");
 });
 
 app.route("/api/accounts", managerOnly(accountRoutes));

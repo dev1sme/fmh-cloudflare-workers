@@ -1,11 +1,11 @@
-import { Button, Group, Stack, Title } from "@mantine/core";
+import { Box, Button, Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useParams } from "react-router-dom";
 
 import type { Payment } from "../../../shared/types";
-import { BankTransferCard } from "../../components/BankTransferCard";
 import { InvoiceLines } from "../../components/InvoiceLines";
-import { MomoCard } from "../../components/MomoCard";
+import { PageHeader } from "../../components/PageHeader";
+import { PaymentMethods } from "../../components/PaymentMethods";
 import { PageState } from "../../components/PageState";
 import { money } from "../../format";
 import { useConfirm } from "../../hooks/useConfirm";
@@ -31,7 +31,7 @@ export function InvoiceDetailPage() {
       title: t("invoices.cancel"),
       message: t("invoices.confirmCancel"),
       confirmLabel: t("invoices.cancel"),
-      color: "orange",
+      color: "red",
       onConfirm: cancel,
     });
   }
@@ -54,38 +54,47 @@ export function InvoiceDetailPage() {
     });
   }
 
+  const hasPaymentMethods = Boolean(invoice?.bank_transfer || invoice?.momo);
+
   return (
     <Stack>
-      <Group justify="space-between">
-        <Title order={3}>
-          {invoice ? `${invoice.code} — ${invoice.room_name}` : t("invoice.fallbackTitle")}
-        </Title>
-        <Button variant="subtle" component={Link} to="/invoices">
-          ← {t("invoices.backToList")}
-        </Button>
-      </Group>
+      <PageHeader
+        title={invoice ? `${invoice.code} — ${invoice.room_name}` : t("invoice.fallbackTitle")}
+        context={invoice && <InvoiceHeader invoice={invoice} />}
+        actions={
+          <Button variant="subtle" component={Link} to="/invoices">
+            ← {t("invoices.backToList")}
+          </Button>
+        }
+      />
 
       <PageState loading={loading} refreshing={refreshing} error={error} onRetry={reload}>
         {invoice && (
-          <Stack>
-            <InvoiceHeader invoice={invoice} />
-            <InvoiceLines invoice={invoice} />
-            {invoice.bank_transfer && (
-              <BankTransferCard transfer={invoice.bank_transfer} preview />
+          // Two columns on a wide screen: the invoice and what is done to it on
+          // the left, what the tenant is shown on the right. One column used
+          // to leave half of a laptop screen empty beside a 520 px stack.
+          <Box className={hasPaymentMethods ? "fmh-detail-grid" : undefined}>
+            <Stack>
+              <InvoiceLines invoice={invoice} />
+              <PaymentsCard
+                invoice={invoice}
+                onPay={recordPayment}
+                onDeletePayment={askDeletePayment}
+              />
+              <OtherFeesCard otherFees={invoice.other_fees} onSave={saveOtherFees} />
+              <InvoiceActions
+                cancelled={invoice.status === "CANCELLED"}
+                onCancel={askCancel}
+                onDelete={askDelete}
+              />
+            </Stack>
+
+            {hasPaymentMethods && (
+              <Box className="fmh-detail-aside">
+                <PaymentMethods transfer={invoice.bank_transfer} momo={invoice.momo} preview />
+              </Box>
             )}
-            {invoice.momo && <MomoCard momo={invoice.momo} preview />}
-            <OtherFeesCard otherFees={invoice.other_fees} onSave={saveOtherFees} />
-            <PaymentsCard
-              invoice={invoice}
-              onPay={recordPayment}
-              onDeletePayment={askDeletePayment}
-            />
-            <InvoiceActions
-              cancelled={invoice.status === "CANCELLED"}
-              onCancel={askCancel}
-              onDelete={askDelete}
-            />
-          </Stack>
+          </Box>
         )}
       </PageState>
 

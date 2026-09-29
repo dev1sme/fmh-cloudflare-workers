@@ -22,7 +22,11 @@ export function InvoiceCards({ invoices }: { invoices: InvoiceWithRoom[] }) {
   return (
     <Stack gap="xs">
       {invoices.map((invoice) => (
-        <Card key={invoice.id} padding={0}>
+        <Card
+          key={invoice.id}
+          padding={0}
+          className={invoice.status !== "CANCELLED" && invoice.paid < invoice.total ? "fmh-owes" : undefined}
+        >
           <UnstyledButton
             component={Link}
             to={`/invoices/${invoice.code}`}

@@ -1,12 +1,13 @@
-import { Box, Button, Group, Stack, Title } from "@mantine/core";
+import { Box, Button, Group, Stack } from "@mantine/core";
 import { IconFileInvoice } from "@tabler/icons-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { EmptyState } from "../../components/EmptyState";
 import { PeriodPicker } from "../../components/PeriodPicker";
+import { PageHeader } from "../../components/PageHeader";
 import { PageState } from "../../components/PageState";
-import { periodLabel } from "../../format";
+import { money, periodLabel } from "../../format";
 import { usePeriodParam } from "../../hooks/usePeriodParam";
 import { InvoiceCards } from "./components/InvoiceCards";
 import { InvoicesTable } from "./components/InvoicesTable";
@@ -22,22 +23,37 @@ export function InvoicesPage() {
   const { generate, busy, result, clearResult } = useGenerateInvoices(period, reload);
   const preview = useGeneratePreview(period, generateOpen);
   const { t } = useTranslation();
+  // Cancelled invoices owed nothing; everything else owes whatever is unpaid.
+  const outstanding = invoices
+    .filter((invoice) => invoice.status !== "CANCELLED")
+    .reduce((sum, invoice) => sum + Math.max(0, invoice.total - invoice.paid), 0);
 
   async function confirmGenerate(roomIds: number[]) {
     if (await generate(roomIds)) setGenerateOpen(false);
   }
 
+  const headerContext = loading
+    ? undefined
+    : outstanding > 0
+      ? t("pageContext.invoicesOwed", { count: invoices.length, amount: money(outstanding) })
+      : t("pageContext.invoicesSettled", { count: invoices.length });
+
   return (
     <Stack>
-      <Group justify="space-between" align="flex-end">
-        <Title order={3}>{t("nav.invoices")}</Title>
-        <Group align="flex-end">
-          <PeriodPicker value={period} onChange={setPeriod} />
-          <Button onClick={() => setGenerateOpen(true)}>
-            {t("invoices.generateFor", { period: periodLabel(period) })}
-          </Button>
-        </Group>
-      </Group>
+      <PageHeader
+        title={t("nav.invoices")}
+        context={headerContext}
+        actions={
+          <>
+            <Group align="flex-end">
+              <PeriodPicker value={period} onChange={setPeriod} />
+              <Button onClick={() => setGenerateOpen(true)}>
+                {t("invoices.generateFor", { period: periodLabel(period) })}
+              </Button>
+            </Group>
+          </>
+        }
+      />
 
       {result && <SkippedAlert skipped={result.skipped} onClose={clearResult} />}
 
