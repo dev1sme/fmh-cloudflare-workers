@@ -39,6 +39,8 @@ Be Vietnam Pro rộng hơn system stack nó thay, và đã làm hỏng hai thứ
 
 **Motion** (`motion`, tức Framer Motion) dùng đúng một chỗ: `PageTransition`, nâng 6 px trong 180 ms khi đổi route. Đây là công cụ mở hai mươi lần mỗi ngày — hiệu ứng duyên dáng ở lần đầu sẽ vướng víu ở lần thứ hai mươi. `useReducedMotion` thu khoảng cách về 0 chứ không bỏ component, để layout không xê dịch giữa hai chế độ.
 
+**Nền trôi** (`BackgroundFX`: aurora + hai orb, CSS animation chứ không phải `motion`) đứng yên dưới `sm` và khi `prefers-reduced-motion`. Trên điện thoại, ba animation vô hạn trên lớp blur 90 px giữ GPU vẽ lại mỗi frame suốt lúc người thuê mở màn QR, trong khi orb 380 px gần như phủ kín màn 375 px nên chuyển động hầu như không thấy. Màu giữ nguyên, chỉ bỏ chuyển động.
+
 **Recharts** tốn ~400 kB raw / 113 kB gzip, là thứ lớn nhất build ra. Từ khi chia route nó là chunk riêng, chỉ tải khi quản lý mở `/dashboard` — người thuê không bao giờ tải. Nó chỉ đáng giá nếu biểu đồ dashboard đáng giá; bỏ `RevenueChart` là gỡ được cả dependency.
 
 ## Song ngữ Việt – Anh

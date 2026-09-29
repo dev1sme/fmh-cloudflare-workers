@@ -152,6 +152,22 @@ body {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
+/*
+ * Held still on a phone. Three infinite animations over 90 px blurs keep the
+ * GPU compositing every frame for as long as the page is open — which, for a
+ * tenant, is the whole time they stand at a banking app copying the account
+ * number. On a 375 px screen a 380 px orb covers most of it, so the drift is
+ * barely visible anyway. The colour stays; only the movement goes, the same
+ * treatment as reduced motion below.
+ */
+@media (max-width: 48em) {
+  .fmh-bg-aurora,
+  .fmh-bg-orb {
+    animation: none;
+    will-change: auto;
+  }
+}
+
 @keyframes fmh-drift-a {
   from {
     transform: translate3d(0, 0, 0) scale(1);
