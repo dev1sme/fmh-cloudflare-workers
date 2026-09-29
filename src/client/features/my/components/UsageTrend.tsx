@@ -75,7 +75,15 @@ function UsageChart({
         // Scaled to the data, not to zero. Household usage never approaches
         // zero, so a zero baseline spends most of the height on a range that
         // carries no information and flattens the change being asked about.
-        yAxisProps={{ domain: axisDomain, width: 34 }}
+        //
+        // `tickFormatter` is set here because Mantine otherwise formats the
+        // ticks with `valueFormatter`, unit included — "215 kWh" does not fit
+        // 34 px and wrapped onto two lines under every tick.
+        yAxisProps={{
+          domain: axisDomain,
+          width: 34,
+          tickFormatter: (v: number) => v.toLocaleString(isEnglish() ? "en-US" : "vi-VN"),
+        }}
         tickLine="y"
         gridAxis="y"
       />
