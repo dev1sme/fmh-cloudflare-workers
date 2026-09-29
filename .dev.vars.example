@@ -1,9 +1,10 @@
 # Copy to .dev.vars for local dev. Production uses `wrangler secret put`.
-JWT_SECRET="doi-thanh-chuoi-ngau-nhien-dai"
+# Signs the session JWT. Any long random string: `openssl rand -base64 48`.
+JWT_SECRET="change-me-to-a-long-random-string"
 
 # The "Secret Key" from the SePay webhook settings. Signs the HMAC-SHA256 the
 # route verifies; without it /hooks/sepay-payment answers 503 and records nothing.
-SEPAY_WEBHOOK_SECRET="doi-thanh-secret-key-cua-sepay"
+SEPAY_WEBHOOK_SECRET="change-me-to-the-sepay-secret-key"
 
 # Encrypts the notification bot tokens stored in `bots.token` (AES-GCM).
 #
@@ -13,10 +14,10 @@ SEPAY_WEBHOOK_SECRET="doi-thanh-secret-key-cua-sepay"
 #
 # Unset means the bot routes answer 503 rather than storing a token they could
 # never decrypt. Changing it does NOT re-encrypt existing rows — every bot
-# token has to be re-entered in Cài đặt afterwards, so treat it as permanent.
+# token has to be re-entered in Thông báo afterwards, so treat it as permanent.
 #
 # The bots themselves, the tenants' groups and the manager's chat are rows in
-# `bots` / `bot_targets`, managed from Cài đặt. They used to be the three
+# `bots` / `bot_targets`, managed from Thông báo. They used to be the three
 # ZALO_* variables that stood here; env vars could hold one bot and two chat
 # ids, not N of each.
 BOT_ENCRYPTION_KEY=""
