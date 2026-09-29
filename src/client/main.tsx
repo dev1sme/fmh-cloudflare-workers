@@ -21,7 +21,6 @@ import "./theme.css";
 // fallback and correcting itself.
 import "./i18n";
 
-import { MantineProvider } from "@mantine/core";
 import { Notifications } from "@mantine/notifications";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
@@ -30,15 +29,11 @@ import { BrowserRouter } from "react-router-dom";
 import { App } from "./App";
 import { BackgroundFX } from "./components/BackgroundFX";
 import { ChunkErrorBoundary } from "./components/ChunkErrorBoundary";
-import { cssVariablesResolver, theme } from "./theme";
+import { LocalizedMantineProvider } from "./components/LocalizedMantineProvider";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <MantineProvider
-      theme={theme}
-      cssVariablesResolver={cssVariablesResolver}
-      defaultColorScheme="auto"
-    >
+    <LocalizedMantineProvider>
       <BackgroundFX />
       <Notifications position="top-right" />
       <BrowserRouter>
@@ -48,6 +43,6 @@ createRoot(document.getElementById("root")!).render(
           <App />
         </ChunkErrorBoundary>
       </BrowserRouter>
-    </MantineProvider>
+    </LocalizedMantineProvider>
   </StrictMode>,
 );

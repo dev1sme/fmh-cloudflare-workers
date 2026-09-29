@@ -21,6 +21,7 @@ export const en: Resources = {
   common: {
     account: "Account",
     changePassword: "Change password",
+    togglePassword: "Show or hide password",
     logout: "Sign out",
     language: "Language",
     home: "Back to home",

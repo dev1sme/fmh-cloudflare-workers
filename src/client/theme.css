@@ -298,6 +298,34 @@ textarea {
   background-color: var(--fmh-input);
 }
 
+/*
+ * 16 px inputs on a phone, or iOS Safari zooms the page in on focus and never
+ * zooms back out — the user is left pinching the screen after every login.
+ * Safari does this for any focused field under 16 px, and Mantine's default
+ * `sm` input is 14 px.
+ *
+ * Mantine writes `--input-fz` / `--input-height` as inline style on the
+ * wrapper, which only an `!important` declaration can override. Height goes to
+ * 42 px with it: a 36 px field is a small target for a thumb, and the
+ * password-visibility toggle inside it is sized off that height.
+ *
+ * Not `maximum-scale=1` on the viewport: that stops the zoom by taking pinch
+ * zoom away from everyone who needs it.
+ */
+@media (max-width: 48em) {
+  .mantine-Input-wrapper {
+    --input-fz: 1rem !important;
+  }
+
+  .mantine-Input-wrapper[data-size="sm"] {
+    --input-height: 2.625rem !important;
+  }
+
+  .mantine-PasswordInput-root {
+    --psi-button-size: 2.25rem !important;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

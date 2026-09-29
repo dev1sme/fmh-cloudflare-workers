@@ -19,6 +19,7 @@ export const vi = {
   common: {
     account: "Tài khoản",
     changePassword: "Đổi mật khẩu",
+    togglePassword: "Hiện hoặc ẩn mật khẩu",
     logout: "Đăng xuất",
     language: "Ngôn ngữ",
     home: "Về trang chủ",
