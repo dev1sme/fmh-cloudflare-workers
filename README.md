@@ -41,7 +41,8 @@ Deploy: `npm run db:migrate:remote && npm run deploy`. Secrets, domain và các 
 |---|---|
 | [architecture.md](docs/architecture.md) | Một Worker, cấu trúc thư mục, phân tầng client, code splitting |
 | [data-model.md](docs/data-model.md) | Schema, ràng buộc, mã công khai, enum, điểm thiết kế không được phá |
-| [api.md](docs/api.md) | Envelope, mã lỗi, bề mặt API, hành vi cần giữ, an toàn SQL |
+| [api.md](docs/api.md) | Bề mặt API, hành vi cần giữ, an toàn SQL |
+| [envelop-conventions.md](.claude/rules/envelop-conventions.md) | Chuẩn response envelope, định dạng `error.code` |
 | [auth.md](docs/auth.md) | Vai trò, middleware, phiên, mật khẩu, số vòng PBKDF2 |
 | [payments.md](docs/payments.md) | VietQR, MoMo, webhook SePay |
 | [notifications.md](docs/notifications.md) | Zalo bot, `bots` / `bot_targets`, mã hoá token |

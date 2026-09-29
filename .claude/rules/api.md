@@ -1,12 +1,12 @@
 # API
 
-Spec: `docs/api.md` (envelope, error codes, surface, behaviour to preserve, SQL safety). Read it before adding or changing any route under `/api`, touching `src/server/db/`, or changing the envelope.
+Spec: `docs/api.md` (surface, behaviour to preserve, SQL safety). Envelope and error-code format: `envelop-conventions.md`. Read both before adding or changing any route under `/api` or touching `src/server/db/`.
 
 Must hold:
 
 - Handlers never call `c.json` — use `ok` / `failure` / `notFound` from `src/server/envelope.ts`. `grep -rn "c\.json(" src/server/` matches only `envelope.ts`.
 - Error codes are UPPER_SNAKE English and are the API contract. Never reword or re-case one. Validation keeps its specific code (`MISSING_ROOM_NAME`) plus `details`, never a blanket `VALIDATION_ERROR`.
-- A new user-facing error code needs a key in `src/client/i18n/locales/vi.ts` and `en.ts` (check commands in the doc).
+- A new user-facing error code needs a key in `src/client/i18n/locales/vi.ts` and `en.ts` (check commands in `envelop-conventions.md`).
 - Paths address resources by public `code` via `parseCode`, except `/api/buildings/:code`.
 - Static sub-paths (`/readings/suggest`, `/invoices/generate-preview`) are registered before `/:code`.
 - Every value goes through `.bind()`. Never pass a request body into `buildSet` — build the patch field by field. No `...body` in `src/server/`.

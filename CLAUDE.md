@@ -24,7 +24,8 @@ Read the rule file that matches the task, then the doc it points to, **before** 
 | `.claude/rules/commands.md` | `docs/deployment.md` | run any npm script, wrangler, or a migration |
 | `.claude/rules/mcp-servers.md` | — | call a `cloudflare-bindings` or `cloudflare-docs` MCP tool |
 | `.claude/rules/data-model.md` | `docs/data-model.md` | write a migration, add a column, or compute money |
-| `.claude/rules/api.md` | `docs/api.md` | add or change any route under `/api`, touch `src/server/db/`, or change the response envelope |
+| `.claude/rules/api.md` | `docs/api.md` | add or change any route under `/api`, or touch `src/server/db/` |
+| `.claude/rules/envelop-conventions.md` | — (is the spec) | change the response envelope, add an error code, or add a response field |
 | `.claude/rules/auth.md` | `docs/auth.md` | touch login, sessions, roles, accounts, or password hashing |
 | `.claude/rules/security-headers.md` | `docs/security-headers.md` | change `public/_headers`, `src/server/headers.ts`, or CSP |
 | `.claude/rules/payments.md` | `docs/payments.md` | touch VietQR, bank details, or the SePay webhook |
@@ -45,6 +46,6 @@ These are the ones that cost money, break production, or leak data when broken. 
 - **Bot tokens are encrypted at rest and write-only.** `bots.token` is AES-GCM ciphertext; no response anywhere returns a token, and a `GROUP` destination is never sent amounts or room names. → `docs/notifications.md`
 - **Handlers never call `c.json` directly.** Go through `ok` / `failure` / `notFound` in `src/server/envelope.ts`. → `docs/api.md`
 - **Never pass a request body into `buildSet`.** Column names come from a fixed allowlist at each call site; `...body` would be an injection hole. → `docs/api.md`
-- **Error codes are UPPER_SNAKE and are the API contract.** `failure()` and `fail()` throw on anything else. `errors.ts` maps them to Vietnamese. Do not reword or re-case them. → `docs/api.md`
+- **Error codes are UPPER_SNAKE and are the API contract.** `failure()` and `fail()` throw on anything else. `errors.ts` maps them to Vietnamese. Do not reword or re-case them. → `.claude/rules/envelop-conventions.md`
 - **`d1_database_query` hits the REMOTE database.** Reads are fine; any write needs explicit approval first. → `.claude/rules/mcp-servers.md`
 - **`npx` does not work here** — a shell hook rewrites it to `npm`. Use an npm script or `./node_modules/.bin/<bin>`. → `.claude/rules/commands.md`

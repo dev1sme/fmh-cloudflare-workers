@@ -2,41 +2,16 @@
 
 Mọi thứ dưới `/api` đều cần phiên đăng nhập, trừ `/api/health` và `/api/auth/*`. `/hooks/*` nằm ngoài `/api` và xác thực bằng chữ ký (→ [payments.md](payments.md)).
 
-## Response envelope
+## Envelope & mã lỗi
 
-Mục đích: frontend, QA và bên tích hợp đọc một hình dạng duy nhất, ổn định.
+Chuẩn envelope, định dạng thuộc tính và quy tắc `error.code` nằm riêng ở [`.claude/rules/envelop-conventions.md`](../.claude/rules/envelop-conventions.md). Phần dưới chỉ là cách dự án này áp dụng nó.
 
-```jsonc
-// thành công
-{ "success": true,  "message": "Invoices retrieved.", "data": { "invoices": [] }, "meta": { "timestamp": 1785900251 } }
-// lỗi
-{ "success": false, "message": "Duplicate data.", "error": { "code": "DUPLICATE_DATA", "details": null }, "meta": { "timestamp": 1785900251 } }
-// lỗi validation
-{ "success": false, "message": "The given data was invalid.",
-  "error": { "code": "MISSING_ROOM_NAME", "details": { "room_name": ["MISSING_ROOM_NAME"] } },
-  "meta": { "timestamp": 1785900251 } }
-```
+- Handler **không bao giờ gọi `c.json` trực tiếp** — đi qua `ok` / `failure` / `notFound` trong `src/server/envelope.ts`. `grep -rn "c\.json(" src/server/` chỉ được khớp `envelope.ts`.
+- `data` giữ nguyên hình dạng bên trong của từng route (`{ invoices }`, `{ room }`, `{ ok: true }`), không làm phẳng — `request<T>` trong `api.ts` bóc đúng một lớp.
+- `message` là câu tiếng Anh cho log; SPA không hiển thị, mà tự dựng câu từ `error.code`. `onError` log lỗi thật và trả `INTERNAL_ERROR`.
+- **Khác với ví dụ chung trong file envelope:** validation giữ **mã cụ thể** (`MISSING_ROOM_NAME`), không dùng `VALIDATION_ERROR`, rồi thêm `details: { "room_name": ["MISSING_ROOM_NAME"] }`. `chiTietValidation` tách field từ mã; mã nghiệp vụ không nêu field (`ELECTRICITY_END_BELOW_START`) thì `details: null`. Lý do: câu chữ nằm ở client, không phải server.
 
-- Handler **không bao giờ gọi `c.json` trực tiếp** — đi qua `ok` / `failure` / `notFound` trong `src/server/envelope.ts`, để `success`, `message`, `meta.timestamp` không thể có ở endpoint này mà thiếu ở endpoint kia. `grep -rn "c\.json(" src/server/` chỉ được khớp `envelope.ts`.
-- `data` giữ nguyên hình dạng bên trong mà mỗi route vẫn trả (`{ invoices }`, `{ room }`, `{ ok: true }`), không làm phẳng. Vì thế `request<T>` trong `api.ts` bóc đúng một lớp và không nơi gọi nào trong client phải sửa.
-- `message` là câu tiếng Anh cho log và bên tích hợp. SPA **không bao giờ hiển thị** nó — SPA tự dựng câu từ `error.code`. Không đặt message của exception nội bộ vào đây; `onError` log lỗi thật và trả `INTERNAL_ERROR`.
-- Không đổi tên tuỳ tiện giữa `data` / `result` / `payload`. Không trả raw model, stack trace, secret, token, password hash.
-
-### Định dạng thuộc tính
-
-- Số nguyên là số thật, không bọc trong chuỗi. `meta.timestamp` là số.
-- Boolean là boolean thật, không `"true"`/`"false"`.
-- Field số giữ cùng kiểu ở mọi endpoint.
-- Enum là UPPER_SNAKE tiếng Anh, ổn định, đọc được bằng máy (bảng enum → [data-model.md](data-model.md)).
-- Field nullable là `null` rõ ràng, theo một quy ước thống nhất.
-
-## Mã lỗi
-
-`error.code` **bắt buộc UPPER_SNAKE tiếng Anh**, khớp `^[A-Z][A-Z0-9]*(_[A-Z0-9]+)*$`. Được **ép trong code**: `failure()` trong `envelope.ts` và `fail()` trong `validate.ts` đều throw nếu sai định dạng.
-
-**Mã là API contract.** Client map chúng sang câu hiển thị; đổi chữ trong một mã là breaking change, không phải sửa câu chữ.
-
-Validation giữ **mã cụ thể** (`MISSING_ROOM_NAME`), không dùng `VALIDATION_ERROR` chung chung, rồi thêm `details`. Mã do validation sinh ghép từ tên field: `MISSING_<FIELD>`, `INVALID_<FIELD>`, `TOO_LONG_<FIELD>`. `chiTietValidation` tách field từ mã rồi hạ về chữ thường làm khoá trong `details`; mã nghiệp vụ không nêu field nào (`ELECTRICITY_END_BELOW_START`) thì `details: null`. Gửi `VALIDATION_ERROR` sẽ buộc câu chữ phải nằm ở server — không phải chỗ của nó.
+Ánh xạ lỗi trong `app.onError` và các guard:
 
 | Lỗi | HTTP | Mã |
 |---|---|---|
@@ -50,33 +25,6 @@ Validation giữ **mã cụ thể** (`MISSING_ROOM_NAME`), không dùng `VALIDAT
 | Người thuê gọi route quản lý | 403 | `FORBIDDEN` |
 | Quản lý gọi `/api/me/*` | 403 | `NO_ROOM_BOUND` |
 | Lỗi khác | 500 | `INTERNAL_ERROR` (lỗi thật chỉ vào `console.error`) |
-
-### Mã phải đọc được trên UI
-
-Đúng định dạng chưa đủ. `thongBaoLoi` tra `errors.<CODE>` trong locale trước; không có thì rơi xuống câu sinh từ tên field (`INVALID_RENT` → "Giá trị không hợp lệ: giá phòng"). Lối thoát đó chỉ đẹp khi mã **nêu đúng một field người dùng nhìn thấy** và `fields.<field>` có mặt — `INVALID_BODY` từng in ra "Giá trị không hợp lệ: body." vì sai cả hai.
-
-Kiểm mã sai định dạng:
-
-```bash
-grep -rhoE '(failure\(c, "|fail\(")[a-zA-Z_]+"' src/server/ \
-  | sed -E 's/.*"([a-zA-Z_]+)"/\1/' | sort -u | grep -vE '^[A-Z][A-Z0-9_]*$'
-```
-
-Tìm mã thiếu câu hiển thị:
-
-```bash
-grep -rhoE '"[A-Z][A-Z0-9]*(_[A-Z0-9]+)+"' src/server/ | tr -d '"' | sort -u \
-  | while read -r c; do grep -q "^    ${c}:" src/client/i18n/locales/vi.ts || echo "$c"; done
-```
-
-Kết quả không phải lỗi hết. Bỏ qua bốn nhóm:
-
-- **Giá trị enum**, không phải mã lỗi: `BANK_TRANSFER`, `MISSING_READING`, `ALREADY_INVOICED`.
-- **Chỉ webhook phát ra**: `STALE_SIGNATURE`, `NOT_INCOMING`, `NO_INVOICE_CODE`, … SePay đọc, SPA không bao giờ thấy. Phần lớn nằm trong `reason` của một `ok()` 200.
-- **`reason` nội bộ** bị bọc trước khi tới client: `TOKEN_UNREADABLE` trong `notify.ts` đi vào `message` của `TEST_MESSAGE_FAILED`, và client tra mã bọc ngoài.
-- **Khớp `MISSING_`/`INVALID_`/`TOO_LONG_` và có `fields.<field>`**: `INVALID_AMOUNT` ra "Giá trị không hợp lệ: số tiền" là đúng ý.
-
-Còn lại mới là thiếu thật.
 
 ## Đường dẫn
 
