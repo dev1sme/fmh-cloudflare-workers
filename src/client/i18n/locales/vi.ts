@@ -93,7 +93,7 @@ export const vi = {
 
   login: {
     title: "Đăng nhập",
-    subtitle: "Dùng tài khoản chủ nhà cấp cho phòng của bạn.",
+    subtitle: "Dùng tài khoản đã được cấp cho phòng của bạn.",
     username: "Tài khoản",
     password: "Mật khẩu",
     submit: "Đăng nhập",
@@ -109,8 +109,8 @@ export const vi = {
     payNow: "Thanh toán ngay",
     paidUp: "Đã thanh toán đủ",
     paidUpHint:
-      "Hóa đơn tháng {{period}} đã được thanh toán. Hóa đơn kỳ tới sẽ hiện ở đây khi chủ nhà phát hành.",
-    noInvoiceYet: "Chủ nhà đã ghi chỉ số nhưng chưa phát hành hóa đơn cho kỳ này.",
+      "Hóa đơn tháng {{period}} đã được thanh toán. Hóa đơn kỳ tới sẽ hiện ở đây khi được phát hành.",
+    noInvoiceYet: "Chỉ số điện nước đã được ghi nhận nhưng chưa phát hành hóa đơn cho kỳ này.",
     history: "Lịch sử",
     rangeLabel: "Khoảng thời gian",
     range3: "3 tháng",
