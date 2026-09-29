@@ -75,7 +75,7 @@ export function CollectionBar({
         {done ? (
           <IconCheck size={15} stroke={2.5} color="var(--mantine-color-settled-6)" />
         ) : (
-          <Text size="xs" c="owed.6" fw={600} style={{ whiteSpace: "nowrap" }}>
+          <Text size="xs" c="owed" fw={600} style={{ whiteSpace: "nowrap" }}>
             {Math.round(ratio * 100)}%
           </Text>
         )}

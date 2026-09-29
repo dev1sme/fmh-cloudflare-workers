@@ -33,7 +33,7 @@ export function RoomsPage() {
         room: room.room_name,
       }),
       confirmLabel: t("rooms.movedOutLabel"),
-      color: "orange",
+      color: "red",
       onConfirm: () => moveOut(room.tenant!.code),
     });
   }

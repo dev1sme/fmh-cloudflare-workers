@@ -30,11 +30,15 @@ import { BrowserRouter } from "react-router-dom";
 import { App } from "./App";
 import { BackgroundFX } from "./components/BackgroundFX";
 import { ChunkErrorBoundary } from "./components/ChunkErrorBoundary";
-import { theme } from "./theme";
+import { cssVariablesResolver, theme } from "./theme";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <MantineProvider theme={theme} defaultColorScheme="auto">
+    <MantineProvider
+      theme={theme}
+      cssVariablesResolver={cssVariablesResolver}
+      defaultColorScheme="auto"
+    >
       <BackgroundFX />
       <Notifications position="top-right" />
       <BrowserRouter>

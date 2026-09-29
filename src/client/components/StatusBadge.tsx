@@ -4,8 +4,8 @@ import { useTranslation } from "react-i18next";
 import type { InvoiceStatus } from "../../shared/types";
 
 const COLOURS: Record<InvoiceStatus, string> = {
-  UNPAID: "orange",
-  PAID: "teal",
+  UNPAID: "owed",
+  PAID: "settled",
   CANCELLED: "gray",
 };
 

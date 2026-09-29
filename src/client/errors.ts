@@ -44,5 +44,5 @@ export function toastError(err: unknown): void {
 }
 
 export function toastSuccess(message: string): void {
-  notifications.show({ color: "teal", message });
+  notifications.show({ color: "settled", message });
 }

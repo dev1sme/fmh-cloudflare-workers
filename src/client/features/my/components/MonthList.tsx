@@ -102,7 +102,7 @@ export function MonthList({
         </Text>
 
         {owedOutsideWindow > 0 && (
-          <Text size="xs" c="owed.6">
+          <Text size="xs" c="owed">
             {t("tenant.outOfRangeDebt", { count: owedOutsideWindow })}
           </Text>
         )}

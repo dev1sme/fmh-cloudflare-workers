@@ -1,4 +1,5 @@
 import { Alert, Button, Code, CopyButton, Group, Modal, Stack, Text } from "@mantine/core";
+import { IconAlertTriangle } from "@tabler/icons-react";
 
 import { useTranslation } from "react-i18next";
 
@@ -39,14 +40,14 @@ export function PasswordModal({
           {result?.password}
         </Code>
 
-        <Alert color="yellow" variant="light">
+        <Alert color="gray" variant="light" icon={<IconAlertTriangle size={18} stroke={1.8} />}>
           {t("accounts.shownOnce")}
         </Alert>
 
         <Group justify="flex-end">
           <CopyButton value={result?.password ?? ""}>
             {({ copied, copy }) => (
-              <Button variant="light" color={copied ? "teal" : undefined} onClick={copy}>
+              <Button variant="light" color={copied ? "settled" : undefined} onClick={copy}>
                 {copied ? t("common.copied") : t("accounts.copyPassword")}
               </Button>
             )}

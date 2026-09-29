@@ -83,10 +83,10 @@ export function InvoiceLines({ invoice }: { invoice: InvoiceDetail }) {
         </Group>
         {invoice.outstanding > 0 && (
           <Group justify="space-between">
-            <Text c="orange" fw={500}>
+            <Text c="owed" fw={500}>
               {t("invoice.outstanding")}
             </Text>
-            <Text c="orange" fw={600}>
+            <Text c="owed" fw={600}>
               {money(invoice.outstanding)}
             </Text>
           </Group>

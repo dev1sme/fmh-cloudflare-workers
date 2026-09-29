@@ -29,7 +29,7 @@ export function TenantsPage() {
         room: tenant.room_name,
       }),
       confirmLabel: t("tenants.movedOut"),
-      color: "orange",
+      color: "red",
       onConfirm: () => moveOut(tenant.code),
     });
   }
@@ -43,7 +43,7 @@ export function TenantsPage() {
         date: formatDate(tenant.moved_out),
       }),
       confirmLabel: t("tenants.undoLabel"),
-      color: "teal",
+      color: "settled",
       onConfirm: () => undoMoveOut(tenant.code),
     });
   }

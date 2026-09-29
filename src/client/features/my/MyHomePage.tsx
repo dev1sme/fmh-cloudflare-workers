@@ -86,11 +86,11 @@ export function MyHomePage() {
             </div>
 
             {dashboard.outstanding_total > 0 ? (
-              <Text className="fmh-num" fw={700} fz="1.35rem" c="owed.6">
+              <Text className="fmh-num" fw={700} fz="1.35rem" c="owed">
                 {t("tenant.needToPay", { amount: money(dashboard.outstanding_total) })}
               </Text>
             ) : (
-              <Group gap={6} c="settled.6">
+              <Group gap={6} c="settled">
                 <IconCircleCheck size={18} stroke={1.8} />
                 <Text fw={600}>{t("tenant.paidUp")}</Text>
               </Group>
@@ -142,7 +142,7 @@ export function MyHomePage() {
                   {t("tenant.history")}
                 </Text>
                 <SegmentedControl
-                  size="xs"
+                  size="sm"
                   value={range}
                   onChange={setRange}
                   data={rangeOptions}

@@ -31,7 +31,7 @@ export function InvoiceDetailPage() {
       title: t("invoices.cancel"),
       message: t("invoices.confirmCancel"),
       confirmLabel: t("invoices.cancel"),
-      color: "orange",
+      color: "red",
       onConfirm: cancel,
     });
   }

@@ -1,4 +1,5 @@
 import { Alert, Badge, Button, Checkbox, Group, Modal, Stack, Table, Text } from "@mantine/core";
+import { IconAlertTriangle } from "@tabler/icons-react";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -87,7 +88,11 @@ export function GenerateInvoicesModal({
         ) : (
           <Stack>
             {ready.length === 0 && (
-              <Alert color="yellow" title={t("invoices.noneReadyTitle")}>
+              <Alert
+                color="gray"
+                icon={<IconAlertTriangle size={18} stroke={1.8} />}
+                title={t("invoices.noneReadyTitle")}
+              >
                 {t("invoices.noneReadyBody")}
               </Alert>
             )}
