@@ -23,7 +23,7 @@ export function TenantActions({
   onDelete: (tenant: TenantDetail) => void;
 }) {
   const { t } = useTranslation();
-  const dangThue = tenant.moved_out === null;
+  const isActive = tenant.moved_out === null;
 
   return (
     <Group gap="xs" justify="flex-end" wrap="nowrap">
@@ -38,7 +38,7 @@ export function TenantActions({
           </Button>
         </Menu.Target>
         <Menu.Dropdown>
-          {dangThue ? (
+          {isActive ? (
             <Menu.Item color="orange" onClick={() => onMoveOut(tenant)}>
               {t("tenants.recordMoveOut")}
             </Menu.Item>

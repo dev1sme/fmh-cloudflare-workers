@@ -2,17 +2,17 @@ import { Badge, Table } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 
 import type { ReadingDetail, RoomDetail } from "../../../../shared/types";
-import { ngay } from "../../../format";
+import { formatDate } from "../../../format";
 import { ReadingActions } from "./ReadingActions";
 
 export function ReadingsTable({
-  phong,
-  chiSoCuaPhong,
+  rooms,
+  readingForRoom,
   onEdit,
   onDelete,
 }: {
-  phong: RoomDetail[];
-  chiSoCuaPhong: (roomId: number) => ReadingDetail | null;
+  rooms: RoomDetail[];
+  readingForRoom: (roomId: number) => ReadingDetail | null;
   onEdit: (room: RoomDetail, reading: ReadingDetail | null) => void;
   onDelete: (reading: ReadingDetail) => void;
 }) {
@@ -33,8 +33,8 @@ export function ReadingsTable({
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>
-          {phong.map((room) => {
-            const reading = chiSoCuaPhong(room.id);
+          {rooms.map((room) => {
+            const reading = readingForRoom(room.id);
 
             return (
               <Table.Tr key={room.id}>
@@ -51,7 +51,7 @@ export function ReadingsTable({
                 <Table.Td>{reading ? `${reading.electricity_used} kWh` : t("common.empty")}</Table.Td>
                 <Table.Td>{reading ? `${reading.water_start} → ${reading.water_end}` : t("common.empty")}</Table.Td>
                 <Table.Td>{reading ? `${reading.water_used} m³` : t("common.empty")}</Table.Td>
-                <Table.Td>{reading ? ngay(reading.recorded_on) : t("common.empty")}</Table.Td>
+                <Table.Td>{reading ? formatDate(reading.recorded_on) : t("common.empty")}</Table.Td>
                 <Table.Td>
                   <ReadingActions
                     room={room}

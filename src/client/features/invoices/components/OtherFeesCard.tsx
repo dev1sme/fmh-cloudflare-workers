@@ -2,20 +2,20 @@ import { Button, Card, Group, NumberInput, Stack, Text } from "@mantine/core";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { dauPhanCach } from "../../../format";
+import { separators } from "../../../format";
 
 export function OtherFeesCard({
-  phiKhac,
+  otherFees,
   onSave,
 }: {
-  phiKhac: number;
+  otherFees: number;
   onSave: (value: number) => Promise<boolean>;
 }) {
-  const [value, setValue] = useState<number | string>(phiKhac);
+  const [value, setValue] = useState<number | string>(otherFees);
   const [busy, setBusy] = useState(false);
   const { t } = useTranslation();
 
-  useEffect(() => setValue(phiKhac), [phiKhac]);
+  useEffect(() => setValue(otherFees), [otherFees]);
 
   async function save() {
     setBusy(true);
@@ -33,7 +33,7 @@ export function OtherFeesCard({
             onChange={setValue}
             min={0}
             step={10000}
-            {...dauPhanCach()}
+            {...separators()}
             w={200}
           />
           <Button variant="light" onClick={save} loading={busy}>

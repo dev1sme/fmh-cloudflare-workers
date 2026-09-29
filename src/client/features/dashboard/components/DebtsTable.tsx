@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
 import type { DashboardDebt } from "../../../../shared/types";
-import { periodLabel, tien } from "../../../format";
+import { periodLabel, money } from "../../../format";
 
 /**
  * Who still owes money, worst first, across every period — not just the one
@@ -47,7 +47,7 @@ export function DebtsTable({ debts }: { debts: DashboardDebt[] }) {
                   <Table.Td>{debt.invoice_count}</Table.Td>
                   <Table.Td c="dimmed">{periodLabel(debt.oldest_period)}</Table.Td>
                   <Table.Td className="fmh-num" fw={600} c="owed.6">
-                    {tien(debt.amount)}
+                    {money(debt.amount)}
                   </Table.Td>
                 </Table.Tr>
               ))}

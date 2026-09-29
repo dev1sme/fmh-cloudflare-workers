@@ -6,23 +6,23 @@ import { useTranslation } from "react-i18next";
 import type { TenantDetail } from "../../../shared/types";
 import { EmptyState } from "../../components/EmptyState";
 import { PageState } from "../../components/PageState";
-import { ngay } from "../../format";
+import { formatDate } from "../../format";
 import { useConfirm } from "../../hooks/useConfirm";
-import { TenantModal, type MucTieuNguoiThue } from "./components/TenantModal";
+import { TenantModal, type TenantTarget } from "./components/TenantModal";
 import { TenantCards } from "./components/TenantCards";
 import { TenantsTable } from "./components/TenantsTable";
-import { useDanhSachNguoiThue, useThaoTacNguoiThue } from "./useTenants";
+import { useTenantList, useTenantActions } from "./useTenants";
 
 export function TenantsPage() {
-  const { nguoiThue, phong, loading, refreshing, error, reload } = useDanhSachNguoiThue();
-  const { them, capNhat, chuyenDi, huyChuyenDi, xoa } = useThaoTacNguoiThue(reload);
-  const { xacNhan, hopThoai } = useConfirm();
+  const { tenants, rooms, loading, refreshing, error, reload } = useTenantList();
+  const { add, update, moveOut, undoMoveOut, remove } = useTenantActions(reload);
+  const { confirm, confirmDialog } = useConfirm();
   const { t } = useTranslation();
 
-  const [dangMo, setDangMo] = useState<MucTieuNguoiThue>(null);
+  const [movingOut, setMovingOut] = useState<TenantTarget>(null);
 
-  function hoiChuyenDi(tenant: TenantDetail) {
-    xacNhan({
+  function askMoveOut(tenant: TenantDetail) {
+    confirm({
       title: t("tenants.recordMoveOut"),
       message: t("tenants.confirmMoveOut", {
         name: tenant.full_name,
@@ -30,33 +30,33 @@ export function TenantsPage() {
       }),
       confirmLabel: t("tenants.movedOut"),
       color: "orange",
-      onConfirm: () => chuyenDi(tenant.code),
+      onConfirm: () => moveOut(tenant.code),
     });
   }
 
-  function hoiHuyChuyenDi(tenant: TenantDetail) {
-    xacNhan({
+  function askUndoMoveOut(tenant: TenantDetail) {
+    confirm({
       title: t("tenants.confirmUndoTitle"),
       message: t("tenants.confirmUndo", {
         name: tenant.full_name,
         room: tenant.room_name,
-        date: ngay(tenant.moved_out),
+        date: formatDate(tenant.moved_out),
       }),
       confirmLabel: t("tenants.undoLabel"),
       color: "teal",
-      onConfirm: () => huyChuyenDi(tenant.code),
+      onConfirm: () => undoMoveOut(tenant.code),
     });
   }
 
-  function hoiXoa(tenant: TenantDetail) {
-    xacNhan({
+  function askDelete(tenant: TenantDetail) {
+    confirm({
       title: t("tenants.confirmDeleteTitle"),
       message: t("tenants.confirmDelete", {
         name: tenant.full_name,
         room: tenant.room_name,
       }),
       confirmLabel: t("common.delete"),
-      onConfirm: () => xoa(tenant.code),
+      onConfirm: () => remove(tenant.code),
     });
   }
 
@@ -65,7 +65,7 @@ export function TenantsPage() {
       <Group justify="space-between">
         <Title order={3}>{t("nav.tenants")}</Title>
         <Button
-          onClick={() => setDangMo({ tenant: null })}
+          onClick={() => setMovingOut({ tenant: null })}
           leftSection={<IconUserPlus size={16} stroke={1.8} />}
         >
           {t("tenants.add")}
@@ -73,14 +73,14 @@ export function TenantsPage() {
       </Group>
 
       <PageState loading={loading} refreshing={refreshing} error={error} onRetry={reload}>
-        {nguoiThue.length === 0 ? (
+        {tenants.length === 0 ? (
           <EmptyState
             icon={<IconUsers size={24} stroke={1.6} />}
             title={t("tenants.empty")}
             hint={t("tenants.emptyHint")}
             action={
               <Button
-                onClick={() => setDangMo({ tenant: null })}
+                onClick={() => setMovingOut({ tenant: null })}
                 leftSection={<IconUserPlus size={16} stroke={1.8} />}
               >
                 {t("tenants.add")}
@@ -92,20 +92,20 @@ export function TenantsPage() {
             {/* Eight columns at minWidth 820 — the widest table in the app. */}
             <Box visibleFrom="sm">
               <TenantsTable
-                nguoiThue={nguoiThue}
-                onEdit={(tenant) => setDangMo({ tenant })}
-                onMoveOut={hoiChuyenDi}
-                onUndoMoveOut={hoiHuyChuyenDi}
-                onDelete={hoiXoa}
+                tenants={tenants}
+                onEdit={(tenant) => setMovingOut({ tenant })}
+                onMoveOut={askMoveOut}
+                onUndoMoveOut={askUndoMoveOut}
+                onDelete={askDelete}
               />
             </Box>
             <Box hiddenFrom="sm">
               <TenantCards
-                nguoiThue={nguoiThue}
-                onEdit={(tenant) => setDangMo({ tenant })}
-                onMoveOut={hoiChuyenDi}
-                onUndoMoveOut={hoiHuyChuyenDi}
-                onDelete={hoiXoa}
+                tenants={tenants}
+                onEdit={(tenant) => setMovingOut({ tenant })}
+                onMoveOut={askMoveOut}
+                onUndoMoveOut={askUndoMoveOut}
+                onDelete={askDelete}
               />
             </Box>
           </>
@@ -113,13 +113,13 @@ export function TenantsPage() {
       </PageState>
 
       <TenantModal
-        target={dangMo}
-        phong={phong}
-        onClose={() => setDangMo(null)}
-        onCreate={them}
-        onUpdate={capNhat}
+        target={movingOut}
+        rooms={rooms}
+        onClose={() => setMovingOut(null)}
+        onCreate={add}
+        onUpdate={update}
       />
-      {hopThoai}
+      {confirmDialog}
     </Stack>
   );
 }

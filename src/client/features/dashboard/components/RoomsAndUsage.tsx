@@ -3,7 +3,7 @@ import { IconBolt, IconDroplet, IconHome, IconNotebook } from "@tabler/icons-rea
 import { useTranslation } from "react-i18next";
 
 import type { DashboardRooms, DashboardUsage } from "../../../../shared/types";
-import { laTiengAnh } from "../../../i18n";
+import { isEnglish } from "../../../i18n";
 import { StatCard } from "./StatCard";
 
 export function RoomsAndUsage({
@@ -16,11 +16,11 @@ export function RoomsAndUsage({
   usage: DashboardUsage;
 }) {
   const { t } = useTranslation();
-  const so = (value: number) => value.toLocaleString(laTiengAnh() ? "en-US" : "vi-VN");
+  const formatNumber = (value: number) => value.toLocaleString(isEnglish() ? "en-US" : "vi-VN");
 
   /** Signed percentage change, or the "no earlier period" note when there is
    *  nothing to compare against. */
-  const chenhLech = (now: number, before: number): string => {
+  const changeLabel = (now: number, before: number): string => {
     if (before === 0) return t("dashboard.noPrevious");
     const percent = Math.round(((now - before) / before) * 100);
     return t("dashboard.changeVsPrevious", {
@@ -54,14 +54,14 @@ export function RoomsAndUsage({
       <StatCard
         label={t("meter.electricityUsed")}
         icon={<IconBolt size={16} stroke={1.8} />}
-        value={`${so(usage.electricity)} kWh`}
-        hint={chenhLech(usage.electricity, usage.electricity_previous)}
+        value={`${formatNumber(usage.electricity)} kWh`}
+        hint={changeLabel(usage.electricity, usage.electricity_previous)}
       />
       <StatCard
         label={t("meter.waterUsed")}
         icon={<IconDroplet size={16} stroke={1.8} />}
-        value={`${so(usage.water)} m³`}
-        hint={chenhLech(usage.water, usage.water_previous)}
+        value={`${formatNumber(usage.water)} m³`}
+        hint={changeLabel(usage.water, usage.water_previous)}
       />
     </SimpleGrid>
   );

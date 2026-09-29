@@ -2,7 +2,7 @@ import { Card, Stack, Text } from "@mantine/core";
 import { Trans, useTranslation } from "react-i18next";
 
 import type { MomoInfo } from "../../shared/types";
-import { tien } from "../format";
+import { money } from "../format";
 import { CopyableRow } from "./CopyableRow";
 
 /**
@@ -10,7 +10,7 @@ import { CopyableRow } from "./CopyableRow";
  * personal QR payload is not a verified format, and a wrong guess would produce
  * a code that pays the wrong wallet.
  */
-export function MomoCard({ momo, xemTruoc = false }: { momo: MomoInfo; xemTruoc?: boolean }) {
+export function MomoCard({ momo, preview = false }: { momo: MomoInfo; preview?: boolean }) {
   const { t } = useTranslation();
 
   return (
@@ -18,7 +18,7 @@ export function MomoCard({ momo, xemTruoc = false }: { momo: MomoInfo; xemTruoc?
       <Stack gap="xs">
         <div>
           <Text fw={500}>{t("payment.momoTitle")}</Text>
-          {xemTruoc && (
+          {preview && (
             <Text size="xs" c="dimmed">
               {t("payment.previewShort")}
             </Text>
@@ -30,11 +30,11 @@ export function MomoCard({ momo, xemTruoc = false }: { momo: MomoInfo; xemTruoc?
         <CopyableRow
           label={t("payment.amount")}
           value={String(momo.amount)}
-          display={tien(momo.amount)}
+          display={money(momo.amount)}
         />
         <CopyableRow label={t("payment.memo")} value={momo.transfer_note} />
 
-        {!xemTruoc && (
+        {!preview && (
           <Text size="xs" c="dimmed" mt="xs">
             <Trans
               i18nKey="payment.momoHowTo"

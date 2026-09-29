@@ -1,29 +1,29 @@
 import { useState } from "react";
 
 import { auth, type SessionUser } from "../../api";
-import { thongBaoLoi } from "../../errors";
+import { errorMessage } from "../../errors";
 
 /**
  * Login is the one place that shows the error inline instead of as a toast —
  * the message belongs next to the form the user is still looking at.
  */
 export function useLogin(onLogin: (user: SessionUser) => void) {
-  const [loi, setLoi] = useState<string | null>(null);
-  const [dangChay, setDangChay] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
-  async function dangNhap(username: string, password: string) {
-    setDangChay(true);
-    setLoi(null);
+  async function login(username: string, password: string) {
+    setBusy(true);
+    setError(null);
 
     try {
       const { user } = await auth.login(username, password);
       onLogin(user);
     } catch (err) {
-      setLoi(thongBaoLoi(err));
+      setError(errorMessage(err));
     } finally {
-      setDangChay(false);
+      setBusy(false);
     }
   }
 
-  return { dangNhap, loi, dangChay };
+  return { login, error, busy };
 }

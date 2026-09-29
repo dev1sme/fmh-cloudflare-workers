@@ -1,10 +1,10 @@
 import { Text } from "@mantine/core";
 
 /** Consumption between two meter numbers, never negative while typing. */
-export function Consumption({ cu, moi, donVi }: { cu: number; moi: number; donVi: string }) {
+export function Consumption({ from, to, unit }: { from: number; to: number; unit: string }) {
   return (
     <Text span fw={600}>
-      {Math.max(0, moi - cu)} {donVi}
+      {Math.max(0, to - from)} {unit}
     </Text>
   );
 }

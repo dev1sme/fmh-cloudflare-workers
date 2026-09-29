@@ -4,11 +4,11 @@ import { useTranslation } from "react-i18next";
 
 import type { PreviewRoom, GenerationStatus } from "../../../../shared/types";
 import { PageState } from "../../../components/PageState";
-import { periodLabel, tien } from "../../../format";
+import { periodLabel, money } from "../../../format";
 
 /** Null is the billable case — anything else is the key for the reason the
  *  row is locked. */
-const KHONG_SINH_DUOC = {
+const LOCK_REASON = {
   READY: null,
   MISSING_READING: "invoices.statusMissingReading",
   ALREADY_INVOICED: "invoices.statusAlreadyInvoiced",
@@ -26,7 +26,7 @@ export function GenerateInvoicesModal({
   loading,
   error,
   onRetry,
-  dangChay,
+  busy,
   onClose,
   onSubmit,
 }: {
@@ -36,14 +36,14 @@ export function GenerateInvoicesModal({
   loading: boolean;
   error: unknown;
   onRetry: () => void;
-  dangChay: boolean;
+  busy: boolean;
   onClose: () => void;
   onSubmit: (roomIds: number[]) => void;
 }) {
-  const [chon, setChon] = useState<number[]>([]);
+  const [selected, setSelected] = useState<number[]>([]);
   const { t } = useTranslation();
 
-  const sanSang = useMemo(
+  const ready = useMemo(
     () => rooms.filter((item) => item.status === "READY"),
     [rooms],
   );
@@ -51,27 +51,27 @@ export function GenerateInvoicesModal({
   // Everything billable starts ticked — the common run is "all of them", and
   // unticking one room is less work than ticking eight.
   useEffect(() => {
-    setChon(sanSang.map((item) => item.room_id));
-  }, [sanSang]);
+    setSelected(ready.map((item) => item.room_id));
+  }, [ready]);
 
-  const nhomTheoToa = useMemo(() => {
-    const map = new Map<number, { ten: string; rooms: PreviewRoom[] }>();
+  const byBuilding = useMemo(() => {
+    const map = new Map<number, { name: string; rooms: PreviewRoom[] }>();
 
     for (const item of rooms) {
-      const nhom = map.get(item.building_id) ?? { ten: item.building_name, rooms: [] };
-      nhom.rooms.push(item);
-      map.set(item.building_id, nhom);
+      const group = map.get(item.building_id) ?? { name: item.building_name, rooms: [] };
+      group.rooms.push(item);
+      map.set(item.building_id, group);
     }
 
     return [...map.values()];
   }, [rooms]);
 
-  const tongChon = rooms
-    .filter((item) => chon.includes(item.room_id))
+  const selectedTotal = rooms
+    .filter((item) => selected.includes(item.room_id))
     .reduce((sum, item) => sum + (item.estimate?.total ?? 0), 0);
 
-  function doi(roomId: number, tick: boolean) {
-    setChon((truoc) => (tick ? [...truoc, roomId] : truoc.filter((id) => id !== roomId)));
+  function toggle(roomId: number, tick: boolean) {
+    setSelected((prev) => (tick ? [...prev, roomId] : prev.filter((id) => id !== roomId)));
   }
 
   return (
@@ -86,19 +86,19 @@ export function GenerateInvoicesModal({
           <Text c="dimmed">{t("invoices.noRooms")}</Text>
         ) : (
           <Stack>
-            {sanSang.length === 0 && (
+            {ready.length === 0 && (
               <Alert color="yellow" title={t("invoices.noneReadyTitle")}>
                 {t("invoices.noneReadyBody")}
               </Alert>
             )}
 
             <Checkbox
-              label={t("invoices.selectAll", { count: sanSang.length })}
-              disabled={sanSang.length === 0}
-              checked={sanSang.length > 0 && chon.length === sanSang.length}
-              indeterminate={chon.length > 0 && chon.length < sanSang.length}
+              label={t("invoices.selectAll", { count: ready.length })}
+              disabled={ready.length === 0}
+              checked={ready.length > 0 && selected.length === ready.length}
+              indeterminate={selected.length > 0 && selected.length < ready.length}
               onChange={(event) =>
-                setChon(event.currentTarget.checked ? sanSang.map((item) => item.room_id) : [])
+                setSelected(event.currentTarget.checked ? ready.map((item) => item.room_id) : [])
               }
             />
 
@@ -113,20 +113,20 @@ export function GenerateInvoicesModal({
                   </Table.Tr>
                 </Table.Thead>
 
-                {nhomTheoToa.map((nhom) => (
-                  <Table.Tbody key={nhom.ten}>
+                {byBuilding.map((group) => (
+                  <Table.Tbody key={group.name}>
                     <Table.Tr>
                       <Table.Td colSpan={4} fw={600} bg="var(--mantine-color-default-hover)">
-                        {nhom.ten}
+                        {group.name}
                       </Table.Td>
                     </Table.Tr>
 
-                    {nhom.rooms.map((item) => (
-                      <DongPhong
+                    {group.rooms.map((item) => (
+                      <RoomRow
                         key={item.room_id}
                         item={item}
-                        checked={chon.includes(item.room_id)}
-                        onChange={(tick) => doi(item.room_id, tick)}
+                        checked={selected.includes(item.room_id)}
+                        onChange={(tick) => toggle(item.room_id, tick)}
                       />
                     ))}
                   </Table.Tbody>
@@ -137,16 +137,16 @@ export function GenerateInvoicesModal({
             <Group justify="space-between">
               <Text size="sm" c="dimmed">
                 {t("invoices.selectedSummary", {
-                  count: chon.length,
-                  amount: tien(tongChon),
+                  count: selected.length,
+                  amount: money(selectedTotal),
                 })}
               </Text>
               <Button
-                onClick={() => onSubmit(chon)}
-                loading={dangChay}
-                disabled={chon.length === 0}
+                onClick={() => onSubmit(selected)}
+                loading={busy}
+                disabled={selected.length === 0}
               >
-                {t("invoices.generateN", { count: chon.length })}
+                {t("invoices.generateN", { count: selected.length })}
               </Button>
             </Group>
           </Stack>
@@ -156,7 +156,7 @@ export function GenerateInvoicesModal({
   );
 }
 
-function DongPhong({
+function RoomRow({
   item,
   checked,
   onChange,
@@ -166,14 +166,14 @@ function DongPhong({
   onChange: (checked: boolean) => void;
 }) {
   const { t } = useTranslation();
-  const lyDo = KHONG_SINH_DUOC[item.status];
+  const lockReason = LOCK_REASON[item.status];
 
   return (
-    <Table.Tr opacity={lyDo ? 0.6 : 1}>
+    <Table.Tr opacity={lockReason ? 0.6 : 1}>
       <Table.Td>
         <Checkbox
           checked={checked}
-          disabled={lyDo !== null}
+          disabled={lockReason !== null}
           aria-label={t("invoices.selectRoom", { room: item.room_name })}
           onChange={(event) => onChange(event.currentTarget.checked)}
         />
@@ -181,9 +181,9 @@ function DongPhong({
       <Table.Td fw={500}>
         <Group gap="xs" wrap="nowrap">
           {item.room_name}
-          {lyDo && (
+          {lockReason && (
             <Badge size="sm" variant="light" color="gray">
-              {t(lyDo)}
+              {t(lockReason)}
             </Badge>
           )}
         </Group>
@@ -194,7 +194,7 @@ function DongPhong({
           : t("common.empty")}
       </Table.Td>
       <Table.Td ta="right" fw={600}>
-        {item.estimate ? tien(item.estimate.total) : t("common.empty")}
+        {item.estimate ? money(item.estimate.total) : t("common.empty")}
       </Table.Td>
     </Table.Tr>
   );

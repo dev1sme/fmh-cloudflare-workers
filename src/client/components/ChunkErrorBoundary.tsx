@@ -4,36 +4,36 @@ import { Component, type ReactNode } from "react";
 import i18n from "../i18n";
 
 /** Session storage key holding when the last automatic reload was attempted. */
-const LAN_TAI_LAI = "fmh-chunk-reload";
+const RELOAD_KEY = "fmh-chunk-reload";
 
 /** Two chunk failures inside this window mean reloading is not fixing it. */
-const CHO_TAI_LAI_MS = 10_000;
+const RETRY_WINDOW_MS = 10_000;
 
 /**
  * Chrome, Firefox and Safari each word a failed `import()` differently, and a
  * chunk served as `index.html` fails on the MIME type instead. Match all four
  * rather than one browser's wording.
  */
-const DAU_HIEU = [
+const CHUNK_ERROR_SIGNATURES = [
   "failed to fetch dynamically imported module",
   "error loading dynamically imported module",
   "importing a module script failed",
   "expected a javascript module script",
 ];
 
-function laLoiChunk(error: unknown): boolean {
+function isChunkError(error: unknown): boolean {
   const message = error instanceof Error ? error.message : String(error ?? "");
-  const thuong = message.toLowerCase();
-  return DAU_HIEU.some((dau) => thuong.includes(dau));
+  const lower = message.toLowerCase();
+  return CHUNK_ERROR_SIGNATURES.some((signature) => lower.includes(signature));
 }
 
 /** True when the last automatic reload is old enough that another is worth it. */
-function nenTaiLai(): boolean {
+function shouldReload(): boolean {
   try {
-    const truoc = Number(sessionStorage.getItem(LAN_TAI_LAI));
-    if (Number.isFinite(truoc) && Date.now() - truoc < CHO_TAI_LAI_MS) return false;
+    const last = Number(sessionStorage.getItem(RELOAD_KEY));
+    if (Number.isFinite(last) && Date.now() - last < RETRY_WINDOW_MS) return false;
 
-    sessionStorage.setItem(LAN_TAI_LAI, String(Date.now()));
+    sessionStorage.setItem(RELOAD_KEY, String(Date.now()));
     return true;
   } catch {
     // Storage is locked down; reloading once is still better than a blank page,
@@ -45,7 +45,7 @@ function nenTaiLai(): boolean {
 type State = {
   error: unknown;
   /** `null` until `componentDidCatch` has decided; keeps the first paint blank. */
-  cach: "reload" | "manual" | null;
+  recovery: "reload" | "manual" | null;
 };
 
 /**
@@ -66,33 +66,33 @@ type State = {
  * a "reload the page" message.
  */
 export class ChunkErrorBoundary extends Component<{ children: ReactNode }, State> {
-  state: State = { error: null, cach: null };
+  state: State = { error: null, recovery: null };
 
   static getDerivedStateFromError(error: unknown): Partial<State> {
     return { error };
   }
 
   componentDidCatch(error: unknown): void {
-    if (!laLoiChunk(error)) return;
+    if (!isChunkError(error)) return;
 
-    if (nenTaiLai()) {
-      this.setState({ cach: "reload" });
+    if (shouldReload()) {
+      this.setState({ recovery: "reload" });
       window.location.reload();
       return;
     }
 
-    this.setState({ cach: "manual" });
+    this.setState({ recovery: "manual" });
   }
 
   render(): ReactNode {
-    const { error, cach } = this.state;
+    const { error, recovery } = this.state;
     if (!error) return this.props.children;
 
     // Not ours. Propagate exactly as if this boundary were not here.
-    if (!laLoiChunk(error)) throw error;
+    if (!isChunkError(error)) throw error;
 
     // The reload is already on its way; painting anything would flash.
-    if (cach !== "manual") return null;
+    if (recovery !== "manual") return null;
 
     return (
       <Center py="xl" px="md">

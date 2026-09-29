@@ -3,7 +3,7 @@ import { IconRefresh } from "@tabler/icons-react";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
-import { thongBaoLoi } from "../errors";
+import { errorMessage } from "../errors";
 
 /**
  * Renders children once data has arrived, and says what is happening until then.
@@ -42,7 +42,7 @@ export function PageState({
     return (
       <Alert color="red" title={t("common.loadFailed")}>
         <Group justify="space-between" align="center" wrap="wrap" gap="sm">
-          <Box>{thongBaoLoi(error)}</Box>
+          <Box>{errorMessage(error)}</Box>
           {onRetry && (
             <Button
               size="xs"

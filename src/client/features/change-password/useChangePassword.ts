@@ -1,7 +1,7 @@
 import { useState } from "react";
 
 import { auth } from "../../api";
-import { baoThanhCong, thongBaoLoi } from "../../errors";
+import { toastSuccess, errorMessage } from "../../errors";
 import i18n from "../../i18n";
 
 /**
@@ -9,25 +9,25 @@ import i18n from "../../i18n";
  * "wrong current password" belongs next to the field the user is looking at.
  */
 export function useChangePassword() {
-  const [loi, setLoi] = useState<string | null>(null);
-  const [dangChay, setDangChay] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
-  async function doiMatKhau(matKhauCu: string, matKhauMoi: string): Promise<boolean> {
-    setDangChay(true);
-    setLoi(null);
+  async function changePassword(currentPassword: string, newPassword: string): Promise<boolean> {
+    setBusy(true);
+    setError(null);
 
     try {
-      await auth.doiMatKhau(matKhauCu, matKhauMoi);
+      await auth.changePassword(currentPassword, newPassword);
       // `i18n.t`, not the hook: this is a plain function, not a component.
-      baoThanhCong(i18n.t("changePassword.done"));
+      toastSuccess(i18n.t("changePassword.done"));
       return true;
     } catch (err) {
-      setLoi(thongBaoLoi(err));
+      setError(errorMessage(err));
       return false;
     } finally {
-      setDangChay(false);
+      setBusy(false);
     }
   }
 
-  return { doiMatKhau, loi, dangChay };
+  return { changePassword, error, busy };
 }

@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 
 import type { RoomDetail } from "../../../../shared/types";
 import { CardField } from "../../../components/CardField";
-import { ngay, tien } from "../../../format";
+import { formatDate, money } from "../../../format";
 import { RoomActions } from "./RoomActions";
 
 /**
@@ -17,13 +17,13 @@ import { RoomActions } from "./RoomActions";
  * keeps `.fmh-num` so the figures still line up down the stack.
  */
 export function RoomCards({
-  phong,
+  rooms,
   onEdit,
   onMoveIn,
   onMoveOut,
   onDelete,
 }: {
-  phong: RoomDetail[];
+  rooms: RoomDetail[];
   onEdit: (room: RoomDetail) => void;
   onMoveIn: (room: RoomDetail) => void;
   onMoveOut: (room: RoomDetail) => void;
@@ -33,7 +33,7 @@ export function RoomCards({
 
   return (
     <Stack gap="xs">
-      {phong.map((room) => (
+      {rooms.map((room) => (
         <Card key={room.id} padding="md">
           <Stack gap="xs">
             <Group justify="space-between" wrap="nowrap" gap="sm" align="flex-start">
@@ -44,7 +44,7 @@ export function RoomCards({
                 </Text>
               </div>
               <Text fw={700} className="fmh-num">
-                {tien(room.rent)}
+                {money(room.rent)}
               </Text>
             </Group>
 
@@ -68,7 +68,7 @@ export function RoomCards({
 
             {/* Only shown once there is a tenancy — "Từ ngày —" is noise. */}
             {room.tenant && (
-              <CardField label={t("rooms.colFrom")}>{ngay(room.tenant.moved_in)}</CardField>
+              <CardField label={t("rooms.colFrom")}>{formatDate(room.tenant.moved_in)}</CardField>
             )}
 
             {room.area !== null && (

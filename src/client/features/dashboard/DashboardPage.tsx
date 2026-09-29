@@ -12,7 +12,7 @@ import { useDashboard } from "./useDashboard";
 
 export function DashboardPage() {
   const [period, setPeriod] = usePeriodParam();
-  const { soLieu, loading, refreshing, error, reload } = useDashboard(period);
+  const { dashboard, loading, refreshing, error, reload } = useDashboard(period);
   const { t } = useTranslation();
 
   return (
@@ -23,12 +23,12 @@ export function DashboardPage() {
       </Group>
 
       <PageState loading={loading} refreshing={refreshing} error={error} onRetry={reload}>
-        {soLieu && (
+        {dashboard && (
           <Stack>
-            <RevenueCards revenue={soLieu.revenue} />
-            <RoomsAndUsage period={period} rooms={soLieu.rooms} usage={soLieu.usage} />
-            <RevenueChart history={soLieu.history} />
-            <DebtsTable debts={soLieu.debts} />
+            <RevenueCards revenue={dashboard.revenue} />
+            <RoomsAndUsage period={period} rooms={dashboard.rooms} usage={dashboard.usage} />
+            <RevenueChart history={dashboard.history} />
+            <DebtsTable debts={dashboard.debts} />
           </Stack>
         )}
       </PageState>

@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 
 import type { InvoiceWithRoom } from "../../../../shared/types";
 import { CollectionBar } from "../../../components/CollectionBar";
-import { tien } from "../../../format";
+import { money } from "../../../format";
 
 /**
  * The invoice list on a phone.
@@ -16,12 +16,12 @@ import { tien } from "../../../format";
  * three facts that matter — room, total, how much is collected — with the
  * breakdown a tap away.
  */
-export function InvoiceCards({ hoaDon }: { hoaDon: InvoiceWithRoom[] }) {
+export function InvoiceCards({ invoices }: { invoices: InvoiceWithRoom[] }) {
   const { t } = useTranslation();
 
   return (
     <Stack gap="xs">
-      {hoaDon.map((invoice) => (
+      {invoices.map((invoice) => (
         <Card key={invoice.id} padding={0}>
           <UnstyledButton
             component={Link}
@@ -39,7 +39,7 @@ export function InvoiceCards({ hoaDon }: { hoaDon: InvoiceWithRoom[] }) {
                 </div>
                 <Group gap="xs" wrap="nowrap">
                   <Text fw={700} className="fmh-num">
-                    {tien(invoice.total)}
+                    {money(invoice.total)}
                   </Text>
                   <IconChevronRight size={16} stroke={1.8} opacity={0.5} />
                 </Group>
@@ -48,9 +48,9 @@ export function InvoiceCards({ hoaDon }: { hoaDon: InvoiceWithRoom[] }) {
               <Group justify="space-between" wrap="nowrap" gap="sm">
                 <Text size="xs" c="dimmed">
                   {t("invoices.cardBreakdown", {
-                    rent: tien(invoice.rent_amount),
-                    electricity: tien(invoice.electricity_amount),
-                    water: tien(invoice.water_amount),
+                    rent: money(invoice.rent_amount),
+                    electricity: money(invoice.electricity_amount),
+                    water: money(invoice.water_amount),
                   })}
                 </Text>
               </Group>

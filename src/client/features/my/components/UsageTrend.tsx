@@ -3,10 +3,10 @@ import { Card, Group, Text, Title } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 
 import type { TenantMonth } from "../../../../shared/types";
-import { laTiengAnh } from "../../../i18n";
+import { isEnglish } from "../../../i18n";
 import { periodTick } from "../../../format";
 
-type Diem = { period: string; value: number | null };
+type ChartPoint = { period: string; value: number | null };
 
 /**
  * Breathing room above and below the line, proportional rather than a fixed
@@ -17,9 +17,9 @@ type Diem = { period: string; value: number | null };
  * bites when consumption is already near zero, where a zero baseline is honest
  * anyway.
  */
-function daiTruc([min, max]: readonly [number, number]): [number, number] {
-  const dem = Math.max((max - min) * 0.15, 1);
-  return [Math.max(0, Math.floor(min - dem)), Math.ceil(max + dem)];
+function axisDomain([min, max]: readonly [number, number]): [number, number] {
+  const padding = Math.max((max - min) * 0.15, 1);
+  return [Math.max(0, Math.floor(min - padding)), Math.ceil(max + padding)];
 }
 
 /**
@@ -31,27 +31,27 @@ function daiTruc([min, max]: readonly [number, number]): [number, number] {
  * The unit sits beside the title because the y-axis ticks are bare numbers;
  * the tooltip carries it too, but that needs a hover the tenant may never do.
  */
-function Bieu({
-  tieuDe,
-  nhan,
+function UsageChart({
+  title,
+  tooltipLabel,
   data,
-  mau,
-  donVi,
+  color,
+  unit,
 }: {
   /** Above the chart, where the axis already says the unit. */
-  tieuDe: string;
+  title: string;
   /** Inside the tooltip, which pops up over a bare point with no context. */
-  nhan: string;
-  data: Diem[];
-  mau: string;
-  donVi: string;
+  tooltipLabel: string;
+  data: ChartPoint[];
+  color: string;
+  unit: string;
 }) {
   return (
     <Card>
       <Group justify="space-between" align="baseline" mb="md">
-        <Title order={5}>{tieuDe}</Title>
+        <Title order={5}>{title}</Title>
         <Text size="xs" c="dimmed">
-          {donVi}
+          {unit}
         </Text>
       </Group>
 
@@ -59,7 +59,7 @@ function Bieu({
         h={150}
         data={data}
         dataKey="period"
-        series={[{ name: "value", label: nhan, color: mau }]}
+        series={[{ name: "value", label: tooltipLabel, color }]}
         // Straight segments between measurements, not the default `monotone`:
         // a smooth curve draws values between two months that were never read,
         // and can overshoot the highest point — showing a peak above the real
@@ -70,12 +70,12 @@ function Bieu({
         // they were consecutive.
         connectNulls={false}
         valueFormatter={(v) =>
-          `${v.toLocaleString(laTiengAnh() ? "en-US" : "vi-VN")} ${donVi}`
+          `${v.toLocaleString(isEnglish() ? "en-US" : "vi-VN")} ${unit}`
         }
         // Scaled to the data, not to zero. Household usage never approaches
         // zero, so a zero baseline spends most of the height on a range that
         // carries no information and flattens the change being asked about.
-        yAxisProps={{ domain: daiTruc, width: 34 }}
+        yAxisProps={{ domain: axisDomain, width: 34 }}
         tickLine="y"
         gridAxis="y"
       />
@@ -109,34 +109,34 @@ export function UsageTrend({ months }: { months: TenantMonth[] }) {
   const { t } = useTranslation();
 
   // `months` arrives newest-first; a chart reads left to right as time passing.
-  const theoThoiGian = months.slice().reverse();
-  if (theoThoiGian.filter((m) => m.electricity_used !== null).length < 2) return null;
+  const chronological = months.slice().reverse();
+  if (chronological.filter((m) => m.electricity_used !== null).length < 2) return null;
 
-  const dien = theoThoiGian.map((m) => ({
+  const electricity = chronological.map((m) => ({
     period: periodTick(m.period),
     value: m.electricity_used,
   }));
 
-  const nuoc = theoThoiGian.map((m) => ({
+  const water = chronological.map((m) => ({
     period: periodTick(m.period),
     value: m.water_used,
   }));
 
   return (
     <>
-      <Bieu
-        tieuDe={t("meter.electricity")}
-        nhan={t("meter.electricityUsed")}
-        data={dien}
-        mau="owed.5"
-        donVi="kWh"
+      <UsageChart
+        title={t("meter.electricity")}
+        tooltipLabel={t("meter.electricityUsed")}
+        data={electricity}
+        color="owed.5"
+        unit="kWh"
       />
-      <Bieu
-        tieuDe={t("meter.water")}
-        nhan={t("meter.waterUsed")}
-        data={nuoc}
-        mau="settled.5"
-        donVi="m³"
+      <UsageChart
+        title={t("meter.water")}
+        tooltipLabel={t("meter.waterUsed")}
+        data={water}
+        color="settled.5"
+        unit="m³"
       />
     </>
   );

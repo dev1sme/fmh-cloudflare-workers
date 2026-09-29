@@ -6,24 +6,24 @@ import {
   type AccountInput,
   type AccountWithPassword,
 } from "../../api";
-import { baoLoi, baoThanhCong } from "../../errors";
+import { toastError, toastSuccess } from "../../errors";
 import i18n from "../../i18n";
 import { useResource } from "../../hooks/useResource";
 
-export function useDanhSachTaiKhoan() {
-  const taiKhoan = useResource(() => accountsApi.list(), []);
-  const phong = useResource(() => roomsApi.list(), []);
+export function useAccountList() {
+  const accounts = useResource(() => accountsApi.list(), []);
+  const rooms = useResource(() => roomsApi.list(), []);
 
   return {
-    taiKhoan: taiKhoan.data?.accounts ?? [],
-    phong: phong.data?.rooms ?? [],
-    loading: taiKhoan.loading || phong.loading,
-    refreshing: taiKhoan.refreshing || phong.refreshing,
-    error: taiKhoan.error ?? phong.error,
+    accounts: accounts.data?.accounts ?? [],
+    rooms: rooms.data?.rooms ?? [],
+    loading: accounts.loading || rooms.loading,
+    refreshing: accounts.refreshing || rooms.refreshing,
+    error: accounts.error ?? rooms.error,
     // Both: `error` can be either request's, so a retry has to cover both.
     reload: () => {
-      taiKhoan.reload();
-      phong.reload();
+      accounts.reload();
+      rooms.reload();
     },
   };
 }
@@ -31,67 +31,67 @@ export function useDanhSachTaiKhoan() {
 /**
  * Mutations plus the one-shot password.
  *
- * `matKhauMoi` holds the plaintext the server just generated so the screen can
+ * `newPassword` holds the plaintext the server just generated so the screen can
  * show it once; clearing it is the only place it exists. Nothing reads a
  * password back from the API.
  */
-export function useThaoTacTaiKhoan(reload: () => void) {
-  const [matKhauMoi, setMatKhauMoi] = useState<AccountWithPassword | null>(null);
+export function useAccountActions(reload: () => void) {
+  const [newPassword, setNewPassword] = useState<AccountWithPassword | null>(null);
 
-  async function them(input: AccountInput): Promise<boolean> {
+  async function add(input: AccountInput): Promise<boolean> {
     try {
-      setMatKhauMoi(await accountsApi.create(input));
-      baoThanhCong(i18n.t("accounts.created"));
+      setNewPassword(await accountsApi.create(input));
+      toastSuccess(i18n.t("accounts.created"));
       reload();
       return true;
     } catch (err) {
-      baoLoi(err);
+      toastError(err);
       return false;
     }
   }
 
-  async function doiTen(code: string, username: string): Promise<boolean> {
+  async function rename(code: string, username: string): Promise<boolean> {
     try {
       await accountsApi.rename(code, username);
-      baoThanhCong(i18n.t("accounts.renamed"));
+      toastSuccess(i18n.t("accounts.renamed"));
       reload();
       return true;
     } catch (err) {
-      baoLoi(err);
+      toastError(err);
       return false;
     }
   }
 
   /** No current password required — the manager is resetting someone else's. */
-  async function datLaiMatKhau(code: string, password?: string): Promise<boolean> {
+  async function resetPassword(code: string, password?: string): Promise<boolean> {
     try {
-      setMatKhauMoi(await accountsApi.resetPassword(code, password));
-      baoThanhCong(i18n.t("accounts.passwordReset"));
+      setNewPassword(await accountsApi.resetPassword(code, password));
+      toastSuccess(i18n.t("accounts.passwordReset"));
       return true;
     } catch (err) {
-      baoLoi(err);
+      toastError(err);
       return false;
     }
   }
 
-  async function xoa(code: string): Promise<boolean> {
+  async function remove(code: string): Promise<boolean> {
     try {
       await accountsApi.remove(code);
-      baoThanhCong(i18n.t("accounts.deleted"));
+      toastSuccess(i18n.t("accounts.deleted"));
       reload();
       return true;
     } catch (err) {
-      baoLoi(err);
+      toastError(err);
       return false;
     }
   }
 
   return {
-    them,
-    doiTen,
-    datLaiMatKhau,
-    xoa,
-    matKhauMoi,
-    quenMatKhau: () => setMatKhauMoi(null),
+    add,
+    rename,
+    resetPassword,
+    remove,
+    newPassword,
+    clearNewPassword: () => setNewPassword(null),
   };
 }

@@ -4,14 +4,14 @@ import { Link } from "react-router-dom";
 
 import type { InvoiceWithRoom } from "../../../../shared/types";
 import { CollectionBar } from "../../../components/CollectionBar";
-import { tien } from "../../../format";
+import { money } from "../../../format";
 
 export function InvoicesTable({
-  hoaDon,
-  tongTien,
+  invoices,
+  grandTotal,
 }: {
-  hoaDon: InvoiceWithRoom[];
-  tongTien: number;
+  invoices: InvoiceWithRoom[];
+  grandTotal: number;
 }) {
   const { t } = useTranslation();
 
@@ -33,7 +33,7 @@ export function InvoicesTable({
         </Table.Thead>
 
         <Table.Tbody>
-          {hoaDon.map((invoice) => (
+          {invoices.map((invoice) => (
             <Table.Tr key={invoice.id}>
               <Table.Td>
                 <Text size="sm" c="dimmed">
@@ -41,12 +41,12 @@ export function InvoicesTable({
                 </Text>
               </Table.Td>
               <Table.Td fw={600}>{invoice.room_name}</Table.Td>
-              <Table.Td className="fmh-num">{tien(invoice.rent_amount)}</Table.Td>
-              <Table.Td className="fmh-num">{tien(invoice.electricity_amount)}</Table.Td>
-              <Table.Td className="fmh-num">{tien(invoice.water_amount)}</Table.Td>
-              <Table.Td className="fmh-num">{tien(invoice.other_fees)}</Table.Td>
+              <Table.Td className="fmh-num">{money(invoice.rent_amount)}</Table.Td>
+              <Table.Td className="fmh-num">{money(invoice.electricity_amount)}</Table.Td>
+              <Table.Td className="fmh-num">{money(invoice.water_amount)}</Table.Td>
+              <Table.Td className="fmh-num">{money(invoice.other_fees)}</Table.Td>
               <Table.Td className="fmh-num" fw={700}>
-                {tien(invoice.total)}
+                {money(invoice.total)}
               </Table.Td>
               <Table.Td>
                 <CollectionBar
@@ -72,7 +72,7 @@ export function InvoicesTable({
               </Text>
             </Table.Td>
             <Table.Td className="fmh-num" fw={700}>
-              {tien(tongTien)}
+              {money(grandTotal)}
             </Table.Td>
             <Table.Td colSpan={2} />
           </Table.Tr>

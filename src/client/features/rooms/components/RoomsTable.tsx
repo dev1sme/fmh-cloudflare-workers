@@ -2,17 +2,17 @@ import { Table, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 
 import type { RoomDetail } from "../../../../shared/types";
-import { ngay, tien } from "../../../format";
+import { formatDate, money } from "../../../format";
 import { RoomActions } from "./RoomActions";
 
 export function RoomsTable({
-  phong,
+  rooms,
   onEdit,
   onMoveIn,
   onMoveOut,
   onDelete,
 }: {
-  phong: RoomDetail[];
+  rooms: RoomDetail[];
   onEdit: (room: RoomDetail) => void;
   onMoveIn: (room: RoomDetail) => void;
   onMoveOut: (room: RoomDetail) => void;
@@ -34,7 +34,7 @@ export function RoomsTable({
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>
-          {phong.map((room) => (
+          {rooms.map((room) => (
             <Table.Tr key={room.id}>
               <Table.Td>
                 <Text fw={500}>{room.room_name}</Text>
@@ -42,7 +42,7 @@ export function RoomsTable({
                   {room.building_name}
                 </Text>
               </Table.Td>
-              <Table.Td>{tien(room.rent)}</Table.Td>
+              <Table.Td>{money(room.rent)}</Table.Td>
               <Table.Td>{room.area ? `${room.area} m²` : t("common.empty")}</Table.Td>
               <Table.Td>
                 {room.tenant ? (
@@ -60,7 +60,7 @@ export function RoomsTable({
                 )}
               </Table.Td>
               <Table.Td>
-                {room.tenant ? ngay(room.tenant.moved_in) : t("common.empty")}
+                {room.tenant ? formatDate(room.tenant.moved_in) : t("common.empty")}
               </Table.Td>
               <Table.Td>
                 <RoomActions

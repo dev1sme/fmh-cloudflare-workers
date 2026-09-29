@@ -1,4 +1,4 @@
-import i18n, { laTiengAnh } from "./i18n";
+import i18n, { isEnglish } from "./i18n";
 
 /**
  * These are plain functions, not hooks, because they are called from tooltips,
@@ -11,19 +11,19 @@ import i18n, { laTiengAnh } from "./i18n";
  * through every call site.
  */
 
-const SO = { vi: new Intl.NumberFormat("vi-VN"), en: new Intl.NumberFormat("en-US") };
+const NUMBER_FORMATS = { vi: new Intl.NumberFormat("vi-VN"), en: new Intl.NumberFormat("en-US") };
 
-function so(): Intl.NumberFormat {
-  return laTiengAnh() ? SO.en : SO.vi;
+function numberFormat(): Intl.NumberFormat {
+  return isEnglish() ? NUMBER_FORMATS.en : NUMBER_FORMATS.vi;
 }
 
-function moc(): string {
-  return laTiengAnh() ? "en-US" : "vi-VN";
+function locale(): string {
+  return isEnglish() ? "en-US" : "vi-VN";
 }
 
 /** 2370000 -> "2.370.000 đ" (vi) / "2,370,000 đ" (en) */
-export function tien(value: number): string {
-  return i18n.t("format.currency", { value: so().format(value) });
+export function money(value: number): string {
+  return i18n.t("format.currency", { value: numberFormat().format(value) });
 }
 
 /**
@@ -31,12 +31,12 @@ export function tien(value: number): string {
  * the full figure does not fit: an axis exists to show magnitude, and the exact
  * number is one hover away in the tooltip.
  */
-export function tienRutGon(value: number): string {
-  const rutGon = (chia: number) =>
-    (value / chia).toLocaleString(moc(), { maximumFractionDigits: 1 });
+export function moneyShort(value: number): string {
+  const shorten = (divisor: number) =>
+    (value / divisor).toLocaleString(locale(), { maximumFractionDigits: 1 });
 
-  if (value >= 1_000_000_000) return i18n.t("format.billion", { value: rutGon(1_000_000_000) });
-  if (value >= 1_000_000) return i18n.t("format.million", { value: rutGon(1_000_000) });
+  if (value >= 1_000_000_000) return i18n.t("format.billion", { value: shorten(1_000_000_000) });
+  if (value >= 1_000_000) return i18n.t("format.million", { value: shorten(1_000_000) });
   if (value >= 1_000) return i18n.t("format.thousand", { value: Math.round(value / 1_000) });
   return String(value);
 }
@@ -47,7 +47,7 @@ export function periodLabel(period: string): string {
 
   // Built in UTC on purpose: a local-time date for the 1st can land on the
   // previous month west of Greenwich and name the wrong month.
-  const monthName = new Intl.DateTimeFormat(moc(), { month: "short", timeZone: "UTC" }).format(
+  const monthName = new Intl.DateTimeFormat(locale(), { month: "short", timeZone: "UTC" }).format(
     new Date(Date.UTC(Number(year), Number(month) - 1, 1)),
   );
 
@@ -59,8 +59,8 @@ export function periodLabel(period: string): string {
  * than deriving them from a locale. Hard-coding the Vietnamese pair left an
  * English-language manager typing rent into a field that groups with dots.
  */
-export function dauPhanCach(): { thousandSeparator: string; decimalSeparator: string } {
-  return laTiengAnh()
+export function separators(): { thousandSeparator: string; decimalSeparator: string } {
+  return isEnglish()
     ? { thousandSeparator: ",", decimalSeparator: "." }
     : { thousandSeparator: ".", decimalSeparator: "," };
 }
@@ -79,7 +79,7 @@ export function periodTick(period: string): string {
  * two different dates for one payment and has no way to tell which reading is
  * right.
  */
-export function ngay(value: string | null): string {
+export function formatDate(value: string | null): string {
   if (!value) return "—";
   const [year, month, day] = value.slice(0, 10).split("-");
   return `${day}/${month}/${year}`;
@@ -89,6 +89,6 @@ export function currentPeriod(): string {
   return new Date().toISOString().slice(0, 7);
 }
 
-export function homNay(): string {
+export function today(): string {
   return new Date().toISOString().slice(0, 10);
 }

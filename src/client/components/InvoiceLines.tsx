@@ -2,7 +2,7 @@ import { Card, Divider, Group, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 
 import type { InvoiceDetail } from "../../shared/types";
-import { tien } from "../format";
+import { money } from "../format";
 
 function Line({ label, note, value }: { label: string; note?: string; value: number }) {
   return (
@@ -15,7 +15,7 @@ function Line({ label, note, value }: { label: string; note?: string; value: num
           </Text>
         )}
       </div>
-      <Text ta="right">{tien(value)}</Text>
+      <Text ta="right">{money(value)}</Text>
     </Group>
   );
 }
@@ -24,10 +24,10 @@ function Line({ label, note, value }: { label: string; note?: string; value: num
 export function InvoiceLines({ invoice }: { invoice: InvoiceDetail }) {
   const { t } = useTranslation();
 
-  const soDien = invoice.reading
+  const electricityUsed = invoice.reading
     ? invoice.reading.electricity_end - invoice.reading.electricity_start
     : null;
-  const soNuoc = invoice.reading
+  const waterUsed = invoice.reading
     ? invoice.reading.water_end - invoice.reading.water_start
     : null;
 
@@ -38,14 +38,14 @@ export function InvoiceLines({ invoice }: { invoice: InvoiceDetail }) {
         <Line
           label={t("invoice.electricity")}
           note={
-            soDien === null
-              ? t("invoice.unitPrice", { price: tien(invoice.electricity_rate), unit: "kWh" })
+            electricityUsed === null
+              ? t("invoice.unitPrice", { price: money(invoice.electricity_rate), unit: "kWh" })
               : t("invoice.meterNote", {
                   start: invoice.reading!.electricity_start,
                   end: invoice.reading!.electricity_end,
-                  used: soDien,
+                  used: electricityUsed,
                   unit: "kWh",
-                  price: tien(invoice.electricity_rate),
+                  price: money(invoice.electricity_rate),
                 })
           }
           value={invoice.electricity_amount}
@@ -53,14 +53,14 @@ export function InvoiceLines({ invoice }: { invoice: InvoiceDetail }) {
         <Line
           label={t("invoice.water")}
           note={
-            soNuoc === null
-              ? t("invoice.unitPrice", { price: tien(invoice.water_rate), unit: "m³" })
+            waterUsed === null
+              ? t("invoice.unitPrice", { price: money(invoice.water_rate), unit: "m³" })
               : t("invoice.meterNote", {
                   start: invoice.reading!.water_start,
                   end: invoice.reading!.water_end,
-                  used: soNuoc,
+                  used: waterUsed,
                   unit: "m³",
-                  price: tien(invoice.water_rate),
+                  price: money(invoice.water_rate),
                 })
           }
           value={invoice.water_amount}
@@ -74,12 +74,12 @@ export function InvoiceLines({ invoice }: { invoice: InvoiceDetail }) {
         <Group justify="space-between">
           <Text fw={600}>{t("invoice.total")}</Text>
           <Text fw={700} size="lg">
-            {tien(invoice.total)}
+            {money(invoice.total)}
           </Text>
         </Group>
         <Group justify="space-between">
           <Text c="dimmed">{t("invoice.collected")}</Text>
-          <Text c="dimmed">{tien(invoice.paid)}</Text>
+          <Text c="dimmed">{money(invoice.paid)}</Text>
         </Group>
         {invoice.outstanding > 0 && (
           <Group justify="space-between">
@@ -87,7 +87,7 @@ export function InvoiceLines({ invoice }: { invoice: InvoiceDetail }) {
               {t("invoice.outstanding")}
             </Text>
             <Text c="orange" fw={600}>
-              {tien(invoice.outstanding)}
+              {money(invoice.outstanding)}
             </Text>
           </Group>
         )}

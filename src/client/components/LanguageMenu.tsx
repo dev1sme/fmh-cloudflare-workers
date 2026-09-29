@@ -2,7 +2,7 @@ import { Menu } from "@mantine/core";
 import { IconCheck } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
-import { NGON_NGU } from "../i18n";
+import { LANGUAGES } from "../i18n";
 
 /**
  * The two language options, ready to drop inside an existing `Menu.Dropdown`.
@@ -14,24 +14,24 @@ import { NGON_NGU } from "../i18n";
  */
 export function LanguageMenuItems() {
   const { t, i18n } = useTranslation();
-  const dangDung = i18n.resolvedLanguage ?? "vi";
+  const current = i18n.resolvedLanguage ?? "vi";
 
   return (
     <>
       <Menu.Label>{t("common.language")}</Menu.Label>
-      {NGON_NGU.map((ngon) => (
+      {LANGUAGES.map((lang) => (
         <Menu.Item
-          key={ngon.value}
-          onClick={() => void i18n.changeLanguage(ngon.value)}
+          key={lang.value}
+          onClick={() => void i18n.changeLanguage(lang.value)}
           leftSection={
-            ngon.value === dangDung ? (
+            lang.value === current ? (
               <IconCheck size={16} stroke={2} />
             ) : (
               <span style={{ display: "inline-block", width: 16 }} />
             )
           }
         >
-          {ngon.label}
+          {lang.label}
         </Menu.Item>
       ))}
     </>

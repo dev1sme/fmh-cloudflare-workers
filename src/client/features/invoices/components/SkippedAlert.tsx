@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 
 import type { GenerateResult } from "../../../../shared/types";
 
-const LY_DO = {
+const REASON_KEYS = {
   MISSING_READING: "invoices.skipMissingReading",
   ALREADY_INVOICED: "invoices.skipAlreadyInvoiced",
 } as const satisfies Record<GenerateResult["skipped"][number]["reason"], string>;
@@ -25,7 +25,7 @@ export function SkippedAlert({
       <List size="sm">
         {skipped.map((item) => (
           <List.Item key={item.room_id}>
-            {item.room_name} — {t(LY_DO[item.reason])}
+            {item.room_name} — {t(REASON_KEYS[item.reason])}
           </List.Item>
         ))}
       </List>

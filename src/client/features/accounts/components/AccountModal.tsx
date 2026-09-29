@@ -7,17 +7,17 @@ import type { AccountInput } from "../../../api";
 
 export function AccountModal({
   opened,
-  phong,
+  rooms,
   onClose,
   onSubmit,
 }: {
   opened: boolean;
-  phong: RoomDetail[];
+  rooms: RoomDetail[];
   onClose: () => void;
   onSubmit: (input: AccountInput) => Promise<boolean>;
 }) {
   const [username, setUsername] = useState("");
-  const [vaiTro, setVaiTro] = useState<string | null>("TENANT");
+  const [role, setRole] = useState<string | null>("TENANT");
   const [roomId, setRoomId] = useState<string | null>(null);
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
@@ -26,18 +26,18 @@ export function AccountModal({
   useEffect(() => {
     if (!opened) return;
     setUsername("");
-    setVaiTro("TENANT");
-    setRoomId(phong[0] ? String(phong[0].id) : null);
+    setRole("TENANT");
+    setRoomId(rooms[0] ? String(rooms[0].id) : null);
     setPassword("");
-  }, [opened, phong]);
+  }, [opened, rooms]);
 
   async function save() {
     setBusy(true);
 
     const ok = await onSubmit({
       username,
-      role: vaiTro === "MANAGER" ? "MANAGER" : "TENANT",
-      room_id: vaiTro === "MANAGER" ? null : Number(roomId),
+      role: role === "MANAGER" ? "MANAGER" : "TENANT",
+      room_id: role === "MANAGER" ? null : Number(roomId),
       // Empty means "generate one" — the server decides and returns it once.
       password: password || undefined,
     });
@@ -58,21 +58,21 @@ export function AccountModal({
         />
         <Select
           label={t("accounts.role")}
-          value={vaiTro}
-          onChange={setVaiTro}
+          value={role}
+          onChange={setRole}
           data={[
             { value: "TENANT", label: t("accounts.roleTenant") },
             { value: "MANAGER", label: t("accounts.roleManager") },
           ]}
           allowDeselect={false}
         />
-        {vaiTro === "TENANT" && (
+        {role === "TENANT" && (
           <Select
             label={t("dashboard.colRoom")}
             description={t("accounts.roomHint")}
             value={roomId}
             onChange={setRoomId}
-            data={phong.map((room) => ({ value: String(room.id), label: room.room_name }))}
+            data={rooms.map((room) => ({ value: String(room.id), label: room.room_name }))}
             allowDeselect={false}
           />
         )}

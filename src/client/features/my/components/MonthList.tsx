@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 
 import type { TenantMonth } from "../../../../shared/types";
 import { CollectionBar } from "../../../components/CollectionBar";
-import { ngay, periodLabel, tien } from "../../../format";
+import { formatDate, periodLabel, money } from "../../../format";
 
 /**
  * Every month besides the one featured above, one line each.
@@ -26,16 +26,16 @@ import { ngay, periodLabel, tien } from "../../../format";
  *
  * A month with no invoice yet is not a link — there is nothing to open.
  */
-function Dong({ month }: { month: TenantMonth }) {
+function MonthRow({ month }: { month: TenantMonth }) {
   const { t } = useTranslation();
-  const coChiSo = month.electricity_used !== null;
+  const hasReading = month.electricity_used !== null;
 
-  const noiDung = (
+  const content = (
     <Group justify="space-between" wrap="nowrap" gap="md">
       <div style={{ minWidth: 0 }}>
         <Text fw={600}>{periodLabel(month.period)}</Text>
         <Text size="xs" c="dimmed">
-          {coChiSo
+          {hasReading
             ? // Non-null asserted: all five come from the same `readings` row,
               // so `electricity_used` being present means the rest are too.
               t("tenant.monthMeta", {
@@ -43,7 +43,7 @@ function Dong({ month }: { month: TenantMonth }) {
                 eEnd: month.electricity_end!,
                 wStart: month.water_start!,
                 wEnd: month.water_end!,
-                date: ngay(month.recorded_on).slice(0, 5),
+                date: formatDate(month.recorded_on).slice(0, 5),
               })
             : t("tenant.noReading")}
         </Text>
@@ -52,7 +52,7 @@ function Dong({ month }: { month: TenantMonth }) {
       <Group gap="md" wrap="nowrap">
         <div style={{ textAlign: "right" }}>
           <Text fw={700} className="fmh-num">
-            {month.total === null ? "—" : tien(month.total)}
+            {month.total === null ? "—" : money(month.total)}
           </Text>
           {month.status && (
             <CollectionBar total={month.total ?? 0} paid={month.paid} status={month.status} />
@@ -64,7 +64,7 @@ function Dong({ month }: { month: TenantMonth }) {
   );
 
   if (!month.code) {
-    return <div style={{ padding: "12px 14px" }}>{noiDung}</div>;
+    return <div style={{ padding: "12px 14px" }}>{content}</div>;
   }
 
   return (
@@ -74,23 +74,23 @@ function Dong({ month }: { month: TenantMonth }) {
       className="fmh-row-link"
       style={{ display: "block", padding: "12px 14px" }}
     >
-      {noiDung}
+      {content}
     </UnstyledButton>
   );
 }
 
 /**
- * `noNgoaiKhoang` counts the unpaid months that fall outside the selected
+ * `owedOutsideWindow` counts the unpaid months that fall outside the selected
  * window and were pulled back in anyway. They are annotated rather than left
  * unexplained, because otherwise picking "3 tháng" and getting five rows looks
  * like the filter is broken.
  */
 export function MonthList({
   months,
-  noNgoaiKhoang,
+  owedOutsideWindow,
 }: {
   months: TenantMonth[];
-  noNgoaiKhoang: number;
+  owedOutsideWindow: number;
 }) {
   const { t } = useTranslation();
 
@@ -101,9 +101,9 @@ export function MonthList({
           {t("tenant.otherMonths")}
         </Text>
 
-        {noNgoaiKhoang > 0 && (
+        {owedOutsideWindow > 0 && (
           <Text size="xs" c="owed.6">
-            {t("tenant.outOfRangeDebt", { count: noNgoaiKhoang })}
+            {t("tenant.outOfRangeDebt", { count: owedOutsideWindow })}
           </Text>
         )}
       </Group>
@@ -115,7 +115,7 @@ export function MonthList({
               key={month.period}
               style={{ borderTop: i === 0 ? undefined : "1px solid var(--fmh-rule)" }}
             >
-              <Dong month={month} />
+              <MonthRow month={month} />
             </div>
           ))}
         </Stack>

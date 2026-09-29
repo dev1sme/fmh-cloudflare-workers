@@ -7,5 +7,5 @@ export function useDashboard(period: string) {
     [period],
   );
 
-  return { soLieu: data, loading, refreshing, error, reload };
+  return { dashboard: data, loading, refreshing, error, reload };
 }

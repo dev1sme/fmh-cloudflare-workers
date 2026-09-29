@@ -109,14 +109,14 @@ export function LoginRoutes({ onLogin }: { onLogin: (user: SessionUser) => void 
  * place instead of blanking the shell as well.
  */
 export function AppRoutes({ user, onLogout }: { user: SessionUser; onLogout: () => void }) {
-  const quanLy = user.role === "MANAGER";
+  const isManager = user.role === "MANAGER";
 
   return (
     <>
       {/* Ctrl+K, manager only — a tenant has one room and nothing to jump
           between, and now does not download it either. No fallback: a search
           box that has not arrived yet should show nothing, not a spinner. */}
-      {quanLy && (
+      {isManager && (
         <Suspense fallback={null}>
           <QuickSearch />
         </Suspense>
@@ -126,7 +126,7 @@ export function AppRoutes({ user, onLogout }: { user: SessionUser; onLogout: () 
         {/* Signing in leaves `/login` in the address bar; send it to the role's
             own landing screen rather than letting the catch-all 404 it. */}
         <Route path="/login" element={<Navigate to="/" replace />} />
-        {quanLy ? (
+        {isManager ? (
           <Route element={<AppLayout user={user} onLogout={onLogout} />}>
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="/dashboard" element={<DashboardPage />} />

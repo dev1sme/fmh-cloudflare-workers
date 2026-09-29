@@ -3,7 +3,7 @@ import { IconCheck } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
 import type { InvoiceStatus } from "../../shared/types";
-import { tien } from "../format";
+import { money } from "../format";
 
 /**
  * How much of one invoice has actually been collected.
@@ -45,7 +45,7 @@ export function CollectionBar({
       label={
         done
           ? t("invoice.collectedAll")
-          : t("invoice.stillOwed", { amount: tien(outstanding) })
+          : t("invoice.stillOwed", { amount: money(outstanding) })
       }
       withArrow
       position="left"

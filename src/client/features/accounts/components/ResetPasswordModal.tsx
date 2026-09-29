@@ -22,11 +22,11 @@ export function ResetPasswordModal({
     if (account) setPassword("");
   }, [account]);
 
-  async function submit(tuSinh: boolean) {
+  async function submit(autoGenerate: boolean) {
     if (!account) return;
     setBusy(true);
 
-    const ok = await onSubmit(account.code, tuSinh ? undefined : password);
+    const ok = await onSubmit(account.code, autoGenerate ? undefined : password);
 
     setBusy(false);
     if (ok) onClose();

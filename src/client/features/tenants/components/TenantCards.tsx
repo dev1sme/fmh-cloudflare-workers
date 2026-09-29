@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 
 import type { TenantDetail } from "../../../../shared/types";
 import { CardField } from "../../../components/CardField";
-import { ngay } from "../../../format";
+import { formatDate } from "../../../format";
 import { TenantActions } from "./TenantActions";
 
 /**
@@ -20,13 +20,13 @@ import { TenantActions } from "./TenantActions";
  * said.
  */
 export function TenantCards({
-  nguoiThue,
+  tenants,
   onEdit,
   onMoveOut,
   onUndoMoveOut,
   onDelete,
 }: {
-  nguoiThue: TenantDetail[];
+  tenants: TenantDetail[];
   onEdit: (tenant: TenantDetail) => void;
   onMoveOut: (tenant: TenantDetail) => void;
   onUndoMoveOut: (tenant: TenantDetail) => void;
@@ -36,8 +36,8 @@ export function TenantCards({
 
   return (
     <Stack gap="xs">
-      {nguoiThue.map((tenant) => {
-        const dangThue = tenant.moved_out === null;
+      {tenants.map((tenant) => {
+        const isActive = tenant.moved_out === null;
 
         return (
           <Card key={tenant.id} padding="md">
@@ -47,8 +47,8 @@ export function TenantCards({
                   <Text fw={700}>{tenant.room_name}</Text>
                   <Text size="sm">{tenant.full_name}</Text>
                 </div>
-                <Badge color={dangThue ? "teal" : "gray"} variant="light">
-                  {dangThue ? t("tenants.renting") : t("tenants.movedOut")}
+                <Badge color={isActive ? "teal" : "gray"} variant="light">
+                  {isActive ? t("tenants.renting") : t("tenants.movedOut")}
                 </Badge>
               </Group>
 
@@ -60,10 +60,10 @@ export function TenantCards({
                 {t("tenants.occupantsCell", { count: tenant.occupants })}
               </CardField>
 
-              <CardField label={t("tenants.colIn")}>{ngay(tenant.moved_in)}</CardField>
+              <CardField label={t("tenants.colIn")}>{formatDate(tenant.moved_in)}</CardField>
 
-              {!dangThue && (
-                <CardField label={t("tenants.colOut")}>{ngay(tenant.moved_out)}</CardField>
+              {!isActive && (
+                <CardField label={t("tenants.colOut")}>{formatDate(tenant.moved_out)}</CardField>
               )}
 
               <TenantActions

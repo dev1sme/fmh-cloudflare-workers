@@ -11,17 +11,17 @@ import type { AccountWithPassword } from "../../../api";
  * is stored hashed and no endpoint returns it again. Forgotten means reset.
  */
 export function PasswordModal({
-  ketQua,
+  result,
   onClose,
 }: {
-  ketQua: AccountWithPassword | null;
+  result: AccountWithPassword | null;
   onClose: () => void;
 }) {
   const { t } = useTranslation();
 
   return (
     <Modal
-      opened={ketQua !== null}
+      opened={result !== null}
       onClose={onClose}
       title={t("accounts.newPasswordTitle")}
       centered
@@ -29,14 +29,14 @@ export function PasswordModal({
     >
       <Stack>
         <Text size="sm">
-          {t("accounts.forAccount")} <b>{ketQua?.account.username}</b>
-          {ketQua?.account.room_name
-            ? t("accounts.forRoom", { room: ketQua.account.room_name })
+          {t("accounts.forAccount")} <b>{result?.account.username}</b>
+          {result?.account.room_name
+            ? t("accounts.forRoom", { room: result.account.room_name })
             : t("accounts.forManager")}
         </Text>
 
         <Code block fz="lg" ta="center" py="md">
-          {ketQua?.password}
+          {result?.password}
         </Code>
 
         <Alert color="yellow" variant="light">
@@ -44,7 +44,7 @@ export function PasswordModal({
         </Alert>
 
         <Group justify="flex-end">
-          <CopyButton value={ketQua?.password ?? ""}>
+          <CopyButton value={result?.password ?? ""}>
             {({ copied, copy }) => (
               <Button variant="light" color={copied ? "teal" : undefined} onClick={copy}>
                 {copied ? t("common.copied") : t("accounts.copyPassword")}

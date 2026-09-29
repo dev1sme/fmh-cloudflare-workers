@@ -3,17 +3,17 @@ import { useTranslation } from "react-i18next";
 
 import type { InvoiceDetail } from "../../../../shared/types";
 import { StatusBadge } from "../../../components/StatusBadge";
-import { ngay, periodLabel } from "../../../format";
+import { formatDate, periodLabel } from "../../../format";
 
-export function InvoiceHeader({ hoaDon }: { hoaDon: InvoiceDetail }) {
+export function InvoiceHeader({ invoice }: { invoice: InvoiceDetail }) {
   const { t } = useTranslation();
 
   return (
     <Group>
-      <Text c="dimmed">{periodLabel(hoaDon.period)}</Text>
-      <StatusBadge value={hoaDon.status} />
+      <Text c="dimmed">{periodLabel(invoice.period)}</Text>
+      <StatusBadge value={invoice.status} />
       <Text c="dimmed" size="sm">
-        {t("invoices.createdOn", { date: ngay(hoaDon.created_at) })}
+        {t("invoices.createdOn", { date: formatDate(invoice.created_at) })}
       </Text>
     </Group>
   );

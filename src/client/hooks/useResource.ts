@@ -39,22 +39,22 @@ export function useResource<T>(loader: () => Promise<T>, deps: unknown[] = []): 
   // changed, the same one means `tick` did. Refs rather than state so reading
   // them does not put `data` in the effect's dependency list and re-fetch on
   // every arrival.
-  const runTruoc = useRef<typeof run | null>(null);
-  const coDuLieu = useRef(false);
+  const lastRun = useRef<typeof run | null>(null);
+  const hasData = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
-    const lamMoi = runTruoc.current === run && coDuLieu.current;
-    runTruoc.current = run;
+    const isRefresh = lastRun.current === run && hasData.current;
+    lastRun.current = run;
 
-    if (lamMoi) setRefreshing(true);
+    if (isRefresh) setRefreshing(true);
     else setLoading(true);
 
     run()
       .then((result) => {
         if (!cancelled) {
           setData(result);
-          coDuLieu.current = true;
+          hasData.current = true;
           setError(null);
         }
       })

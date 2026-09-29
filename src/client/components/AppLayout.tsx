@@ -100,7 +100,7 @@ const NAV_GROUPS = [
 const CARRIES_PERIOD = new Set(["/dashboard", "/readings", "/invoices"]);
 
 /** Two initials from a username, e.g. `phong01` -> `PH`. */
-function chuCaiDau(username: string): string {
+function initials(username: string): string {
   return username.slice(0, 2).toUpperCase();
 }
 
@@ -217,7 +217,7 @@ export function AppLayout({
               >
                 <Group gap="sm" wrap="nowrap">
                   <Avatar size={32} radius="sm" color="settled">
-                    {chuCaiDau(user.username)}
+                    {initials(user.username)}
                   </Avatar>
                   <div style={{ minWidth: 0, flex: 1 }}>
                     <Text size="sm" fw={600} truncate>

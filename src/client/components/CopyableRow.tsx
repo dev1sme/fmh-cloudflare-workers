@@ -41,7 +41,7 @@ export function CopyableRow({
   display?: string;
 }) {
   const { t } = useTranslation();
-  const moTa = t("common.copy", { what: label.toLowerCase() });
+  const copyLabel = t("common.copy", { what: label.toLowerCase() });
 
   return (
     <Group justify="space-between" gap="md" wrap="nowrap">
@@ -56,13 +56,13 @@ export function CopyableRow({
 
         <CopyButton value={value} timeout={1500}>
           {({ copied, copy }) => (
-            <Tooltip label={copied ? t("common.copied") : moTa} withArrow>
+            <Tooltip label={copied ? t("common.copied") : copyLabel} withArrow>
               <ActionIcon
                 variant={copied ? "filled" : "light"}
                 color={copied ? "teal" : "gray"}
                 size="sm"
                 onClick={copy}
-                aria-label={moTa}
+                aria-label={copyLabel}
               >
                 {copied ? <CheckIcon /> : <CopyIcon />}
               </ActionIcon>

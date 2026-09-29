@@ -7,50 +7,50 @@ import { BankTransferCard } from "../../components/BankTransferCard";
 import { InvoiceLines } from "../../components/InvoiceLines";
 import { MomoCard } from "../../components/MomoCard";
 import { PageState } from "../../components/PageState";
-import { tien } from "../../format";
+import { money } from "../../format";
 import { useConfirm } from "../../hooks/useConfirm";
 import { InvoiceActions } from "./components/InvoiceActions";
 import { InvoiceHeader } from "./components/InvoiceHeader";
 import { PaymentsCard } from "./components/PaymentsCard";
 import { OtherFeesCard } from "./components/OtherFeesCard";
-import { useInvoiceDetail, useThaoTacHoaDon } from "./useInvoiceDetail";
+import { useInvoiceDetail, useInvoiceActions } from "./useInvoiceDetail";
 
 export function InvoiceDetailPage() {
   const code = (useParams().code ?? "").toUpperCase();
   const navigate = useNavigate();
 
-  const { hoaDon, loading, refreshing, error, reload } = useInvoiceDetail(code);
-  const { luuPhiKhac, huy, xoa, ghiNhanThanhToan, xoaThanhToan } = useThaoTacHoaDon(code, reload, () =>
+  const { invoice, loading, refreshing, error, reload } = useInvoiceDetail(code);
+  const { saveOtherFees, cancel, remove, recordPayment, removePayment } = useInvoiceActions(code, reload, () =>
     navigate("/invoices"),
   );
-  const { xacNhan, hopThoai } = useConfirm();
+  const { confirm, confirmDialog } = useConfirm();
   const { t } = useTranslation();
 
-  function hoiHuy() {
-    xacNhan({
+  function askCancel() {
+    confirm({
       title: t("invoices.cancel"),
       message: t("invoices.confirmCancel"),
       confirmLabel: t("invoices.cancel"),
       color: "orange",
-      onConfirm: huy,
+      onConfirm: cancel,
     });
   }
 
-  function hoiXoa() {
-    xacNhan({
+  function askDelete() {
+    confirm({
       title: t("invoices.delete"),
       message: t("invoices.confirmDelete"),
       confirmLabel: t("common.delete"),
-      onConfirm: xoa,
+      onConfirm: remove,
     });
   }
 
-  function hoiXoaThanhToan(payment: Payment) {
-    xacNhan({
+  function askDeletePayment(payment: Payment) {
+    confirm({
       title: t("invoices.deletePaymentTitle"),
-      message: t("invoices.confirmDeletePayment", { amount: tien(payment.amount) }),
+      message: t("invoices.confirmDeletePayment", { amount: money(payment.amount) }),
       confirmLabel: t("common.delete"),
-      onConfirm: () => xoaThanhToan(payment.code),
+      onConfirm: () => removePayment(payment.code),
     });
   }
 
@@ -58,7 +58,7 @@ export function InvoiceDetailPage() {
     <Stack>
       <Group justify="space-between">
         <Title order={3}>
-          {hoaDon ? `${hoaDon.code} — ${hoaDon.room_name}` : t("invoice.fallbackTitle")}
+          {invoice ? `${invoice.code} — ${invoice.room_name}` : t("invoice.fallbackTitle")}
         </Title>
         <Button variant="subtle" component={Link} to="/invoices">
           ← {t("invoices.backToList")}
@@ -66,30 +66,30 @@ export function InvoiceDetailPage() {
       </Group>
 
       <PageState loading={loading} refreshing={refreshing} error={error} onRetry={reload}>
-        {hoaDon && (
+        {invoice && (
           <Stack>
-            <InvoiceHeader hoaDon={hoaDon} />
-            <InvoiceLines invoice={hoaDon} />
-            {hoaDon.bank_transfer && (
-              <BankTransferCard chuyenKhoan={hoaDon.bank_transfer} xemTruoc />
+            <InvoiceHeader invoice={invoice} />
+            <InvoiceLines invoice={invoice} />
+            {invoice.bank_transfer && (
+              <BankTransferCard transfer={invoice.bank_transfer} preview />
             )}
-            {hoaDon.momo && <MomoCard momo={hoaDon.momo} xemTruoc />}
-            <OtherFeesCard phiKhac={hoaDon.other_fees} onSave={luuPhiKhac} />
+            {invoice.momo && <MomoCard momo={invoice.momo} preview />}
+            <OtherFeesCard otherFees={invoice.other_fees} onSave={saveOtherFees} />
             <PaymentsCard
-              hoaDon={hoaDon}
-              onPay={ghiNhanThanhToan}
-              onDeletePayment={hoiXoaThanhToan}
+              invoice={invoice}
+              onPay={recordPayment}
+              onDeletePayment={askDeletePayment}
             />
             <InvoiceActions
-              daHuy={hoaDon.status === "CANCELLED"}
-              onCancel={hoiHuy}
-              onDelete={hoiXoa}
+              cancelled={invoice.status === "CANCELLED"}
+              onCancel={askCancel}
+              onDelete={askDelete}
             />
           </Stack>
         )}
       </PageState>
 
-      {hopThoai}
+      {confirmDialog}
     </Stack>
   );
 }

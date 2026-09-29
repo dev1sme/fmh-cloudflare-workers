@@ -5,7 +5,7 @@ import { useSession } from "./features/login/useSession";
 import { AppRoutes, LoginRoutes } from "./routes";
 
 export function App() {
-  const { phien, dangNhapXong, dangXuat } = useSession();
+  const { session, onLoggedIn, logout } = useSession();
 
   // Subscribes the whole tree to `languageChanged`. The formatters in
   // `format.ts` read the language off the i18next instance rather than from a
@@ -14,7 +14,7 @@ export function App() {
   // root is cheap here and keeps every money and date string in step.
   useTranslation();
 
-  if (phien.status === "loading") {
+  if (session.status === "loading") {
     return (
       <Center mih="100dvh">
         <Loader />
@@ -25,9 +25,9 @@ export function App() {
   // Two route tables rather than one with guards: a screen a signed-out
   // visitor can reach and a screen only a session can reach have nothing in
   // common, and there is no path from one table into the other.
-  if (phien.status === "out") {
-    return <LoginRoutes onLogin={dangNhapXong} />;
+  if (session.status === "out") {
+    return <LoginRoutes onLogin={onLoggedIn} />;
   }
 
-  return <AppRoutes user={phien.user} onLogout={dangXuat} />;
+  return <AppRoutes user={session.user} onLogout={logout} />;
 }

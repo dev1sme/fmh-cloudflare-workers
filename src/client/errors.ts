@@ -12,7 +12,7 @@ import i18n from "./i18n";
  * adding a language costs a block in the locale files and nothing on the
  * server.
  */
-export function thongBaoLoi(err: unknown): string {
+export function errorMessage(err: unknown): string {
   const code = err instanceof ApiError ? err.code : "";
 
   // Runtime-built keys are not literal types, hence the casts here and below.
@@ -39,10 +39,10 @@ export function thongBaoLoi(err: unknown): string {
   return i18n.t("errors.fallback");
 }
 
-export function baoLoi(err: unknown): void {
-  notifications.show({ color: "red", title: i18n.t("common.error"), message: thongBaoLoi(err) });
+export function toastError(err: unknown): void {
+  notifications.show({ color: "red", title: i18n.t("common.error"), message: errorMessage(err) });
 }
 
-export function baoThanhCong(message: string): void {
+export function toastSuccess(message: string): void {
   notifications.show({ color: "teal", message });
 }

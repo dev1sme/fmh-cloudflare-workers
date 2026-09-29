@@ -3,35 +3,35 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import type { ReadingDetail, RoomDetail } from "../../../../shared/types";
-import { baoLoi } from "../../../errors";
-import { homNay } from "../../../format";
-import type { ChiSoNhap } from "../useReadings";
+import { toastError } from "../../../errors";
+import { today } from "../../../format";
+import type { ReadingEntry } from "../useReadings";
 import { Consumption } from "./Consumption";
 
-export type MucTieu = { room: RoomDetail; reading: ReadingDetail | null };
+export type ReadingTarget = { room: RoomDetail; reading: ReadingDetail | null };
 
 export function ReadingModal({
   period,
   target,
-  goiY,
+  suggest,
   onClose,
   onSubmit,
 }: {
   period: string;
-  target: MucTieu | null;
-  goiY: (roomId: number) => Promise<{ electricity_start: number; water_start: number; previous_period: string | null }>;
+  target: ReadingTarget | null;
+  suggest: (roomId: number) => Promise<{ electricity_start: number; water_start: number; previous_period: string | null }>;
   onClose: () => void;
   onSubmit: (
     target: { roomId: number; readingCode: string | null },
-    input: ChiSoNhap,
+    input: ReadingEntry,
   ) => Promise<boolean>;
 }) {
-  const [dienCu, setDienCu] = useState<number | string>(0);
-  const [dienMoi, setDienMoi] = useState<number | string>(0);
-  const [nuocCu, setNuocCu] = useState<number | string>(0);
-  const [nuocMoi, setNuocMoi] = useState<number | string>(0);
-  const [ngayGhi, setNgayGhi] = useState(homNay());
-  const [ghiChuGoiY, setGhiChuGoiY] = useState<string | null>(null);
+  const [electricityStart, setElectricityStart] = useState<number | string>(0);
+  const [electricityEnd, setElectricityEnd] = useState<number | string>(0);
+  const [waterStart, setWaterStart] = useState<number | string>(0);
+  const [waterEnd, setWaterEnd] = useState<number | string>(0);
+  const [recordedOn, setRecordedOn] = useState(today());
+  const [suggestionNote, setSuggestionNote] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const { t } = useTranslation();
 
@@ -43,31 +43,31 @@ export function ReadingModal({
     if (!target) return;
 
     if (target.reading) {
-      setDienCu(target.reading.electricity_start);
-      setDienMoi(target.reading.electricity_end);
-      setNuocCu(target.reading.water_start);
-      setNuocMoi(target.reading.water_end);
-      setNgayGhi(target.reading.recorded_on);
-      setGhiChuGoiY(null);
+      setElectricityStart(target.reading.electricity_start);
+      setElectricityEnd(target.reading.electricity_end);
+      setWaterStart(target.reading.water_start);
+      setWaterEnd(target.reading.water_end);
+      setRecordedOn(target.reading.recorded_on);
+      setSuggestionNote(null);
       return;
     }
 
-    setDienMoi(0);
-    setNuocMoi(0);
-    setNgayGhi(homNay());
+    setElectricityEnd(0);
+    setWaterEnd(0);
+    setRecordedOn(today());
 
-    goiY(target.room.id)
+    suggest(target.room.id)
       .then((suggestion) => {
-        setDienCu(suggestion.electricity_start);
-        setNuocCu(suggestion.water_start);
-        setGhiChuGoiY(
+        setElectricityStart(suggestion.electricity_start);
+        setWaterStart(suggestion.water_start);
+        setSuggestionNote(
           suggestion.previous_period
             ? t("readings.carriedFrom", { period: suggestion.previous_period })
             : t("readings.noPrevious"),
         );
       })
-      .catch(baoLoi);
-  }, [target, goiY, t]);
+      .catch(toastError);
+  }, [target, suggest, t]);
 
   async function save() {
     if (!target) return;
@@ -76,11 +76,11 @@ export function ReadingModal({
     const ok = await onSubmit(
       { roomId: target.room.id, readingCode: target.reading?.code ?? null },
       {
-        electricity_start: Number(dienCu),
-        electricity_end: Number(dienMoi),
-        water_start: Number(nuocCu),
-        water_end: Number(nuocMoi),
-        recorded_on: ngayGhi,
+        electricity_start: Number(electricityStart),
+        electricity_end: Number(electricityEnd),
+        water_start: Number(waterStart),
+        water_end: Number(waterEnd),
+        recorded_on: recordedOn,
       },
     );
 
@@ -95,25 +95,25 @@ export function ReadingModal({
       title={t("readings.modalTitle", { room: target?.room.room_name ?? "", period })}
     >
       <Stack>
-        {ghiChuGoiY && (
+        {suggestionNote && (
           <Text size="sm" c="dimmed">
-            {ghiChuGoiY}
+            {suggestionNote}
           </Text>
         )}
 
         <Group grow>
-          <NumberInput label={t("readings.electricityStart")} value={dienCu} onChange={setDienCu} min={0} />
-          <NumberInput label={t("readings.electricityEnd")} value={dienMoi} onChange={setDienMoi} min={0} />
+          <NumberInput label={t("readings.electricityStart")} value={electricityStart} onChange={setElectricityStart} min={0} />
+          <NumberInput label={t("readings.electricityEnd")} value={electricityEnd} onChange={setElectricityEnd} min={0} />
         </Group>
         <Group grow>
-          <NumberInput label={t("readings.waterStart")} value={nuocCu} onChange={setNuocCu} min={0} />
-          <NumberInput label={t("readings.waterEnd")} value={nuocMoi} onChange={setNuocMoi} min={0} />
+          <NumberInput label={t("readings.waterStart")} value={waterStart} onChange={setWaterStart} min={0} />
+          <NumberInput label={t("readings.waterEnd")} value={waterEnd} onChange={setWaterEnd} min={0} />
         </Group>
         <TextInput
           type="date"
           label={t("readings.colRecordedOn")}
-          value={ngayGhi}
-          onChange={(e) => setNgayGhi(e.currentTarget.value)}
+          value={recordedOn}
+          onChange={(e) => setRecordedOn(e.currentTarget.value)}
         />
 
         {/* Two labelled figures rather than one sentence with two values
@@ -121,9 +121,9 @@ export function ReadingModal({
             and the labels already exist. */}
         <Text size="sm">
           {t("meter.electricityUsed")}:{" "}
-          <Consumption cu={Number(dienCu)} moi={Number(dienMoi)} donVi="kWh" /> ·{" "}
+          <Consumption from={Number(electricityStart)} to={Number(electricityEnd)} unit="kWh" /> ·{" "}
           {t("meter.waterUsed")}:{" "}
-          <Consumption cu={Number(nuocCu)} moi={Number(nuocMoi)} donVi="m³" />
+          <Consumption from={Number(waterStart)} to={Number(waterEnd)} unit="m³" />
         </Text>
 
         <Button onClick={save} loading={busy}>

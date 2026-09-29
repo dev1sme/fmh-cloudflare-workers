@@ -9,7 +9,7 @@ import { CopyableRow } from "../../../components/CopyableRow";
  * still the thing a tenant would otherwise retype by hand, so it gets the same
  * copy button as the full card.
  */
-export function TransferInstructions({ maHoaDon }: { maHoaDon: string }) {
+export function TransferInstructions({ invoiceCode }: { invoiceCode: string }) {
   const { t } = useTranslation();
 
   return (
@@ -18,7 +18,7 @@ export function TransferInstructions({ maHoaDon }: { maHoaDon: string }) {
         <Text size="sm" c="dimmed">
           {t("payment.noBankYet")}
         </Text>
-        <CopyableRow label={t("payment.memo")} value={maHoaDon} />
+        <CopyableRow label={t("payment.memo")} value={invoiceCode} />
       </Stack>
     </Card>
   );

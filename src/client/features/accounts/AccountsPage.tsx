@@ -14,24 +14,24 @@ import { AccountsTable } from "./components/AccountsTable";
 import { PasswordModal } from "./components/PasswordModal";
 import { RenameModal } from "./components/RenameModal";
 import { ResetPasswordModal } from "./components/ResetPasswordModal";
-import { useDanhSachTaiKhoan, useThaoTacTaiKhoan } from "./useAccounts";
+import { useAccountList, useAccountActions } from "./useAccounts";
 
 export function AccountsPage({ user }: { user: SessionUser }) {
-  const { taiKhoan, phong, loading, refreshing, error, reload } = useDanhSachTaiKhoan();
-  const { them, doiTen, datLaiMatKhau, xoa, matKhauMoi, quenMatKhau } = useThaoTacTaiKhoan(reload);
-  const { xacNhan, hopThoai } = useConfirm();
+  const { accounts, rooms, loading, refreshing, error, reload } = useAccountList();
+  const { add, rename, resetPassword, remove, newPassword, clearNewPassword } = useAccountActions(reload);
+  const { confirm, confirmDialog } = useConfirm();
   const { t } = useTranslation();
 
-  const [dangThem, setDangThem] = useState(false);
-  const [dangReset, setDangReset] = useState<Account | null>(null);
-  const [dangDoiTen, setDangDoiTen] = useState<Account | null>(null);
+  const [adding, setAdding] = useState(false);
+  const [resetting, setResetting] = useState<Account | null>(null);
+  const [renaming, setRenaming] = useState<Account | null>(null);
 
-  function hoiXoa(account: Account) {
-    xacNhan({
+  function askDelete(account: Account) {
+    confirm({
       title: t("accounts.delete"),
       message: t("accounts.confirmDelete", { name: account.username }),
       confirmLabel: t("common.delete"),
-      onConfirm: () => xoa(account.code),
+      onConfirm: () => remove(account.code),
     });
   }
 
@@ -40,7 +40,7 @@ export function AccountsPage({ user }: { user: SessionUser }) {
       <Group justify="space-between">
         <Title order={3}>{t("nav.accounts")}</Title>
         <Button
-          onClick={() => setDangThem(true)}
+          onClick={() => setAdding(true)}
           leftSection={<IconUserPlus size={16} stroke={1.8} />}
         >
           {t("accounts.add")}
@@ -52,14 +52,14 @@ export function AccountsPage({ user }: { user: SessionUser }) {
       </Text>
 
       <PageState loading={loading} refreshing={refreshing} error={error} onRetry={reload}>
-        {taiKhoan.length === 0 ? (
+        {accounts.length === 0 ? (
           <EmptyState
             icon={<IconKey size={24} stroke={1.6} />}
             title={t("accounts.empty")}
             hint={t("accounts.emptyHint")}
             action={
               <Button
-                onClick={() => setDangThem(true)}
+                onClick={() => setAdding(true)}
                 leftSection={<IconUserPlus size={16} stroke={1.8} />}
               >
                 {t("accounts.add")}
@@ -71,20 +71,20 @@ export function AccountsPage({ user }: { user: SessionUser }) {
             {/* Four columns at minWidth 680 — still wider than a phone. */}
             <Box visibleFrom="sm">
               <AccountsTable
-                taiKhoan={taiKhoan}
-                idHienTai={user.id}
-                onRename={setDangDoiTen}
-                onResetPassword={setDangReset}
-                onDelete={hoiXoa}
+                accounts={accounts}
+                currentUserId={user.id}
+                onRename={setRenaming}
+                onResetPassword={setResetting}
+                onDelete={askDelete}
               />
             </Box>
             <Box hiddenFrom="sm">
               <AccountCards
-                taiKhoan={taiKhoan}
-                idHienTai={user.id}
-                onRename={setDangDoiTen}
-                onResetPassword={setDangReset}
-                onDelete={hoiXoa}
+                accounts={accounts}
+                currentUserId={user.id}
+                onRename={setRenaming}
+                onResetPassword={setResetting}
+                onDelete={askDelete}
               />
             </Box>
           </>
@@ -92,19 +92,19 @@ export function AccountsPage({ user }: { user: SessionUser }) {
       </PageState>
 
       <AccountModal
-        opened={dangThem}
-        phong={phong}
-        onClose={() => setDangThem(false)}
-        onSubmit={them}
+        opened={adding}
+        rooms={rooms}
+        onClose={() => setAdding(false)}
+        onSubmit={add}
       />
       <ResetPasswordModal
-        account={dangReset}
-        onClose={() => setDangReset(null)}
-        onSubmit={datLaiMatKhau}
+        account={resetting}
+        onClose={() => setResetting(null)}
+        onSubmit={resetPassword}
       />
-      <RenameModal account={dangDoiTen} onClose={() => setDangDoiTen(null)} onSubmit={doiTen} />
-      <PasswordModal ketQua={matKhauMoi} onClose={quenMatKhau} />
-      {hopThoai}
+      <RenameModal account={renaming} onClose={() => setRenaming(null)} onSubmit={rename} />
+      <PasswordModal result={newPassword} onClose={clearNewPassword} />
+      {confirmDialog}
     </Stack>
   );
 }

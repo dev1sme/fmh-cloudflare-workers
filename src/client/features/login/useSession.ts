@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import { auth, type SessionUser } from "../../api";
 
-export type TrangThaiPhien =
+export type SessionState =
   | { status: "loading" }
   | { status: "out" }
   | { status: "in"; user: SessionUser };
@@ -16,24 +16,24 @@ export type TrangThaiPhien =
  * a redirect in the table beats doing it here.
  */
 export function useSession() {
-  const [phien, setPhien] = useState<TrangThaiPhien>({ status: "loading" });
+  const [session, setSession] = useState<SessionState>({ status: "loading" });
 
   useEffect(() => {
     auth
       .me()
-      .then(({ user }) => setPhien({ status: "in", user }))
-      .catch(() => setPhien({ status: "out" }));
+      .then(({ user }) => setSession({ status: "in", user }))
+      .catch(() => setSession({ status: "out" }));
   }, []);
 
-  const dangNhapXong = useCallback(
-    (user: SessionUser) => setPhien({ status: "in", user }),
+  const onLoggedIn = useCallback(
+    (user: SessionUser) => setSession({ status: "in", user }),
     [],
   );
 
-  const dangXuat = useCallback(async () => {
+  const logout = useCallback(async () => {
     await auth.logout().catch(() => undefined);
-    setPhien({ status: "out" });
+    setSession({ status: "out" });
   }, []);
 
-  return { phien, dangNhapXong, dangXuat };
+  return { session, onLoggedIn, logout };
 }

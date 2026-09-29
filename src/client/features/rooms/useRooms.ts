@@ -4,33 +4,33 @@ import {
   tenants as tenantsApi,
   type RoomInput,
 } from "../../api";
-import { baoLoi, baoThanhCong } from "../../errors";
+import { toastError, toastSuccess } from "../../errors";
 import i18n from "../../i18n";
-import { homNay } from "../../format";
+import { today } from "../../format";
 import { useResource } from "../../hooks/useResource";
 
-export function useDanhSachPhong() {
-  const phong = useResource(() => roomsApi.list(), []);
-  const nha = useResource(() => buildingsApi.list(), []);
+export function useRoomList() {
+  const rooms = useResource(() => roomsApi.list(), []);
+  const buildings = useResource(() => buildingsApi.list(), []);
 
   return {
-    phong: phong.data?.rooms ?? [],
+    rooms: rooms.data?.rooms ?? [],
     // Needed to pick a building when adding a room.
-    nha: nha.data?.buildings ?? [],
-    loading: phong.loading || nha.loading,
-    refreshing: phong.refreshing || nha.refreshing,
-    error: phong.error ?? nha.error,
+    buildings: buildings.data?.buildings ?? [],
+    loading: rooms.loading || buildings.loading,
+    refreshing: rooms.refreshing || buildings.refreshing,
+    error: rooms.error ?? buildings.error,
     // Both, not just the rooms. `error` surfaces whichever request failed, so a
     // retry that re-ran only one of them would leave the buildings error on
     // screen with a button that does nothing about it.
     reload: () => {
-      phong.reload();
-      nha.reload();
+      rooms.reload();
+      buildings.reload();
     },
   };
 }
 
-export type NguoiThueMoi = {
+export type NewTenant = {
   full_name: string;
   phone: string;
   occupants: number;
@@ -41,45 +41,45 @@ export type NguoiThueMoi = {
  * Mutations for the rooms screen. Each returns whether it succeeded so the
  * caller can close its modal, and reports its own success/error toast.
  */
-export function useThaoTacPhong(reload: () => void) {
-  async function themPhong(input: RoomInput): Promise<boolean> {
+export function useRoomActions(reload: () => void) {
+  async function addRoom(input: RoomInput): Promise<boolean> {
     try {
       await roomsApi.create(input);
-      baoThanhCong(i18n.t("rooms.added"));
+      toastSuccess(i18n.t("rooms.added"));
       reload();
       return true;
     } catch (err) {
-      baoLoi(err);
+      toastError(err);
       return false;
     }
   }
 
-  async function capNhatPhong(code: string, patch: Partial<RoomInput>): Promise<boolean> {
+  async function updateRoom(code: string, patch: Partial<RoomInput>): Promise<boolean> {
     try {
       await roomsApi.update(code, patch);
-      baoThanhCong(i18n.t("rooms.saved"));
+      toastSuccess(i18n.t("rooms.saved"));
       reload();
       return true;
     } catch (err) {
-      baoLoi(err);
+      toastError(err);
       return false;
     }
   }
 
   /** Rejected by the API while readings, invoices or tenants reference the room. */
-  async function xoaPhong(code: string): Promise<boolean> {
+  async function removeRoom(code: string): Promise<boolean> {
     try {
       await roomsApi.remove(code);
-      baoThanhCong(i18n.t("rooms.deleted"));
+      toastSuccess(i18n.t("rooms.deleted"));
       reload();
       return true;
     } catch (err) {
-      baoLoi(err);
+      toastError(err);
       return false;
     }
   }
 
-  async function themNguoiThue(roomId: number, input: NguoiThueMoi): Promise<boolean> {
+  async function moveIn(roomId: number, input: NewTenant): Promise<boolean> {
     try {
       await tenantsApi.create({
         room_id: roomId,
@@ -88,26 +88,26 @@ export function useThaoTacPhong(reload: () => void) {
         occupants: input.occupants,
         moved_in: input.moved_in,
       });
-      baoThanhCong(i18n.t("tenantForm.added"));
+      toastSuccess(i18n.t("tenantForm.added"));
       reload();
       return true;
     } catch (err) {
-      baoLoi(err);
+      toastError(err);
       return false;
     }
   }
 
-  async function chuyenDi(tenantCode: string): Promise<boolean> {
+  async function moveOut(tenantCode: string): Promise<boolean> {
     try {
-      await tenantsApi.update(tenantCode, { moved_out: homNay() });
-      baoThanhCong(i18n.t("tenantForm.movedOutDone"));
+      await tenantsApi.update(tenantCode, { moved_out: today() });
+      toastSuccess(i18n.t("tenantForm.movedOutDone"));
       reload();
       return true;
     } catch (err) {
-      baoLoi(err);
+      toastError(err);
       return false;
     }
   }
 
-  return { themPhong, capNhatPhong, xoaPhong, themNguoiThue, chuyenDi };
+  return { addRoom, updateRoom, removeRoom, moveIn, moveOut };
 }

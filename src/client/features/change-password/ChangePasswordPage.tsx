@@ -5,7 +5,7 @@ import { ChangePasswordForm } from "./components/ChangePasswordForm";
 import { useChangePassword } from "./useChangePassword";
 
 export function ChangePasswordPage() {
-  const { doiMatKhau, loi, dangChay } = useChangePassword();
+  const { changePassword, error, busy } = useChangePassword();
   const { t } = useTranslation();
 
   return (
@@ -16,7 +16,7 @@ export function ChangePasswordPage() {
       </Text>
 
       <Card withBorder padding="lg">
-        <ChangePasswordForm onSubmit={doiMatKhau} loi={loi} dangChay={dangChay} />
+        <ChangePasswordForm onSubmit={changePassword} error={error} busy={busy} />
       </Card>
     </Stack>
   );

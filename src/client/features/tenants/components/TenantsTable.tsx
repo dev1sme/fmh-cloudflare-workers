@@ -2,17 +2,17 @@ import { Badge, Table } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 
 import type { TenantDetail } from "../../../../shared/types";
-import { ngay } from "../../../format";
+import { formatDate } from "../../../format";
 import { TenantActions } from "./TenantActions";
 
 export function TenantsTable({
-  nguoiThue,
+  tenants,
   onEdit,
   onMoveOut,
   onUndoMoveOut,
   onDelete,
 }: {
-  nguoiThue: TenantDetail[];
+  tenants: TenantDetail[];
   onEdit: (tenant: TenantDetail) => void;
   onMoveOut: (tenant: TenantDetail) => void;
   onUndoMoveOut: (tenant: TenantDetail) => void;
@@ -36,8 +36,8 @@ export function TenantsTable({
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>
-          {nguoiThue.map((tenant) => {
-            const dangThue = tenant.moved_out === null;
+          {tenants.map((tenant) => {
+            const isActive = tenant.moved_out === null;
 
             return (
               <Table.Tr key={tenant.id}>
@@ -45,11 +45,11 @@ export function TenantsTable({
                 <Table.Td>{tenant.full_name}</Table.Td>
                 <Table.Td>{tenant.phone ?? t("common.empty")}</Table.Td>
                 <Table.Td>{t("tenants.occupantsCell", { count: tenant.occupants })}</Table.Td>
-                <Table.Td>{ngay(tenant.moved_in)}</Table.Td>
-                <Table.Td>{ngay(tenant.moved_out)}</Table.Td>
+                <Table.Td>{formatDate(tenant.moved_in)}</Table.Td>
+                <Table.Td>{formatDate(tenant.moved_out)}</Table.Td>
                 <Table.Td>
-                  <Badge color={dangThue ? "teal" : "gray"} variant="light">
-                    {dangThue ? t("tenants.renting") : t("tenants.movedOut")}
+                  <Badge color={isActive ? "teal" : "gray"} variant="light">
+                    {isActive ? t("tenants.renting") : t("tenants.movedOut")}
                   </Badge>
                 </Table.Td>
                 <Table.Td>

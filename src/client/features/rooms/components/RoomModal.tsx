@@ -4,62 +4,62 @@ import { useTranslation } from "react-i18next";
 
 import type { Building, RoomDetail } from "../../../../shared/types";
 import type { RoomInput } from "../../../api";
-import { dauPhanCach } from "../../../format";
+import { separators } from "../../../format";
 
 /** Adding when `room` is null, editing otherwise. */
-export type MucTieuPhong = { room: RoomDetail | null } | null;
+export type RoomTarget = { room: RoomDetail | null } | null;
 
 export function RoomModal({
   target,
-  nha,
+  buildings,
   onClose,
   onCreate,
   onUpdate,
 }: {
-  target: MucTieuPhong;
-  nha: Building[];
+  target: RoomTarget;
+  buildings: Building[];
   onClose: () => void;
   onCreate: (input: RoomInput) => Promise<boolean>;
   onUpdate: (code: string, patch: Partial<RoomInput>) => Promise<boolean>;
 }) {
-  const dangSua = target?.room ?? null;
+  const isEdit = target?.room ?? null;
   const { t } = useTranslation();
 
   const [buildingId, setBuildingId] = useState<string | null>(null);
-  const [tenPhong, setTenPhong] = useState("");
-  const [giaPhong, setGiaPhong] = useState<number | string>(0);
-  const [dienTich, setDienTich] = useState<number | string>("");
+  const [roomName, setRoomName] = useState("");
+  const [rent, setRent] = useState<number | string>(0);
+  const [area, setArea] = useState<number | string>("");
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     if (!target) return;
 
-    if (dangSua) {
-      setBuildingId(String(dangSua.building_id));
-      setTenPhong(dangSua.room_name);
-      setGiaPhong(dangSua.rent);
-      setDienTich(dangSua.area ?? "");
+    if (isEdit) {
+      setBuildingId(String(isEdit.building_id));
+      setRoomName(isEdit.room_name);
+      setRent(isEdit.rent);
+      setArea(isEdit.area ?? "");
       return;
     }
 
-    setBuildingId(nha[0] ? String(nha[0].id) : null);
-    setTenPhong("");
-    setGiaPhong(0);
-    setDienTich("");
-  }, [target, dangSua, nha]);
+    setBuildingId(buildings[0] ? String(buildings[0].id) : null);
+    setRoomName("");
+    setRent(0);
+    setArea("");
+  }, [target, isEdit, buildings]);
 
   async function save() {
     if (!target) return;
     setBusy(true);
 
     const chung = {
-      room_name: tenPhong,
-      rent: Number(giaPhong),
-      area: dienTich === "" ? null : Number(dienTich),
+      room_name: roomName,
+      rent: Number(rent),
+      area: area === "" ? null : Number(area),
     };
 
-    const ok = dangSua
-      ? await onUpdate(dangSua.code, chung)
+    const ok = isEdit
+      ? await onUpdate(isEdit.code, chung)
       : await onCreate({ building_id: Number(buildingId), ...chung });
 
     setBusy(false);
@@ -71,7 +71,7 @@ export function RoomModal({
       opened={target !== null}
       onClose={onClose}
       title={
-        dangSua ? t("rooms.editTitle", { name: dangSua.room_name }) : t("rooms.add")
+        isEdit ? t("rooms.editTitle", { name: isEdit.room_name }) : t("rooms.add")
       }
     >
       <Stack>
@@ -79,31 +79,31 @@ export function RoomModal({
           label={t("rooms.building")}
           value={buildingId}
           onChange={setBuildingId}
-          data={nha.map((item) => ({ value: String(item.id), label: item.name }))}
+          data={buildings.map((item) => ({ value: String(item.id), label: item.name }))}
           // Moving a room between buildings would change the tariff its past
           // invoices were priced from; create a new room instead.
-          disabled={dangSua !== null}
+          disabled={isEdit !== null}
           allowDeselect={false}
         />
         <TextInput
           label={t("rooms.name")}
           placeholder="FMH-P03"
-          value={tenPhong}
-          onChange={(e) => setTenPhong(e.currentTarget.value)}
+          value={roomName}
+          onChange={(e) => setRoomName(e.currentTarget.value)}
           required
         />
         <NumberInput
           label={t("rooms.rentField")}
-          value={giaPhong}
-          onChange={setGiaPhong}
+          value={rent}
+          onChange={setRent}
           min={0}
           step={100000}
-          {...dauPhanCach()}
+          {...separators()}
         />
         <NumberInput
           label={t("rooms.areaField")}
-          value={dienTich}
-          onChange={setDienTich}
+          value={area}
+          onChange={setArea}
           min={0}
           allowDecimal
         />

@@ -2,11 +2,11 @@ import { Button, Group } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 
 export function InvoiceActions({
-  daHuy,
+  cancelled,
   onCancel,
   onDelete,
 }: {
-  daHuy: boolean;
+  cancelled: boolean;
   onCancel: () => void;
   onDelete: () => void;
 }) {
@@ -14,7 +14,7 @@ export function InvoiceActions({
 
   return (
     <Group>
-      {!daHuy && (
+      {!cancelled && (
         <Button variant="light" color="orange" onClick={onCancel}>
           {t("invoices.cancel")}
         </Button>

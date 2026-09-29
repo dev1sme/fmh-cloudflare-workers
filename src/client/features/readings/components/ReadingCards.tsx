@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 
 import type { ReadingDetail, RoomDetail } from "../../../../shared/types";
 import { CardField } from "../../../components/CardField";
-import { ngay } from "../../../format";
+import { formatDate } from "../../../format";
 import { ReadingActions } from "./ReadingActions";
 
 /**
@@ -19,13 +19,13 @@ import { ReadingActions } from "./ReadingActions";
  * countable at a glance.
  */
 export function ReadingCards({
-  phong,
-  chiSoCuaPhong,
+  rooms,
+  readingForRoom,
   onEdit,
   onDelete,
 }: {
-  phong: RoomDetail[];
-  chiSoCuaPhong: (roomId: number) => ReadingDetail | null;
+  rooms: RoomDetail[];
+  readingForRoom: (roomId: number) => ReadingDetail | null;
   onEdit: (room: RoomDetail, reading: ReadingDetail | null) => void;
   onDelete: (reading: ReadingDetail) => void;
 }) {
@@ -33,8 +33,8 @@ export function ReadingCards({
 
   return (
     <Stack gap="xs">
-      {phong.map((room) => {
-        const reading = chiSoCuaPhong(room.id);
+      {rooms.map((room) => {
+        const reading = readingForRoom(room.id);
 
         return (
           <Card key={room.id} padding="md">
@@ -69,7 +69,7 @@ export function ReadingCards({
                   </CardField>
 
                   <CardField label={t("readings.colRecordedOn")}>
-                    {ngay(reading.recorded_on)}
+                    {formatDate(reading.recorded_on)}
                   </CardField>
                 </>
               )}

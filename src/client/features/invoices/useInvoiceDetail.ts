@@ -1,9 +1,9 @@
 import { invoices as invoicesApi } from "../../api";
-import { baoLoi, baoThanhCong } from "../../errors";
+import { toastError, toastSuccess } from "../../errors";
 import i18n from "../../i18n";
 import { useResource } from "../../hooks/useResource";
 
-export type ThanhToanMoi = {
+export type NewPayment = {
   amount: number;
   paid_on: string;
   method: string;
@@ -15,7 +15,7 @@ export function useInvoiceDetail(code: string) {
     () => invoicesApi.get(code),
     [code],
   );
-  return { hoaDon: data?.invoice ?? null, loading, refreshing, error, reload };
+  return { invoice: data?.invoice ?? null, loading, refreshing, error, reload };
 }
 
 /**
@@ -25,66 +25,66 @@ export function useInvoiceDetail(code: string) {
  * stored invoice must keep the tariff it was issued at. Wrong price means
  * delete and regenerate.
  */
-export function useThaoTacHoaDon(code: string, reload: () => void, onDeleted: () => void) {
-  async function luuPhiKhac(phiKhac: number): Promise<boolean> {
+export function useInvoiceActions(code: string, reload: () => void, onDeleted: () => void) {
+  async function saveOtherFees(otherFees: number): Promise<boolean> {
     try {
-      await invoicesApi.update(code, { other_fees: phiKhac });
-      baoThanhCong(i18n.t("invoices.otherFeesSaved"));
+      await invoicesApi.update(code, { other_fees: otherFees });
+      toastSuccess(i18n.t("invoices.otherFeesSaved"));
       reload();
       return true;
     } catch (err) {
-      baoLoi(err);
+      toastError(err);
       return false;
     }
   }
 
-  async function huy(): Promise<boolean> {
+  async function cancel(): Promise<boolean> {
     try {
       await invoicesApi.update(code, { status: "CANCELLED" });
-      baoThanhCong(i18n.t("invoices.cancelled"));
+      toastSuccess(i18n.t("invoices.cancelled"));
       reload();
       return true;
     } catch (err) {
-      baoLoi(err);
+      toastError(err);
       return false;
     }
   }
 
-  async function xoa(): Promise<boolean> {
+  async function remove(): Promise<boolean> {
     try {
       await invoicesApi.remove(code);
-      baoThanhCong(i18n.t("invoices.deleted"));
+      toastSuccess(i18n.t("invoices.deleted"));
       onDeleted();
       return true;
     } catch (err) {
-      baoLoi(err);
+      toastError(err);
       return false;
     }
   }
 
-  async function ghiNhanThanhToan(input: ThanhToanMoi): Promise<boolean> {
+  async function recordPayment(input: NewPayment): Promise<boolean> {
     try {
       await invoicesApi.pay(code, input);
-      baoThanhCong(i18n.t("invoices.paymentRecorded"));
+      toastSuccess(i18n.t("invoices.paymentRecorded"));
       reload();
       return true;
     } catch (err) {
-      baoLoi(err);
+      toastError(err);
       return false;
     }
   }
 
-  async function xoaThanhToan(paymentCode: string): Promise<boolean> {
+  async function removePayment(paymentCode: string): Promise<boolean> {
     try {
       await invoicesApi.removePayment(paymentCode);
-      baoThanhCong(i18n.t("invoices.paymentDeleted"));
+      toastSuccess(i18n.t("invoices.paymentDeleted"));
       reload();
       return true;
     } catch (err) {
-      baoLoi(err);
+      toastError(err);
       return false;
     }
   }
 
-  return { luuPhiKhac, huy, xoa, ghiNhanThanhToan, xoaThanhToan };
+  return { saveOtherFees, cancel, remove, recordPayment, removePayment };
 }

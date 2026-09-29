@@ -3,16 +3,16 @@ import { useTranslation } from "react-i18next";
 
 import type { InvoiceDetail, Payment } from "../../../../shared/types";
 import { PaymentsTable } from "../../../components/PaymentsTable";
-import type { ThanhToanMoi } from "../useInvoiceDetail";
+import type { NewPayment } from "../useInvoiceDetail";
 import { PaymentForm } from "./PaymentForm";
 
 export function PaymentsCard({
-  hoaDon,
+  invoice,
   onPay,
   onDeletePayment,
 }: {
-  hoaDon: InvoiceDetail;
-  onPay: (input: ThanhToanMoi) => Promise<boolean>;
+  invoice: InvoiceDetail;
+  onPay: (input: NewPayment) => Promise<boolean>;
   onDeletePayment: (payment: Payment) => void;
 }) {
   const { t } = useTranslation();
@@ -22,14 +22,14 @@ export function PaymentsCard({
       <Stack>
         <Text fw={500}>{t("invoices.paymentsTitle")}</Text>
 
-        {hoaDon.payments.length > 0 && (
-          <PaymentsTable payments={hoaDon.payments} onDelete={onDeletePayment} />
+        {invoice.payments.length > 0 && (
+          <PaymentsTable payments={invoice.payments} onDelete={onDeletePayment} />
         )}
 
-        {hoaDon.status === "CANCELLED" ? (
+        {invoice.status === "CANCELLED" ? (
           <Text c="dimmed">{t("invoices.cancelledNoPayments")}</Text>
         ) : (
-          <PaymentForm conLai={hoaDon.outstanding} onSubmit={onPay} />
+          <PaymentForm outstanding={invoice.outstanding} onSubmit={onPay} />
         )}
       </Stack>
     </Card>

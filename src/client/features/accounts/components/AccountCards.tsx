@@ -16,14 +16,14 @@ import { AccountActions } from "./AccountActions";
  * missing data.
  */
 export function AccountCards({
-  taiKhoan,
-  idHienTai,
+  accounts,
+  currentUserId,
   onRename,
   onResetPassword,
   onDelete,
 }: {
-  taiKhoan: Account[];
-  idHienTai: number;
+  accounts: Account[];
+  currentUserId: number;
   onRename: (account: Account) => void;
   onResetPassword: (account: Account) => void;
   onDelete: (account: Account) => void;
@@ -32,7 +32,7 @@ export function AccountCards({
 
   return (
     <Stack gap="xs">
-      {taiKhoan.map((account) => (
+      {accounts.map((account) => (
         <Card key={account.id} padding="md">
           <Stack gap="xs">
             <Group justify="space-between" wrap="nowrap" gap="sm" align="flex-start">
@@ -40,7 +40,7 @@ export function AccountCards({
                 <Text fw={700} truncate>
                   {account.username}
                 </Text>
-                {account.id === idHienTai && (
+                {account.id === currentUserId && (
                   <Text size="xs" c="dimmed">
                     {t("accounts.currentAccount")}
                   </Text>
@@ -57,7 +57,7 @@ export function AccountCards({
 
             <AccountActions
               account={account}
-              idHienTai={idHienTai}
+              currentUserId={currentUserId}
               onRename={onRename}
               onResetPassword={onResetPassword}
               onDelete={onDelete}

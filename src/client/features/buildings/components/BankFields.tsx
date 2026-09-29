@@ -1,14 +1,14 @@
 import { Select, Stack, Text, TextInput } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 
-import { KHAC, NGAN_HANG } from "../banks";
+import { OTHER_BANK, BANKS } from "../banks";
 
 export type BankValue = {
   bin: string | null;
-  soTk: string;
-  chuTk: string;
-  momoSdt: string;
-  momoTen: string;
+  accountNo: string;
+  accountName: string;
+  momoPhone: string;
+  momoName: string;
 };
 
 /**
@@ -23,8 +23,8 @@ export function BankFields({
   onChange: (next: BankValue) => void;
 }) {
   const { t } = useTranslation();
-  const trongDanhSach = value.bin !== null && NGAN_HANG.some((bank) => bank.bin === value.bin);
-  const luaChon = value.bin === null ? null : trongDanhSach ? value.bin : KHAC;
+  const isListed = value.bin !== null && BANKS.some((bank) => bank.bin === value.bin);
+  const selectValue = value.bin === null ? null : isListed ? value.bin : OTHER_BANK;
 
   return (
     <Stack gap="sm">
@@ -37,17 +37,17 @@ export function BankFields({
         placeholder={t("bank.notConfigured")}
         searchable
         clearable
-        value={luaChon}
+        value={selectValue}
         onChange={(bin) =>
-          onChange({ ...value, bin: bin === KHAC ? "" : bin })
+          onChange({ ...value, bin: bin === OTHER_BANK ? "" : bin })
         }
         data={[
-          ...NGAN_HANG.map((bank) => ({ value: bank.bin, label: `${bank.ten} — ${bank.bin}` })),
-          { value: KHAC, label: t("bank.other") },
+          ...BANKS.map((bank) => ({ value: bank.bin, label: `${bank.name} — ${bank.bin}` })),
+          { value: OTHER_BANK, label: t("bank.other") },
         ]}
       />
 
-      {luaChon === KHAC && (
+      {selectValue === OTHER_BANK && (
         <TextInput
           label={t("bank.bin")}
           description={t("bank.binHint")}
@@ -59,13 +59,13 @@ export function BankFields({
 
       <TextInput
         label={t("bank.accountNo")}
-        value={value.soTk}
-        onChange={(e) => onChange({ ...value, soTk: e.currentTarget.value })}
+        value={value.accountNo}
+        onChange={(e) => onChange({ ...value, accountNo: e.currentTarget.value })}
       />
       <TextInput
         label={t("bank.accountName")}
-        value={value.chuTk}
-        onChange={(e) => onChange({ ...value, chuTk: e.currentTarget.value })}
+        value={value.accountName}
+        onChange={(e) => onChange({ ...value, accountName: e.currentTarget.value })}
       />
 
       <Text fw={500} size="sm" mt="sm">
@@ -78,13 +78,13 @@ export function BankFields({
       <TextInput
         label={t("bank.momoPhone")}
         placeholder="09xxxxxxxx"
-        value={value.momoSdt}
-        onChange={(e) => onChange({ ...value, momoSdt: e.currentTarget.value })}
+        value={value.momoPhone}
+        onChange={(e) => onChange({ ...value, momoPhone: e.currentTarget.value })}
       />
       <TextInput
         label={t("bank.momoName")}
-        value={value.momoTen}
-        onChange={(e) => onChange({ ...value, momoTen: e.currentTarget.value })}
+        value={value.momoName}
+        onChange={(e) => onChange({ ...value, momoName: e.currentTarget.value })}
       />
     </Stack>
   );

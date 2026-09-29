@@ -13,20 +13,20 @@ import type { Account } from "../../../../shared/types";
  */
 export function AccountActions({
   account,
-  idHienTai,
+  currentUserId,
   onRename,
   onResetPassword,
   onDelete,
 }: {
   account: Account;
   /** The logged-in manager, so their own row can refuse deletion. */
-  idHienTai: number;
+  currentUserId: number;
   onRename: (account: Account) => void;
   onResetPassword: (account: Account) => void;
   onDelete: (account: Account) => void;
 }) {
   const { t } = useTranslation();
-  const laChinhMinh = account.id === idHienTai;
+  const isSelf = account.id === currentUserId;
 
   return (
     <Group gap="xs" justify="flex-end" wrap="nowrap">
@@ -43,7 +43,7 @@ export function AccountActions({
         <Menu.Dropdown>
           <Menu.Item onClick={() => onRename(account)}>{t("accounts.rename")}</Menu.Item>
 
-          {laChinhMinh ? (
+          {isSelf ? (
             <Menu.Item color="red" disabled>
               <Stack gap={2}>
                 <span>{t("accounts.delete")}</span>

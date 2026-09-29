@@ -2,11 +2,11 @@ import { Group, Menu, Text, UnstyledButton, useMantineColorScheme } from "@manti
 import { IconDeviceLaptop, IconMoon, IconSun } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
-import { NGON_NGU } from "../i18n";
+import { LANGUAGES } from "../i18n";
 import { LanguageMenuItems } from "./LanguageMenu";
 import { ThemeMenuItems } from "./ThemeMenu";
 
-const BIEU_TUONG = {
+const ICONS = {
   light: IconSun,
   dark: IconMoon,
   auto: IconDeviceLaptop,
@@ -28,8 +28,8 @@ export function PreferencesMenu() {
   const { i18n } = useTranslation();
   const { colorScheme } = useMantineColorScheme();
 
-  const ngonNgu = NGON_NGU.find((n) => n.value === (i18n.resolvedLanguage ?? "vi"));
-  const Icon = BIEU_TUONG[colorScheme];
+  const language = LANGUAGES.find((n) => n.value === (i18n.resolvedLanguage ?? "vi"));
+  const Icon = ICONS[colorScheme];
 
   return (
     <Menu position="bottom-end" shadow="md" width={190}>
@@ -37,7 +37,7 @@ export function PreferencesMenu() {
         <UnstyledButton className="fmh-account" px="xs" py={4}>
           <Group gap={6} wrap="nowrap">
             <Icon size={17} stroke={1.7} />
-            <Text size="sm">{ngonNgu?.label}</Text>
+            <Text size="sm">{language?.label}</Text>
           </Group>
         </UnstyledButton>
       </Menu.Target>

@@ -2,69 +2,69 @@ import { Alert, Button, PasswordInput, Stack } from "@mantine/core";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
-const TOI_THIEU = 8;
+const MIN_LENGTH = 8;
 
 export function ChangePasswordForm({
   onSubmit,
-  loi,
-  dangChay,
+  error,
+  busy,
 }: {
-  onSubmit: (matKhauCu: string, matKhauMoi: string) => Promise<boolean>;
-  loi: string | null;
-  dangChay: boolean;
+  onSubmit: (currentPassword: string, newPassword: string) => Promise<boolean>;
+  error: string | null;
+  busy: boolean;
 }) {
-  const [matKhauCu, setMatKhauCu] = useState("");
-  const [matKhauMoi, setMatKhauMoi] = useState("");
-  const [nhapLai, setNhapLai] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const { t } = useTranslation();
 
-  const lechNhau = nhapLai !== "" && nhapLai !== matKhauMoi;
-  const hopLe = matKhauCu !== "" && matKhauMoi.length >= TOI_THIEU && nhapLai === matKhauMoi;
+  const mismatch = confirmPassword !== "" && confirmPassword !== newPassword;
+  const isValid = currentPassword !== "" && newPassword.length >= MIN_LENGTH && confirmPassword === newPassword;
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
 
-    if (await onSubmit(matKhauCu, matKhauMoi)) {
-      setMatKhauCu("");
-      setMatKhauMoi("");
-      setNhapLai("");
+    if (await onSubmit(currentPassword, newPassword)) {
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
     }
   }
 
   return (
     <form onSubmit={submit}>
       <Stack>
-        {loi && (
+        {error && (
           <Alert color="red" variant="light">
-            {loi}
+            {error}
           </Alert>
         )}
 
         <PasswordInput
           label={t("changePassword.current")}
-          value={matKhauCu}
-          onChange={(e) => setMatKhauCu(e.currentTarget.value)}
+          value={currentPassword}
+          onChange={(e) => setCurrentPassword(e.currentTarget.value)}
           autoComplete="current-password"
           required
         />
         <PasswordInput
           label={t("changePassword.new")}
-          description={t("changePassword.minChars", { count: TOI_THIEU })}
-          value={matKhauMoi}
-          onChange={(e) => setMatKhauMoi(e.currentTarget.value)}
+          description={t("changePassword.minChars", { count: MIN_LENGTH })}
+          value={newPassword}
+          onChange={(e) => setNewPassword(e.currentTarget.value)}
           autoComplete="new-password"
           required
         />
         <PasswordInput
           label={t("changePassword.repeat")}
-          value={nhapLai}
-          onChange={(e) => setNhapLai(e.currentTarget.value)}
-          error={lechNhau ? t("changePassword.mismatch") : null}
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.currentTarget.value)}
+          error={mismatch ? t("changePassword.mismatch") : null}
           autoComplete="new-password"
           required
         />
 
-        <Button type="submit" loading={dangChay} disabled={!hopLe}>
+        <Button type="submit" loading={busy} disabled={!isValid}>
           {t("changePassword.title")}
         </Button>
       </Stack>

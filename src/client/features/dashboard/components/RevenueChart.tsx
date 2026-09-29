@@ -3,7 +3,7 @@ import { Card, Text, Title } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 
 import type { DashboardHistoryPoint } from "../../../../shared/types";
-import { periodTick, tien, tienRutGon } from "../../../format";
+import { periodTick, money, moneyShort } from "../../../format";
 
 /**
  * Billed against collected, one line each.
@@ -69,8 +69,8 @@ export function RevenueChart({ history }: { history: DashboardHistoryPoint[] }) 
           curveType="linear"
           // Tooltip keeps the exact figure; the axis only needs magnitude, and
           // "6.000.000 đ" does not fit in a tick.
-          valueFormatter={tien}
-          yAxisProps={{ tickFormatter: tienRutGon, width: 46, domain: [0, "auto"] }}
+          valueFormatter={money}
+          yAxisProps={{ tickFormatter: moneyShort, width: 46, domain: [0, "auto"] }}
           withLegend
           tickLine="y"
         />

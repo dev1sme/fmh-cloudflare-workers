@@ -12,19 +12,19 @@ import { InvoiceCards } from "./components/InvoiceCards";
 import { InvoicesTable } from "./components/InvoicesTable";
 import { GenerateInvoicesModal } from "./components/GenerateInvoicesModal";
 import { SkippedAlert } from "./components/SkippedAlert";
-import { useInvoicesTheoKy, useSinhHoaDon, useXemTruocSinh } from "./useInvoices";
+import { useInvoicesForPeriod, useGenerateInvoices, useGeneratePreview } from "./useInvoices";
 
 export function InvoicesPage() {
   const [period, setPeriod] = usePeriodParam();
-  const [moSinh, setMoSinh] = useState(false);
+  const [generateOpen, setGenerateOpen] = useState(false);
 
-  const { hoaDon, tongTien, loading, refreshing, error, reload } = useInvoicesTheoKy(period);
-  const { sinh, dangChay, ketQua, xoaKetQua } = useSinhHoaDon(period, reload);
-  const xemTruoc = useXemTruocSinh(period, moSinh);
+  const { invoices, grandTotal, loading, refreshing, error, reload } = useInvoicesForPeriod(period);
+  const { generate, busy, result, clearResult } = useGenerateInvoices(period, reload);
+  const preview = useGeneratePreview(period, generateOpen);
   const { t } = useTranslation();
 
-  async function xacNhanSinh(roomIds: number[]) {
-    if (await sinh(roomIds)) setMoSinh(false);
+  async function confirmGenerate(roomIds: number[]) {
+    if (await generate(roomIds)) setGenerateOpen(false);
   }
 
   return (
@@ -33,16 +33,16 @@ export function InvoicesPage() {
         <Title order={3}>{t("nav.invoices")}</Title>
         <Group align="flex-end">
           <PeriodPicker value={period} onChange={setPeriod} />
-          <Button onClick={() => setMoSinh(true)}>
+          <Button onClick={() => setGenerateOpen(true)}>
             {t("invoices.generateFor", { period: periodLabel(period) })}
           </Button>
         </Group>
       </Group>
 
-      {ketQua && <SkippedAlert skipped={ketQua.skipped} onClose={xoaKetQua} />}
+      {result && <SkippedAlert skipped={result.skipped} onClose={clearResult} />}
 
       <PageState loading={loading} refreshing={refreshing} error={error} onRetry={reload}>
-        {hoaDon.length === 0 ? (
+        {invoices.length === 0 ? (
           // A normal mid-month state, not a fault: the meters are read before
           // the invoices are issued. The action is the same one in the header,
           // repeated where the eye already is.
@@ -51,7 +51,7 @@ export function InvoicesPage() {
             title={t("invoices.emptyPeriod", { period: periodLabel(period) })}
             hint={t("invoices.emptyPeriodHint")}
             action={
-              <Button onClick={() => setMoSinh(true)}>
+              <Button onClick={() => setGenerateOpen(true)}>
                 {t("invoices.generateFor", { period: periodLabel(period) })}
               </Button>
             }
@@ -60,10 +60,10 @@ export function InvoicesPage() {
           <>
             {/* Nine columns do not fit a phone; cards carry the same facts. */}
             <Box visibleFrom="sm">
-              <InvoicesTable hoaDon={hoaDon} tongTien={tongTien} />
+              <InvoicesTable invoices={invoices} grandTotal={grandTotal} />
             </Box>
             <Box hiddenFrom="sm">
-              <InvoiceCards hoaDon={hoaDon} />
+              <InvoiceCards invoices={invoices} />
             </Box>
           </>
         )}
@@ -71,14 +71,14 @@ export function InvoicesPage() {
 
       <GenerateInvoicesModal
         period={period}
-        opened={moSinh}
-        rooms={xemTruoc.rooms}
-        loading={xemTruoc.loading}
-        error={xemTruoc.error}
-        onRetry={xemTruoc.reload}
-        dangChay={dangChay}
-        onClose={() => setMoSinh(false)}
-        onSubmit={xacNhanSinh}
+        opened={generateOpen}
+        rooms={preview.rooms}
+        loading={preview.loading}
+        error={preview.error}
+        onRetry={preview.reload}
+        busy={busy}
+        onClose={() => setGenerateOpen(false)}
+        onSubmit={confirmGenerate}
       />
     </Stack>
   );

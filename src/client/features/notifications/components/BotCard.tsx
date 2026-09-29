@@ -45,15 +45,15 @@ export function BotCard({
   onDeleteTarget: (target: BotTarget) => void;
 }) {
   const { t } = useTranslation();
-  const [dangThu, setDangThu] = useState<string | null>(null);
+  const [testing, setTesting] = useState<string | null>(null);
 
-  const tenNha = (id: number | null) =>
+  const buildingName = (id: number | null) =>
     id === null ? t("bots.allBuildings") : (buildings.find((b) => b.id === id)?.name ?? `#${id}`);
 
-  async function thu(target: BotTarget) {
-    setDangThu(target.code);
+  async function sendTest(target: BotTarget) {
+    setTesting(target.code);
     await onTestTarget(target);
-    setDangThu(null);
+    setTesting(null);
   }
 
   return (
@@ -114,7 +114,7 @@ export function BotCard({
                     </Badge>
                   </Table.Td>
                   <Table.Td>
-                    <Text size="sm">{tenNha(target.building_id)}</Text>
+                    <Text size="sm">{buildingName(target.building_id)}</Text>
                   </Table.Td>
                   <Table.Td>
                     <Group gap="xs" justify="flex-end" wrap="nowrap">
@@ -127,8 +127,8 @@ export function BotCard({
                       <Tooltip label={t("bots.test")}>
                         <ActionIcon
                           variant="subtle"
-                          onClick={() => void thu(target)}
-                          loading={dangThu === target.code}
+                          onClick={() => void sendTest(target)}
+                          loading={testing === target.code}
                           aria-label={t("bots.test")}
                         >
                           <IconSend size={16} stroke={1.8} />

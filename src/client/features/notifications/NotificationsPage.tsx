@@ -1,8 +1,8 @@
 import { Stack } from "@mantine/core";
 
-import { useDanhSachNha } from "../buildings/useBuildings";
+import { useBuildingList } from "../buildings/useBuildings";
 import { BotsSection } from "./components/BotsSection";
-import { useDanhSachBot, useThaoTacBot } from "./useBots";
+import { useBotList, useBotActions } from "./useBots";
 
 /**
  * Zalo notification bots and their destinations. This used to be one page
@@ -21,27 +21,27 @@ import { useDanhSachBot, useThaoTacBot } from "./useBots";
  * a per-building notification target.
  */
 export function NotificationsPage() {
-  const { nha } = useDanhSachNha();
-  const bot = useDanhSachBot();
-  const thaoTacBot = useThaoTacBot(bot.reload);
+  const { buildings } = useBuildingList();
+  const bot = useBotList();
+  const botActions = useBotActions(bot.reload);
 
   return (
     <Stack>
       <BotsSection
         bots={bot.bots}
-        buildings={nha}
+        buildings={buildings}
         loading={bot.loading}
         refreshing={bot.refreshing}
         onRetry={bot.reload}
         error={bot.error}
-        onAddBot={thaoTacBot.themBot}
-        onToggleBot={(item, active) => void thaoTacBot.luuBot(item.code, { active })}
-        onReplaceToken={thaoTacBot.doiToken}
-        onDeleteBot={thaoTacBot.xoaBot}
-        onAddTarget={thaoTacBot.themDich}
-        onSaveTarget={thaoTacBot.luuDich}
-        onTestTarget={thaoTacBot.guiThu}
-        onDeleteTarget={thaoTacBot.xoaDich}
+        onAddBot={botActions.addBot}
+        onToggleBot={(item, active) => void botActions.saveBot(item.code, { active })}
+        onReplaceToken={botActions.replaceToken}
+        onDeleteBot={botActions.removeBot}
+        onAddTarget={botActions.addTarget}
+        onSaveTarget={botActions.saveTarget}
+        onTestTarget={botActions.sendTest}
+        onDeleteTarget={botActions.removeTarget}
       />
     </Stack>
   );

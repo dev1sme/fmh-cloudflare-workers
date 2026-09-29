@@ -5,15 +5,15 @@ import type { Account } from "../../../../shared/types";
 import { AccountActions } from "./AccountActions";
 
 export function AccountsTable({
-  taiKhoan,
-  idHienTai,
+  accounts,
+  currentUserId,
   onRename,
   onResetPassword,
   onDelete,
 }: {
-  taiKhoan: Account[];
+  accounts: Account[];
   /** The logged-in manager, so their own row can say so. */
-  idHienTai: number;
+  currentUserId: number;
   onRename: (account: Account) => void;
   onResetPassword: (account: Account) => void;
   onDelete: (account: Account) => void;
@@ -32,11 +32,11 @@ export function AccountsTable({
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>
-          {taiKhoan.map((account) => (
+          {accounts.map((account) => (
             <Table.Tr key={account.id}>
               <Table.Td>
                 <Text fw={500}>{account.username}</Text>
-                {account.id === idHienTai && (
+                {account.id === currentUserId && (
                   <Text size="xs" c="dimmed">
                     {t("accounts.currentAccount")}
                   </Text>
@@ -54,7 +54,7 @@ export function AccountsTable({
               <Table.Td>
                 <AccountActions
                   account={account}
-                  idHienTai={idHienTai}
+                  currentUserId={currentUserId}
                   onRename={onRename}
                   onResetPassword={onResetPassword}
                   onDelete={onDelete}

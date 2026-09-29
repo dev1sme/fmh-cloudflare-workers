@@ -43,19 +43,19 @@ export function PeriodPicker({
   onChange: (period: string) => void;
 }) {
   const { t } = useTranslation();
-  const [mo, setMo] = useState(false);
+  const [opened, setOpened] = useState(false);
 
   // The year the grid is showing, which is not the selected year once the
   // manager pages back through it without picking anything.
-  const [namXem, setNamXem] = useState(() => Number(value.split("-")[0]));
+  const [viewYear, setViewYear] = useState(() => Number(value.split("-")[0]));
 
-  const namHienTai = Number(currentPeriod().split("-")[0]);
-  const thangDaChon = value.split("-")[1];
-  const namDaChon = Number(value.split("-")[0]);
+  const currentYear = Number(currentPeriod().split("-")[0]);
+  const selectedMonth = value.split("-")[1];
+  const selectedYear = Number(value.split("-")[0]);
 
-  function chon(month: number) {
-    onChange(`${namXem}-${String(month).padStart(2, "0")}`);
-    setMo(false);
+  function pick(month: number) {
+    onChange(`${viewYear}-${String(month).padStart(2, "0")}`);
+    setOpened(false);
   }
 
   return (
@@ -71,8 +71,8 @@ export function PeriodPicker({
         </ActionIcon>
 
         <Popover
-          opened={mo}
-          onChange={setMo}
+          opened={opened}
+          onChange={setOpened}
           position="bottom"
           withArrow
           shadow="md"
@@ -84,8 +84,8 @@ export function PeriodPicker({
               onClick={() => {
                 // Always reopen on the selected year, not wherever the grid was
                 // left last time.
-                setNamXem(namDaChon);
-                setMo((o) => !o);
+                setViewYear(selectedYear);
+                setOpened((o) => !o);
               }}
               style={{ minWidth: 132 }}
             >
@@ -98,17 +98,17 @@ export function PeriodPicker({
               <ActionIcon
                 variant="subtle"
                 aria-label={t("period.previousYear")}
-                onClick={() => setNamXem((y) => y - 1)}
+                onClick={() => setViewYear((y) => y - 1)}
               >
                 <IconChevronLeft size={16} stroke={1.8} />
               </ActionIcon>
 
-              <Text fw={600}>{namXem}</Text>
+              <Text fw={600}>{viewYear}</Text>
 
               <ActionIcon
                 variant="subtle"
                 aria-label={t("period.nextYear")}
-                onClick={() => setNamXem((y) => y + 1)}
+                onClick={() => setViewYear((y) => y + 1)}
               >
                 <IconChevronRight size={16} stroke={1.8} />
               </ActionIcon>
@@ -116,15 +116,15 @@ export function PeriodPicker({
 
             <SimpleGrid cols={3} spacing={4}>
               {Array.from({ length: 12 }, (_, i) => i + 1).map((month) => {
-                const daChon = namXem === namDaChon && String(month).padStart(2, "0") === thangDaChon;
+                const isSelected = viewYear === selectedYear && String(month).padStart(2, "0") === selectedMonth;
 
                 return (
                   <Button
                     key={month}
                     size="xs"
-                    variant={daChon ? "filled" : "subtle"}
-                    color={daChon ? "settled" : "gray"}
-                    onClick={() => chon(month)}
+                    variant={isSelected ? "filled" : "subtle"}
+                    color={isSelected ? "settled" : "gray"}
+                    onClick={() => pick(month)}
                   >
                     {t("period.monthShort", { month })}
                   </Button>
@@ -132,7 +132,7 @@ export function PeriodPicker({
               })}
             </SimpleGrid>
 
-            {namXem !== namHienTai && (
+            {viewYear !== currentYear && (
               <Button
                 fullWidth
                 mt="xs"
@@ -140,7 +140,7 @@ export function PeriodPicker({
                 variant="light"
                 onClick={() => {
                   onChange(currentPeriod());
-                  setMo(false);
+                  setOpened(false);
                 }}
               >
                 {t("period.thisMonth")}

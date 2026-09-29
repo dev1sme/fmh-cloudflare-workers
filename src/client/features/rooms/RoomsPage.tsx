@@ -9,24 +9,24 @@ import { PageState } from "../../components/PageState";
 import { useConfirm } from "../../hooks/useConfirm";
 import { Link } from "react-router-dom";
 import { MoveInModal } from "./components/MoveInModal";
-import { RoomModal, type MucTieuPhong } from "./components/RoomModal";
+import { RoomModal, type RoomTarget } from "./components/RoomModal";
 import { RoomCards } from "./components/RoomCards";
 import { RoomsTable } from "./components/RoomsTable";
-import { useDanhSachPhong, useThaoTacPhong } from "./useRooms";
+import { useRoomList, useRoomActions } from "./useRooms";
 
 export function RoomsPage() {
-  const { phong, nha, loading, refreshing, error, reload } = useDanhSachPhong();
-  const { themPhong, capNhatPhong, xoaPhong, themNguoiThue, chuyenDi } = useThaoTacPhong(reload);
-  const { xacNhan, hopThoai } = useConfirm();
+  const { rooms, buildings, loading, refreshing, error, reload } = useRoomList();
+  const { addRoom, updateRoom, removeRoom, moveIn, moveOut } = useRoomActions(reload);
+  const { confirm, confirmDialog } = useConfirm();
   const { t } = useTranslation();
 
-  const [dangMo, setDangMo] = useState<MucTieuPhong>(null);
-  const [dangThemNguoi, setDangThemNguoi] = useState<RoomDetail | null>(null);
+  const [movingOut, setMovingOut] = useState<RoomTarget>(null);
+  const [movingIn, setMovingIn] = useState<RoomDetail | null>(null);
 
-  function hoiChuyenDi(room: RoomDetail) {
+  function askMoveOut(room: RoomDetail) {
     if (!room.tenant) return;
 
-    xacNhan({
+    confirm({
       title: t("rooms.confirmMoveOutTitle"),
       message: t("rooms.confirmMoveOut", {
         name: room.tenant.full_name,
@@ -34,16 +34,16 @@ export function RoomsPage() {
       }),
       confirmLabel: t("rooms.movedOutLabel"),
       color: "orange",
-      onConfirm: () => chuyenDi(room.tenant!.code),
+      onConfirm: () => moveOut(room.tenant!.code),
     });
   }
 
-  function hoiXoaPhong(room: RoomDetail) {
-    xacNhan({
+  function askDeleteRoom(room: RoomDetail) {
+    confirm({
       title: t("rooms.delete"),
       message: t("rooms.confirmDelete", { room: room.room_name }),
       confirmLabel: t("common.delete"),
-      onConfirm: () => xoaPhong(room.code),
+      onConfirm: () => removeRoom(room.code),
     });
   }
 
@@ -56,11 +56,11 @@ export function RoomsPage() {
             on the screen saying why or where to go. A Tooltip alone would not
             do it — Mantine strips pointer events from a disabled button, so it
             never fires — hence the wrapping span. */}
-        <Tooltip label={t("rooms.needBuilding")} disabled={nha.length > 0} withArrow>
+        <Tooltip label={t("rooms.needBuilding")} disabled={buildings.length > 0} withArrow>
           <span>
             <Button
-              onClick={() => setDangMo({ room: null })}
-              disabled={nha.length === 0}
+              onClick={() => setMovingOut({ room: null })}
+              disabled={buildings.length === 0}
               leftSection={<IconPlus size={16} stroke={1.8} />}
             >
               {t("rooms.add")}
@@ -70,11 +70,11 @@ export function RoomsPage() {
       </Group>
 
       <PageState loading={loading} refreshing={refreshing} error={error} onRetry={reload}>
-        {phong.length === 0 ? (
+        {rooms.length === 0 ? (
           // Two different dead ends, two different answers. With no building
           // there is nothing to do on this screen at all, so the way out points
           // at Nhà; with a building, the room is one click away.
-          nha.length === 0 ? (
+          buildings.length === 0 ? (
             <EmptyState
               icon={<IconBuildingCommunity size={24} stroke={1.6} />}
               title={t("rooms.noBuilding")}
@@ -92,7 +92,7 @@ export function RoomsPage() {
               hint={t("rooms.emptyHint")}
               action={
                 <Button
-                  onClick={() => setDangMo({ room: null })}
+                  onClick={() => setMovingOut({ room: null })}
                   leftSection={<IconPlus size={16} stroke={1.8} />}
                 >
                   {t("rooms.add")}
@@ -106,20 +106,20 @@ export function RoomsPage() {
                 `sm` carry the same facts. */}
             <Box visibleFrom="sm">
               <RoomsTable
-                phong={phong}
-                onEdit={(room) => setDangMo({ room })}
-                onMoveIn={setDangThemNguoi}
-                onMoveOut={hoiChuyenDi}
-                onDelete={hoiXoaPhong}
+                rooms={rooms}
+                onEdit={(room) => setMovingOut({ room })}
+                onMoveIn={setMovingIn}
+                onMoveOut={askMoveOut}
+                onDelete={askDeleteRoom}
               />
             </Box>
             <Box hiddenFrom="sm">
               <RoomCards
-                phong={phong}
-                onEdit={(room) => setDangMo({ room })}
-                onMoveIn={setDangThemNguoi}
-                onMoveOut={hoiChuyenDi}
-                onDelete={hoiXoaPhong}
+                rooms={rooms}
+                onEdit={(room) => setMovingOut({ room })}
+                onMoveIn={setMovingIn}
+                onMoveOut={askMoveOut}
+                onDelete={askDeleteRoom}
               />
             </Box>
           </>
@@ -127,18 +127,18 @@ export function RoomsPage() {
       </PageState>
 
       <RoomModal
-        target={dangMo}
-        nha={nha}
-        onClose={() => setDangMo(null)}
-        onCreate={themPhong}
-        onUpdate={capNhatPhong}
+        target={movingOut}
+        buildings={buildings}
+        onClose={() => setMovingOut(null)}
+        onCreate={addRoom}
+        onUpdate={updateRoom}
       />
       <MoveInModal
-        room={dangThemNguoi}
-        onClose={() => setDangThemNguoi(null)}
-        onSubmit={themNguoiThue}
+        room={movingIn}
+        onClose={() => setMovingIn(null)}
+        onSubmit={moveIn}
       />
-      {hopThoai}
+      {confirmDialog}
     </Stack>
   );
 }

@@ -5,19 +5,19 @@ import { en } from "./locales/en";
 import { vi } from "./locales/vi";
 
 /** The options the language switcher offers, in the order it shows them. */
-export const NGON_NGU = [
+export const LANGUAGES = [
   { value: "vi", label: "Tiếng Việt" },
   { value: "en", label: "English" },
 ] as const;
 
-export const LUU_TAI = "fmh-lang";
+export const LANG_STORAGE_KEY = "fmh-lang";
 
-const HO_TRO = ["vi", "en"] as const;
-type NgonNgu = (typeof HO_TRO)[number];
+const SUPPORTED = ["vi", "en"] as const;
+type Language = (typeof SUPPORTED)[number];
 
-function hopLe(value: string | null | undefined): NgonNgu | null {
-  const goc = value?.slice(0, 2).toLowerCase();
-  return HO_TRO.find((item) => item === goc) ?? null;
+function supported(value: string | null | undefined): Language | null {
+  const base = value?.slice(0, 2).toLowerCase();
+  return SUPPORTED.find((item) => item === base) ?? null;
 }
 
 /**
@@ -35,9 +35,9 @@ function hopLe(value: string | null | undefined): NgonNgu | null {
  * configured here, so a language picked from the menu survived until the next
  * full page load and then reverted.
  */
-function ngonNguBanDau(): NgonNgu {
+function initialLanguage(): Language {
   try {
-    return hopLe(localStorage.getItem(LUU_TAI)) ?? "vi";
+    return supported(localStorage.getItem(LANG_STORAGE_KEY)) ?? "vi";
   } catch {
     // Storage throws in a locked-down browser; the default still applies.
     return "vi";
@@ -46,12 +46,12 @@ function ngonNguBanDau(): NgonNgu {
 
 void i18n.use(initReactI18next).init({
   resources: { vi: { translation: vi }, en: { translation: en } },
-  lng: ngonNguBanDau(),
+  lng: initialLanguage(),
 
   // Vietnamese is the source language, so an English key that has not been
   // written yet renders Vietnamese instead of the raw key.
   fallbackLng: "vi",
-  supportedLngs: [...HO_TRO],
+  supportedLngs: [...SUPPORTED],
 
   // React escapes interpolated values already; letting i18next escape too
   // turns a tenant's name with an apostrophe into `&#39;`.
@@ -63,12 +63,12 @@ void i18n.use(initReactI18next).init({
  * pick their pronunciation from that attribute, and Vietnamese read with an
  * English voice is not understandable.
  */
-function ghiNhoNgonNgu(lng: string): void {
-  const chon = hopLe(lng) ?? "vi";
-  document.documentElement.lang = chon;
+function rememberLanguage(lng: string): void {
+  const chosen = supported(lng) ?? "vi";
+  document.documentElement.lang = chosen;
 
   try {
-    localStorage.setItem(LUU_TAI, chon);
+    localStorage.setItem(LANG_STORAGE_KEY, chosen);
   } catch {
     // Not being able to remember the choice is a smaller problem than
     // throwing out of a language change.
@@ -76,10 +76,10 @@ function ghiNhoNgonNgu(lng: string): void {
 }
 
 document.documentElement.lang = i18n.resolvedLanguage ?? "vi";
-i18n.on("languageChanged", ghiNhoNgonNgu);
+i18n.on("languageChanged", rememberLanguage);
 
 /** True when the active language is English, for the locale-aware formatters. */
-export function laTiengAnh(): boolean {
+export function isEnglish(): boolean {
   return (i18n.resolvedLanguage ?? "vi").startsWith("en");
 }
 

@@ -3,7 +3,7 @@ import { IconCash, IconCoin, IconAlertTriangle } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
 import type { DashboardRevenue } from "../../../../shared/types";
-import { tien } from "../../../format";
+import { money } from "../../../format";
 import { StatCard } from "./StatCard";
 
 /** Money for the selected period. Cancelled invoices are already excluded. */
@@ -16,7 +16,7 @@ export function RevenueCards({ revenue }: { revenue: DashboardRevenue }) {
       <StatCard
         label={t("dashboard.billed")}
         icon={<IconCoin size={16} stroke={1.8} />}
-        value={tien(revenue.billed)}
+        value={money(revenue.billed)}
         hint={
           counts.cancelled > 0
             ? t("dashboard.invoicesWithCancelled", {
@@ -29,14 +29,14 @@ export function RevenueCards({ revenue }: { revenue: DashboardRevenue }) {
       <StatCard
         label={t("dashboard.collected")}
         icon={<IconCash size={16} stroke={1.8} />}
-        value={tien(revenue.collected)}
+        value={money(revenue.collected)}
         hint={t("dashboard.paidCount", { count: counts.paid })}
         color="settled"
       />
       <StatCard
         label={t("dashboard.outstanding")}
         icon={<IconAlertTriangle size={16} stroke={1.8} />}
-        value={tien(revenue.outstanding)}
+        value={money(revenue.outstanding)}
         hint={t("dashboard.unpaidCount", { count: counts.unpaid })}
         color={revenue.outstanding > 0 ? "owed" : undefined}
       />

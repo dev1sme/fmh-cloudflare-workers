@@ -5,12 +5,12 @@ import { useTranslation } from "react-i18next";
 
 export function LoginForm({
   onSubmit,
-  loi,
-  dangChay,
+  error,
+  busy,
 }: {
   onSubmit: (username: string, password: string) => void;
-  loi: string | null;
-  dangChay: boolean;
+  error: string | null;
+  busy: boolean;
 }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -32,9 +32,9 @@ export function LoginForm({
           </Text>
         </div>
 
-        {loi && (
+        {error && (
           <Alert color="red" variant="light" icon={<IconAlertCircle size={18} />}>
-            {loi}
+            {error}
           </Alert>
         )}
 
@@ -61,7 +61,7 @@ export function LoginForm({
           />
         </Stack>
 
-        <Button type="submit" loading={dangChay} fullWidth size="md">
+        <Button type="submit" loading={busy} fullWidth size="md">
           {t("login.submit")}
         </Button>
 

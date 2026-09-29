@@ -3,16 +3,16 @@ import { useResource } from "../../hooks/useResource";
 
 /** Everything here is scoped to the tenant's own room by the API. */
 
-export function useDashboardCuaToi() {
+export function useMyDashboard() {
   const { data, loading, refreshing, error, reload } = useResource(() => me.dashboard(), []);
-  return { soLieu: data, loading, refreshing, error, reload };
+  return { dashboard: data, loading, refreshing, error, reload };
 }
 
 /** `code` may be empty while the newest period has no invoice yet. */
-export function useInvoicesCuaToiChiTiet(code: string) {
+export function useMyInvoice(code: string) {
   const { data, loading, refreshing, error } = useResource(
     () => (code ? me.invoice(code) : Promise.resolve(null)),
     [code],
   );
-  return { hoaDon: data?.invoice ?? null, loading, refreshing, error };
+  return { invoice: data?.invoice ?? null, loading, refreshing, error };
 }

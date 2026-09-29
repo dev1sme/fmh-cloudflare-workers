@@ -2,7 +2,7 @@ import { useCallback, useState } from "react";
 
 import { ConfirmModal } from "../components/ConfirmModal";
 
-export type YeuCauXacNhan = {
+export type ConfirmRequest = {
   title: string;
   message: string;
   confirmLabel?: string;
@@ -15,17 +15,17 @@ export type YeuCauXacNhan = {
  * Replaces window.confirm — a native dialog cannot be styled or animated, and
  * it blocks the whole tab while open.
  *
- *   const { xacNhan, hopThoai } = useConfirm();
- *   <Button onClick={() => xacNhan({ title, message, onConfirm })} />
- *   {hopThoai}
+ *   const { confirm, confirmDialog } = useConfirm();
+ *   <Button onClick={() => confirm({ title, message, onConfirm })} />
+ *   {confirmDialog}
  */
 export function useConfirm() {
-  const [request, setRequest] = useState<YeuCauXacNhan | null>(null);
+  const [request, setRequest] = useState<ConfirmRequest | null>(null);
   const [busy, setBusy] = useState(false);
 
-  const dong = useCallback(() => setRequest(null), []);
+  const close = useCallback(() => setRequest(null), []);
 
-  const chapNhan = useCallback(async () => {
+  const accept = useCallback(async () => {
     if (!request) return;
     setBusy(true);
 
@@ -37,7 +37,7 @@ export function useConfirm() {
     }
   }, [request]);
 
-  const hopThoai = (
+  const confirmDialog = (
     <ConfirmModal
       opened={request !== null}
       title={request?.title ?? ""}
@@ -45,10 +45,10 @@ export function useConfirm() {
       confirmLabel={request?.confirmLabel}
       color={request?.color}
       busy={busy}
-      onConfirm={chapNhan}
-      onClose={dong}
+      onConfirm={accept}
+      onClose={close}
     />
   );
 
-  return { xacNhan: setRequest, hopThoai };
+  return { confirm: setRequest, confirmDialog };
 }

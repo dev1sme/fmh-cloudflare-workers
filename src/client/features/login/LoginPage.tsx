@@ -20,7 +20,7 @@ import { useLogin } from "./useLogin";
  * holds the form. On mobile the panel collapses away — a phone keyboard leaves
  * no room for a statement of purpose.
  */
-function DiemBan({
+function SellingPoint({
   icon,
   children,
 }: {
@@ -44,7 +44,7 @@ export function LoginPage({
 }: {
   onLogin: (user: SessionUser) => void;
 }) {
-  const { dangNhap, loi, dangChay } = useLogin(onLogin);
+  const { login, error, busy } = useLogin(onLogin);
   const { t } = useTranslation();
 
   return (
@@ -69,12 +69,12 @@ export function LoginPage({
               </Group>
 
               <Stack gap="md">
-                <DiemBan icon={<IconFileInvoice size={18} stroke={1.7} />}>
+                <SellingPoint icon={<IconFileInvoice size={18} stroke={1.7} />}>
                   {t("login.sellingInvoice")}
-                </DiemBan>
-                <DiemBan icon={<IconBolt size={18} stroke={1.7} />}>
+                </SellingPoint>
+                <SellingPoint icon={<IconBolt size={18} stroke={1.7} />}>
                   {t("login.sellingUsage")}
-                </DiemBan>
+                </SellingPoint>
               </Stack>
 
               <Text size="xs" c="dimmed">
@@ -90,7 +90,7 @@ export function LoginPage({
               <PreferencesMenu />
             </Group>
 
-            <LoginForm onSubmit={dangNhap} loi={loi} dangChay={dangChay} />
+            <LoginForm onSubmit={login} error={error} busy={busy} />
           </Box>
         </Box>
       </Paper>

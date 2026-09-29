@@ -3,59 +3,59 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import type { Building } from "../../../../shared/types";
-import { dauPhanCach } from "../../../format";
+import { separators } from "../../../format";
 import { BankFields, type BankValue } from "./BankFields";
 
 export function BuildingForm({
-  nha,
+  building,
   onSave,
   onDelete,
 }: {
-  nha: Building;
+  building: Building;
   onSave: (id: number, patch: Partial<Building>) => Promise<boolean>;
-  onDelete: (nha: Building) => void;
+  onDelete: (building: Building) => void;
 }) {
-  const [name, setName] = useState(nha.name);
-  const [address, setAddress] = useState(nha.address ?? "");
-  const [dien, setDien] = useState<number | string>(nha.electricity_rate);
-  const [nuoc, setNuoc] = useState<number | string>(nha.water_rate);
+  const [name, setName] = useState(building.name);
+  const [address, setAddress] = useState(building.address ?? "");
+  const [electricityRate, setElectricityRate] = useState<number | string>(building.electricity_rate);
+  const [waterRate, setWaterRate] = useState<number | string>(building.water_rate);
   const [bank, setBank] = useState<BankValue>({
-    bin: nha.bank_bin,
-    soTk: nha.bank_account_no ?? "",
-    chuTk: nha.bank_account_name ?? "",
-    momoSdt: nha.momo_phone ?? "",
-    momoTen: nha.momo_name ?? "",
+    bin: building.bank_bin,
+    accountNo: building.bank_account_no ?? "",
+    accountName: building.bank_account_name ?? "",
+    momoPhone: building.momo_phone ?? "",
+    momoName: building.momo_name ?? "",
   });
   const [busy, setBusy] = useState(false);
   const { t } = useTranslation();
 
   useEffect(() => {
-    setName(nha.name);
-    setAddress(nha.address ?? "");
-    setDien(nha.electricity_rate);
-    setNuoc(nha.water_rate);
+    setName(building.name);
+    setAddress(building.address ?? "");
+    setElectricityRate(building.electricity_rate);
+    setWaterRate(building.water_rate);
     setBank({
-      bin: nha.bank_bin,
-      soTk: nha.bank_account_no ?? "",
-      chuTk: nha.bank_account_name ?? "",
-      momoSdt: nha.momo_phone ?? "",
-      momoTen: nha.momo_name ?? "",
+      bin: building.bank_bin,
+      accountNo: building.bank_account_no ?? "",
+      accountName: building.bank_account_name ?? "",
+      momoPhone: building.momo_phone ?? "",
+      momoName: building.momo_name ?? "",
     });
-  }, [nha]);
+  }, [building]);
 
   async function save() {
     setBusy(true);
 
-    await onSave(nha.id, {
+    await onSave(building.id, {
       name,
       address: address || null,
-      electricity_rate: Number(dien),
-      water_rate: Number(nuoc),
+      electricity_rate: Number(electricityRate),
+      water_rate: Number(waterRate),
       bank_bin: bank.bin || null,
-      bank_account_no: bank.soTk || null,
-      bank_account_name: bank.chuTk || null,
-      momo_phone: bank.momoSdt || null,
-      momo_name: bank.momoTen || null,
+      bank_account_no: bank.accountNo || null,
+      bank_account_name: bank.accountName || null,
+      momo_phone: bank.momoPhone || null,
+      momo_name: bank.momoName || null,
     });
 
     setBusy(false);
@@ -73,19 +73,19 @@ export function BuildingForm({
         <Group grow>
           <NumberInput
             label={t("buildings.electricityRate")}
-            value={dien}
-            onChange={setDien}
+            value={electricityRate}
+            onChange={setElectricityRate}
             min={0}
             step={500}
-            {...dauPhanCach()}
+            {...separators()}
           />
           <NumberInput
             label={t("buildings.waterRate")}
-            value={nuoc}
-            onChange={setNuoc}
+            value={waterRate}
+            onChange={setWaterRate}
             min={0}
             step={1000}
-            {...dauPhanCach()}
+            {...separators()}
           />
         </Group>
         <Divider my="xs" />
@@ -96,7 +96,7 @@ export function BuildingForm({
           <Button onClick={save} loading={busy}>
             {t("common.save")}
           </Button>
-          <Button variant="subtle" color="red" onClick={() => onDelete(nha)}>
+          <Button variant="subtle" color="red" onClick={() => onDelete(building)}>
             {t("buildings.deleteBuilding")}
           </Button>
         </Group>

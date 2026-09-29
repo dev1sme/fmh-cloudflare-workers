@@ -2,7 +2,7 @@ import { Menu, useMantineColorScheme, type MantineColorScheme } from "@mantine/c
 import { IconCheck, IconDeviceLaptop, IconMoon, IconSun } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
-const LUA_CHON = [
+const OPTIONS = [
   { value: "light", key: "theme.light", icon: IconSun },
   { value: "dark", key: "theme.dark", icon: IconMoon },
   { value: "auto", key: "theme.system", icon: IconDeviceLaptop },
@@ -33,7 +33,7 @@ export function ThemeMenuItems() {
   return (
     <>
       <Menu.Label>{t("theme.label")}</Menu.Label>
-      {LUA_CHON.map((item) => {
+      {OPTIONS.map((item) => {
         const Icon = item.icon;
 
         return (

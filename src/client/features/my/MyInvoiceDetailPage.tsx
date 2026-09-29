@@ -10,11 +10,11 @@ import { PaymentsTable } from "../../components/PaymentsTable";
 import { StatusBadge } from "../../components/StatusBadge";
 import { periodLabel } from "../../format";
 import { TransferInstructions } from "./components/TransferInstructions";
-import { useInvoicesCuaToiChiTiet } from "./useMine";
+import { useMyInvoice } from "./useMine";
 
 export function MyInvoiceDetailPage() {
   const code = (useParams().code ?? "").toUpperCase();
-  const { hoaDon, loading, refreshing, error } = useInvoicesCuaToiChiTiet(code);
+  const { invoice, loading, refreshing, error } = useMyInvoice(code);
   const { t } = useTranslation();
 
   return (
@@ -23,42 +23,42 @@ export function MyInvoiceDetailPage() {
     // is harder to read than a narrow one.
     <Stack maw={560} mx="auto">
       <Group justify="space-between">
-        <Title order={3}>{hoaDon ? hoaDon.code : t("invoice.fallbackTitle")}</Title>
+        <Title order={3}>{invoice ? invoice.code : t("invoice.fallbackTitle")}</Title>
         <Button variant="subtle" component={Link} to="/">
           ← {t("common.home")}
         </Button>
       </Group>
 
       <PageState loading={loading} refreshing={refreshing} error={error}>
-        {hoaDon && (
+        {invoice && (
           <Stack>
             <Group>
-              <Text c="dimmed">{periodLabel(hoaDon.period)}</Text>
-              <StatusBadge value={hoaDon.status} />
+              <Text c="dimmed">{periodLabel(invoice.period)}</Text>
+              <StatusBadge value={invoice.status} />
             </Group>
 
-            <InvoiceLines invoice={hoaDon} />
+            <InvoiceLines invoice={invoice} />
 
-            {hoaDon.payments.length > 0 && (
+            {invoice.payments.length > 0 && (
               <Card withBorder padding="md">
                 <Stack gap="sm">
                   <Text fw={500}>{t("invoice.paidSection")}</Text>
-                  <PaymentsTable payments={hoaDon.payments} />
+                  <PaymentsTable payments={invoice.payments} />
                 </Stack>
               </Card>
             )}
 
-            {hoaDon.bank_transfer ? (
-              <BankTransferCard chuyenKhoan={hoaDon.bank_transfer} />
+            {invoice.bank_transfer ? (
+              <BankTransferCard transfer={invoice.bank_transfer} />
             ) : (
-              !hoaDon.momo &&
-              hoaDon.outstanding > 0 &&
-              hoaDon.status !== "CANCELLED" && (
-                <TransferInstructions maHoaDon={hoaDon.code} />
+              !invoice.momo &&
+              invoice.outstanding > 0 &&
+              invoice.status !== "CANCELLED" && (
+                <TransferInstructions invoiceCode={invoice.code} />
               )
             )}
 
-            {hoaDon.momo && <MomoCard momo={hoaDon.momo} />}
+            {invoice.momo && <MomoCard momo={invoice.momo} />}
           </Stack>
         )}
       </PageState>

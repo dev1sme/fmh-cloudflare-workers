@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 
 import { invoices as invoicesApi, rooms as roomsApi } from "../api";
-import { periodLabel, tien } from "../format";
+import { periodLabel, money } from "../format";
 import { useResource } from "../hooks/useResource";
 
 /**
@@ -39,7 +39,7 @@ export function QuickSearch() {
     const invoices = (invoiceData?.invoices ?? []).map((invoice) => ({
       id: `invoice-${invoice.code}`,
       label: `${invoice.code} · ${invoice.room_name}`,
-      description: `${periodLabel(invoice.period)} · ${tien(invoice.total)}`,
+      description: `${periodLabel(invoice.period)} · ${money(invoice.total)}`,
       leftSection: <IconFileInvoice size={18} stroke={1.6} />,
       onClick: () => navigate(`/invoices/${invoice.code}`),
     }));

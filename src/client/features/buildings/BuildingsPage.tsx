@@ -9,7 +9,7 @@ import { PageState } from "../../components/PageState";
 import { useConfirm } from "../../hooks/useConfirm";
 import { BuildingForm } from "./components/BuildingForm";
 import { BuildingModal } from "./components/BuildingModal";
-import { useDanhSachNha, useThaoTacNha } from "./useBuildings";
+import { useBuildingList, useBuildingActions } from "./useBuildings";
 
 /**
  * Buildings: name, address, the electricity/water rates a generated invoice
@@ -23,19 +23,19 @@ import { useDanhSachNha, useThaoTacNha } from "./useBuildings";
  * thuê do.
  */
 export function BuildingsPage() {
-  const { nha, loading, refreshing, error, reload } = useDanhSachNha();
-  const { them, luu, xoa } = useThaoTacNha(reload);
-  const { xacNhan, hopThoai } = useConfirm();
+  const { buildings, loading, refreshing, error, reload } = useBuildingList();
+  const { add, save, remove } = useBuildingActions(reload);
+  const { confirm, confirmDialog } = useConfirm();
   const { t } = useTranslation();
 
-  const [dangThem, setDangThem] = useState(false);
+  const [adding, setAdding] = useState(false);
 
-  function hoiXoa(item: Building) {
-    xacNhan({
+  function askDelete(item: Building) {
+    confirm({
       title: t("buildings.deleteBuilding"),
       message: t("buildings.confirmDeleteBuilding", { name: item.name }),
       confirmLabel: t("common.delete"),
-      onConfirm: () => xoa(item.id),
+      onConfirm: () => remove(item.id),
     });
   }
 
@@ -44,7 +44,7 @@ export function BuildingsPage() {
       <Group justify="space-between">
         <Title order={3}>{t("nav.buildings")}</Title>
         <Button
-          onClick={() => setDangThem(true)}
+          onClick={() => setAdding(true)}
           leftSection={<IconPlus size={16} stroke={1.8} />}
         >
           {t("buildings.addBuilding")}
@@ -56,14 +56,14 @@ export function BuildingsPage() {
       </Text>
 
       <PageState loading={loading} refreshing={refreshing} error={error} onRetry={reload}>
-        {nha.length === 0 ? (
+        {buildings.length === 0 ? (
           <EmptyState
             icon={<IconBuildingCommunity size={24} stroke={1.6} />}
             title={t("buildings.empty")}
             hint={t("buildings.emptyHint")}
             action={
               <Button
-                onClick={() => setDangThem(true)}
+                onClick={() => setAdding(true)}
                 leftSection={<IconPlus size={16} stroke={1.8} />}
               >
                 {t("buildings.addBuilding")}
@@ -72,15 +72,15 @@ export function BuildingsPage() {
           />
         ) : (
           <Stack>
-            {nha.map((item) => (
-              <BuildingForm key={item.id} nha={item} onSave={luu} onDelete={hoiXoa} />
+            {buildings.map((item) => (
+              <BuildingForm key={item.id} building={item} onSave={save} onDelete={askDelete} />
             ))}
           </Stack>
         )}
       </PageState>
 
-      <BuildingModal opened={dangThem} onClose={() => setDangThem(false)} onSubmit={them} />
-      {hopThoai}
+      <BuildingModal opened={adding} onClose={() => setAdding(false)} onSubmit={add} />
+      {confirmDialog}
     </Stack>
   );
 }

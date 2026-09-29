@@ -2,7 +2,7 @@ import { Button, Table } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 
 import type { Payment } from "../../shared/types";
-import { ngay, tien } from "../format";
+import { formatDate, money } from "../format";
 
 export function PaymentsTable({
   payments,
@@ -27,8 +27,8 @@ export function PaymentsTable({
       <Table.Tbody>
         {payments.map((payment) => (
           <Table.Tr key={payment.id}>
-            <Table.Td>{ngay(payment.paid_on)}</Table.Td>
-            <Table.Td>{tien(payment.amount)}</Table.Td>
+            <Table.Td>{formatDate(payment.paid_on)}</Table.Td>
+            <Table.Td>{money(payment.amount)}</Table.Td>
             <Table.Td>{t(`method.${payment.method}`)}</Table.Td>
             <Table.Td>{payment.note ?? "—"}</Table.Td>
             {onDelete && (

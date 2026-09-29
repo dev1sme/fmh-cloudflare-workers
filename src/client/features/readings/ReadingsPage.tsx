@@ -11,29 +11,29 @@ import { PageState } from "../../components/PageState";
 import { periodLabel } from "../../format";
 import { useConfirm } from "../../hooks/useConfirm";
 import { usePeriodParam } from "../../hooks/usePeriodParam";
-import { ReadingModal, type MucTieu } from "./components/ReadingModal";
+import { ReadingModal, type ReadingTarget } from "./components/ReadingModal";
 import { ReadingCards } from "./components/ReadingCards";
 import { ReadingsTable } from "./components/ReadingsTable";
-import { useReadingsTheoKy, useThaoTacChiSo } from "./useReadings";
+import { useReadingsForPeriod, useReadingActions } from "./useReadings";
 
 export function ReadingsPage() {
   const [period, setPeriod] = usePeriodParam();
-  const { phong, chiSoCuaPhong, loading, refreshing, error, reload } = useReadingsTheoKy(period);
-  const { goiY, luu, xoa } = useThaoTacChiSo(period, reload);
-  const { xacNhan, hopThoai } = useConfirm();
+  const { rooms, readingForRoom, loading, refreshing, error, reload } = useReadingsForPeriod(period);
+  const { suggest, save, remove } = useReadingActions(period, reload);
+  const { confirm, confirmDialog } = useConfirm();
   const { t } = useTranslation();
 
-  const [dangNhap, setDangNhap] = useState<MucTieu | null>(null);
+  const [entering, setEntering] = useState<ReadingTarget | null>(null);
 
-  function hoiXoa(reading: ReadingDetail) {
-    xacNhan({
+  function askDelete(reading: ReadingDetail) {
+    confirm({
       title: t("readings.deleteTitle"),
       message: t("readings.confirmDelete", {
         room: reading.room_name,
         period: periodLabel(reading.period),
       }),
       confirmLabel: t("common.delete"),
-      onConfirm: () => xoa(reading.code),
+      onConfirm: () => remove(reading.code),
     });
   }
 
@@ -47,7 +47,7 @@ export function ReadingsPage() {
       <PageState loading={loading} refreshing={refreshing} error={error} onRetry={reload}>
         {/* Rows here are rooms, not readings — an empty table means no rooms
             exist, which is not fixable from this screen. */}
-        {phong.length === 0 ? (
+        {rooms.length === 0 ? (
           <EmptyState
             icon={<IconHome size={24} stroke={1.6} />}
             title={t("readings.emptyRooms")}
@@ -63,18 +63,18 @@ export function ReadingsPage() {
             {/* Seven columns at minWidth 760. */}
             <Box visibleFrom="sm">
               <ReadingsTable
-                phong={phong}
-                chiSoCuaPhong={chiSoCuaPhong}
-                onEdit={(room, reading) => setDangNhap({ room, reading })}
-                onDelete={hoiXoa}
+                rooms={rooms}
+                readingForRoom={readingForRoom}
+                onEdit={(room, reading) => setEntering({ room, reading })}
+                onDelete={askDelete}
               />
             </Box>
             <Box hiddenFrom="sm">
               <ReadingCards
-                phong={phong}
-                chiSoCuaPhong={chiSoCuaPhong}
-                onEdit={(room, reading) => setDangNhap({ room, reading })}
-                onDelete={hoiXoa}
+                rooms={rooms}
+                readingForRoom={readingForRoom}
+                onEdit={(room, reading) => setEntering({ room, reading })}
+                onDelete={askDelete}
               />
             </Box>
           </>
@@ -83,12 +83,12 @@ export function ReadingsPage() {
 
       <ReadingModal
         period={period}
-        target={dangNhap}
-        goiY={goiY}
-        onClose={() => setDangNhap(null)}
-        onSubmit={luu}
+        target={entering}
+        suggest={suggest}
+        onClose={() => setEntering(null)}
+        onSubmit={save}
       />
-      {hopThoai}
+      {confirmDialog}
     </Stack>
   );
 }

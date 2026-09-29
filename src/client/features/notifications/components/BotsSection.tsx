@@ -52,14 +52,14 @@ export function BotsSection({
   onDeleteTarget: (code: string) => Promise<boolean>;
 }) {
   const { t } = useTranslation();
-  const { xacNhan, hopThoai } = useConfirm();
+  const { confirm, confirmDialog } = useConfirm();
 
-  const [dangThemBot, setDangThemBot] = useState(false);
-  const [doiTokenCho, setDoiTokenCho] = useState<BotWithTargets | null>(null);
-  const [themDichCho, setThemDichCho] = useState<BotWithTargets | null>(null);
+  const [addingBot, setAddingBot] = useState(false);
+  const [tokenFor, setTokenFor] = useState<BotWithTargets | null>(null);
+  const [addTargetFor, setAddTargetFor] = useState<BotWithTargets | null>(null);
 
-  function hoiXoaBot(bot: BotWithTargets) {
-    xacNhan({
+  function askDeleteBot(bot: BotWithTargets) {
+    confirm({
       title: t("bots.delete"),
       message: t("bots.confirmDelete", { name: bot.name }),
       confirmLabel: t("common.delete"),
@@ -67,8 +67,8 @@ export function BotsSection({
     });
   }
 
-  function hoiXoaDich(target: BotTarget) {
-    xacNhan({
+  function askDeleteTarget(target: BotTarget) {
+    confirm({
       title: t("bots.deleteTarget"),
       message: t("bots.confirmDeleteTarget", { label: target.label }),
       confirmLabel: t("common.delete"),
@@ -82,7 +82,7 @@ export function BotsSection({
         <Title order={4}>{t("bots.title")}</Title>
         <Button
           variant="light"
-          onClick={() => setDangThemBot(true)}
+          onClick={() => setAddingBot(true)}
           leftSection={<IconPlus size={16} stroke={1.8} />}
         >
           {t("bots.add")}
@@ -108,12 +108,12 @@ export function BotsSection({
                 bot={bot}
                 buildings={buildings}
                 onToggle={onToggleBot}
-                onReplaceToken={setDoiTokenCho}
-                onDelete={hoiXoaBot}
-                onAddTarget={setThemDichCho}
+                onReplaceToken={setTokenFor}
+                onDelete={askDeleteBot}
+                onAddTarget={setAddTargetFor}
                 onToggleTarget={(target, active) => void onSaveTarget(target.code, { active })}
                 onTestTarget={(target) => void onTestTarget(target.code)}
-                onDeleteTarget={hoiXoaDich}
+                onDeleteTarget={askDeleteTarget}
               />
             ))
           )}
@@ -121,31 +121,31 @@ export function BotsSection({
       </PageState>
 
       <BotModal
-        opened={dangThemBot}
-        onClose={() => setDangThemBot(false)}
+        opened={addingBot}
+        onClose={() => setAddingBot(false)}
         onSubmit={onAddBot}
       />
 
       {/* Same modal, name locked: replacing a token asks for nothing else. */}
       <BotModal
-        opened={doiTokenCho !== null}
-        onClose={() => setDoiTokenCho(null)}
-        tokenOnly={doiTokenCho ? { name: doiTokenCho.name } : undefined}
+        opened={tokenFor !== null}
+        onClose={() => setTokenFor(null)}
+        tokenOnly={tokenFor ? { name: tokenFor.name } : undefined}
         onSubmit={({ token }) =>
-          doiTokenCho ? onReplaceToken(doiTokenCho.code, token) : Promise.resolve(false)
+          tokenFor ? onReplaceToken(tokenFor.code, token) : Promise.resolve(false)
         }
       />
 
       <TargetModal
-        opened={themDichCho !== null}
-        onClose={() => setThemDichCho(null)}
+        opened={addTargetFor !== null}
+        onClose={() => setAddTargetFor(null)}
         buildings={buildings}
         onSubmit={(input) =>
-          themDichCho ? onAddTarget(themDichCho.code, input) : Promise.resolve(false)
+          addTargetFor ? onAddTarget(addTargetFor.code, input) : Promise.resolve(false)
         }
       />
 
-      {hopThoai}
+      {confirmDialog}
     </Stack>
   );
 }
