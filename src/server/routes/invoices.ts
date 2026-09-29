@@ -217,12 +217,20 @@ invoiceRoutes.patch("/:code", async (c) => {
   const rent_amount = optionalInt(body.rent_amount, "rent_amount") ?? current.rent_amount;
   const other_fees = optionalInt(body.other_fees, "other_fees") ?? current.other_fees;
 
-  const invoice = await updateInvoice(c.env.DB, current.id, {
+  const status = optionalEnum(body.status, "status", STATUSES);
+
+  const updated = await updateInvoice(c.env.DB, current.id, {
     rent_amount,
     other_fees,
-    status: optionalEnum(body.status, "status", STATUSES),
+    status,
     total: invoiceTotal({ ...current, rent_amount, other_fees }),
   });
+
+  // A new total moves the line between paid and unpaid: raising the fees on a
+  // PAID invoice leaves money owed, lowering them below what was received
+  // settles it. Re-derived from the payments, same as recording one. An
+  // explicit status in the request is the manager's decision and stands.
+  const invoice = status === undefined ? await syncInvoiceStatus(c.env.DB, current.id) : updated;
 
   return ok(c, { invoice }, "Invoice updated.");
 });
